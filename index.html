@@ -7,24 +7,12 @@
   
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Biblioteca de PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <style>
     .hidden-screen { display: none !important; }
     select { appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em; }
-    
-    /* FIX DO PDF: Fica display none, mas quando ativado, fica absoluto atrás de tudo (z-index -10) */
-    #pdf-molde { 
-      display: none; 
-      position: absolute; 
-      top: 0; 
-      left: 0; 
-      width: 800px; 
-      background: white; 
-      padding: 40px; 
-      color: #1e293b; 
-      z-index: -10; 
-    }
   </style>
 </head>
 <body class="flex h-screen bg-gray-100 font-sans overflow-hidden text-gray-800">
@@ -84,7 +72,7 @@
     <!-- ÁREA DE ROLAGEM INDEPENDENTE -->
     <div class="flex-1 overflow-y-auto p-4 sm:p-6 pb-20 relative z-10">
       
-      <!-- ================= TELA 1: CLIENTES ================= -->
+      <!-- TELA 1: CLIENTES -->
       <div id="clientes" class="screen-content block space-y-6">
         <h2 class="text-2xl font-bold text-gray-800">Cadastro de Clientes</h2>
         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -104,7 +92,7 @@
         </div>
       </div>
 
-      <!-- ================= TELA 2: ORÇAMENTOS ================= -->
+      <!-- TELA 2: ORÇAMENTOS -->
       <div id="orcamentos" class="screen-content hidden-screen space-y-6">
         <h2 class="text-2xl font-bold text-gray-800">Orçamento</h2>
         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -156,7 +144,7 @@
         </div>
       </div>
 
-      <!-- ================= TELA 3: ORDENS DE SERVIÇO ================= -->
+      <!-- TELA 3: ORDENS DE SERVIÇO -->
       <div id="ordens" class="screen-content hidden-screen space-y-6">
         <h2 class="text-2xl font-bold text-gray-800">Ordem de Serviço</h2>
         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
@@ -202,7 +190,7 @@
         </div>
       </div>
 
-      <!-- ================= TELA 4: FINANCEIRO ================= -->
+      <!-- TELA 4: FINANCEIRO -->
       <div id="financeiro" class="screen-content hidden-screen space-y-6">
         <h2 class="text-2xl font-bold text-gray-800">Controle Financeiro</h2>
         
@@ -246,7 +234,7 @@
         </div>
       </div>
 
-      <!-- ================= TELA 5: EQUIPAMENTOS ================= -->
+      <!-- TELA 5: EQUIPAMENTOS -->
       <div id="equipamentos" class="screen-content hidden-screen space-y-6">
         <div class="flex justify-between items-center">
           <h2 class="text-2xl font-bold text-gray-800">Ficha de Equipamentos</h2>
@@ -269,7 +257,7 @@
         </div>
       </div>
 
-      <!-- ================= TELA 6: AGENDA ================= -->
+      <!-- TELA 6: AGENDA -->
       <div id="agenda" class="screen-content hidden-screen space-y-6">
         <div class="flex justify-between items-center">
           <h2 class="text-2xl font-bold text-gray-800">Agenda de Locações</h2>
@@ -286,7 +274,7 @@
         </div>
       </div>
 
-      <!-- ================= TELA 7: RELATÓRIOS ================= -->
+      <!-- TELA 7: RELATÓRIOS -->
       <div id="relatorios" class="screen-content hidden-screen space-y-6">
         <h2 class="text-2xl font-bold text-gray-800">Relatórios Gerenciais</h2>
         
@@ -313,52 +301,6 @@
 
     </div>
   </main>
-
-  <!-- ================= MOLDE DO PDF (Escondido) ================= -->
-  <div id="pdf-molde">
-    <div class="border-b-4 border-slate-900 pb-4 mb-6 flex justify-between items-end">
-      <div>
-        <h1 class="text-4xl font-black tracking-widest text-slate-900">LOCA<span class="text-blue-600">SYS</span></h1>
-        <p class="text-gray-500 text-sm mt-1">Locação e Gestão de Equipamentos</p>
-      </div>
-      <div class="text-right">
-        <h2 class="text-2xl font-bold text-gray-800">ORÇAMENTO OFICIAL</h2>
-        <p class="text-sm font-bold text-gray-500" id="pdf-data"></p>
-      </div>
-    </div>
-    <div class="bg-gray-100 p-4 rounded-lg mb-6 border border-gray-200">
-      <h3 class="text-xs uppercase font-bold text-gray-500 mb-1">Cliente</h3>
-      <p class="text-xl font-bold text-gray-800" id="pdf-cliente-nome">Nome Aqui</p>
-    </div>
-    <div class="mb-6">
-      <h3 class="text-sm uppercase font-bold text-slate-800 mb-2 border-b-2 border-slate-200 pb-1">Equipamentos Solicitados</h3>
-      <ul id="pdf-equipamentos" class="list-disc ml-5 text-gray-700 font-medium"></ul>
-    </div>
-    <div class="grid grid-cols-2 gap-4 mb-6">
-      <div class="border border-gray-200 p-4 rounded-lg text-center">
-        <p class="text-xs uppercase font-bold text-gray-500">Valor Unitário</p>
-        <p class="text-xl font-bold text-gray-800" id="pdf-valor-unitario">R$ 0,00</p>
-      </div>
-      <div class="border border-gray-200 p-4 rounded-lg text-center bg-blue-50">
-        <p class="text-xs uppercase font-bold text-blue-600">Total Estimado</p>
-        <p class="text-2xl font-black text-blue-800" id="pdf-total">R$ 0,00</p>
-      </div>
-    </div>
-    <div class="flex gap-8 mb-6 border-y border-gray-200 py-4">
-      <p class="font-bold text-gray-700"><i class="fas fa-gas-pump"></i> Combustível: <span id="pdf-combustivel" class="text-blue-600">Não</span></p>
-      <p class="font-bold text-gray-700"><i class="fas fa-hard-hat"></i> Operador: <span id="pdf-operador" class="text-blue-600">Não</span></p>
-    </div>
-    <div class="mb-12">
-      <h3 class="text-sm uppercase font-bold text-slate-800 mb-1">Observações Gerais</h3>
-      <p class="text-gray-600 bg-gray-50 p-3 rounded border border-gray-100 min-h-[60px]" id="pdf-obs"></p>
-    </div>
-    <div class="mt-20 pt-8 flex justify-center">
-      <div class="text-center w-64">
-        <div class="border-t-2 border-gray-400 mb-2"></div>
-        <p class="text-sm font-bold text-gray-600">Assinatura Digital / Responsável</p>
-      </div>
-    </div>
-  </div>
 
   <!-- ================= MODAL FINANCEIRO ================= -->
   <div id="modal-fin" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
@@ -427,30 +369,82 @@
       if(selectOS) selectOS.innerHTML = options;
     }
 
-    /* O NOVO CÓDIGO DO PDF CORRIGIDO */
+    /* ================= O SEGREDO DO PDF QUE NÃO FALHA ================= */
     function gerarPDF() {
       const clienteNome = document.getElementById('select-cliente-orcamento').value;
       if (!clienteNome) { alert("Selecione um cliente primeiro!"); return; }
 
-      // 1. Passa os dados pra Div
+      // Pega todos os dados da tela
       const valor = document.getElementById('orc-valor').value || "0";
       const qtd = document.getElementById('orc-qtd').value || "0";
-      
-      document.getElementById('pdf-data').innerText = `Data: ${new Date().toLocaleDateString('pt-BR')}`;
-      document.getElementById('pdf-cliente-nome').innerText = clienteNome;
+      const tipo = document.getElementById('orc-tipo').value;
+      const dataAtual = new Date().toLocaleDateString('pt-BR');
       
       let maquinas = [];
       document.querySelectorAll('.maq-chk:checked').forEach(chk => maquinas.push(chk.value));
-      document.getElementById('pdf-equipamentos').innerHTML = maquinas.length > 0 ? maquinas.map(m => `<li>${m}</li>`).join('') : "<li>Nenhum equipamento marcado</li>";
+      const listaEquipamentos = maquinas.length > 0 
+        ? maquinas.map(m => `<li style="margin-bottom: 4px;">${m}</li>`).join('') 
+        : "<li>Nenhum equipamento marcado</li>";
 
-      document.getElementById('pdf-valor-unitario').innerText = `R$ ${valor} / ${document.getElementById('orc-tipo').value}`;
-      document.getElementById('pdf-total').innerText = `R$ ${(parseFloat(valor) * parseFloat(qtd) || 0).toFixed(2)}`;
+      const total = (parseFloat(valor) * parseFloat(qtd) || 0).toFixed(2);
+      const combustivel = document.getElementById('orc-combustivel').checked ? "Sim, Incluso" : "Não";
+      const operador = document.getElementById('orc-operador').checked ? "Sim, Incluso" : "Não";
+      const obs = document.getElementById('orc-obs').value || "Sem observações adicionais.";
 
-      document.getElementById('pdf-combustivel').innerText = document.getElementById('orc-combustivel').checked ? "Incluso" : "Não";
-      document.getElementById('pdf-operador').innerText = document.getElementById('orc-operador').checked ? "Incluso" : "Não";
-      
-      const obs = document.getElementById('orc-obs').value;
-      document.getElementById('pdf-obs').innerText = obs ? obs : "Sem observações adicionais.";
+      // AO INVÉS DE USAR HTML DA TELA, NÓS CRIAMOS UMA STRING AQUI (O CELULAR NÃO PODE ESCONDER ISSO)
+      const templateHTML = `
+        <div style="font-family: Arial, sans-serif; padding: 40px; color: #1e293b; background: white; width: 800px; box-sizing: border-box;">
+          
+          <div style="border-bottom: 4px solid #0f172a; padding-bottom: 16px; margin-bottom: 24px;">
+            <div style="display: inline-block; width: 50%;">
+              <h1 style="font-size: 36px; font-weight: 900; letter-spacing: 2px; margin: 0; color: #0f172a;">LOCA<span style="color: #2563eb;">SYS</span></h1>
+              <p style="color: #64748b; font-size: 14px; margin: 4px 0 0 0;">Locação e Gestão de Equipamentos</p>
+            </div>
+            <div style="display: inline-block; width: 49%; text-align: right; vertical-align: bottom;">
+              <h2 style="font-size: 24px; font-weight: bold; margin: 0; color: #1e293b;">ORÇAMENTO OFICIAL</h2>
+              <p style="font-size: 14px; font-weight: bold; color: #64748b; margin: 4px 0 0 0;">Data: ${dataAtual}</p>
+            </div>
+          </div>
+          
+          <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin-bottom: 24px; border: 1px solid #e2e8f0;">
+            <h3 style="font-size: 12px; text-transform: uppercase; font-weight: bold; color: #64748b; margin: 0 0 4px 0;">Cliente</h3>
+            <p style="font-size: 20px; font-weight: bold; color: #1e293b; margin: 0;">${clienteNome}</p>
+          </div>
+
+          <div style="margin-bottom: 24px;">
+            <h3 style="font-size: 14px; text-transform: uppercase; font-weight: bold; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 12px;">Equipamentos Solicitados</h3>
+            <ul style="margin-left: 20px; color: #334155; font-weight: 500; font-size: 16px;">
+              ${listaEquipamentos}
+            </ul>
+          </div>
+
+          <div style="margin-bottom: 24px;">
+            <div style="display: inline-block; width: 48%; border: 1px solid #e2e8f0; padding: 16px; border-radius: 8px; text-align: center; box-sizing: border-box;">
+              <p style="font-size: 12px; text-transform: uppercase; font-weight: bold; color: #64748b; margin: 0 0 4px 0;">Valor Unitário</p>
+              <p style="font-size: 20px; font-weight: bold; color: #1e293b; margin: 0;">R$ ${valor} / ${tipo}</p>
+            </div>
+            <div style="display: inline-block; width: 48%; margin-left: 2%; border: 1px solid #bfdbfe; padding: 16px; border-radius: 8px; text-align: center; background: #eff6ff; box-sizing: border-box;">
+              <p style="font-size: 12px; text-transform: uppercase; font-weight: bold; color: #2563eb; margin: 0 0 4px 0;">Total Estimado</p>
+              <p style="font-size: 24px; font-weight: 900; color: #1e40af; margin: 0;">R$ ${total}</p>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 24px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; padding: 16px 0;">
+            <p style="font-weight: bold; color: #334155; margin: 0 0 8px 0;">Combustível: <span style="color: #2563eb;">${combustivel}</span></p>
+            <p style="font-weight: bold; color: #334155; margin: 0;">Operador: <span style="color: #2563eb;">${operador}</span></p>
+          </div>
+
+          <div style="margin-bottom: 48px;">
+            <h3 style="font-size: 14px; text-transform: uppercase; font-weight: bold; color: #1e293b; margin: 0 0 8px 0;">Observações Gerais</h3>
+            <p style="color: #475569; background: #f8fafc; padding: 16px; border-radius: 4px; border: 1px solid #f1f5f9; min-height: 60px; margin: 0;">${obs}</p>
+          </div>
+
+          <div style="margin-top: 80px; text-align: center;">
+            <div style="border-top: 2px solid #94a3b8; width: 300px; margin: 0 auto 8px auto;"></div>
+            <p style="font-size: 14px; font-weight: bold; color: #475569; margin: 0;">Assinatura Digital / Responsável</p>
+          </div>
+        </div>
+      `;
 
       const opt = { 
         margin: 0, 
@@ -460,20 +454,12 @@
         jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } 
       };
       
-      // 2. Tira do display:none para o app renderizar
-      const molde = document.getElementById('pdf-molde');
-      molde.style.display = 'block';
+      alert("Processando PDF... Aguarde!");
       
-      alert("Preparando as cores do PDF... O download vai começar em 1 segundo!");
-
-      // 3. Espera 500ms pro Koder pintar a tela invisível e só então tira a foto
-      setTimeout(() => {
-        html2pdf().set(opt).from(molde).save().then(() => {
-          // 4. Volta a esconder a tela do PDF pra não atrapalhar
-          molde.style.display = 'none';
-        });
-      }, 500);
+      // O gerador agora pega a string pura e converte. Zero falhas!
+      html2pdf().set(opt).from(templateHTML).save();
     }
+    /* ============================================================= */
 
     function enviarWhatsApp() {
       const clienteNome = document.getElementById('select-cliente-orcamento').value;
