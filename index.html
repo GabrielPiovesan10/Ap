@@ -12,7 +12,19 @@
   <style>
     .hidden-screen { display: none !important; }
     select { appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em; }
-    #pdf-molde { position: absolute; left: -9999px; top: 0; width: 800px; background: white; padding: 40px; color: #1e293b; }
+    
+    /* FIX DO PDF: Fica display none, mas quando ativado, fica absoluto atrás de tudo (z-index -10) */
+    #pdf-molde { 
+      display: none; 
+      position: absolute; 
+      top: 0; 
+      left: 0; 
+      width: 800px; 
+      background: white; 
+      padding: 40px; 
+      color: #1e293b; 
+      z-index: -10; 
+    }
   </style>
 </head>
 <body class="flex h-screen bg-gray-100 font-sans overflow-hidden text-gray-800">
@@ -57,8 +69,8 @@
   <!-- ================= ÁREA PRINCIPAL ================= -->
   <main class="flex-1 flex flex-col h-screen bg-gray-100 relative">
     
-    <!-- HEADER FIXO PARA NÃO SUMIR -->
-    <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 shadow-sm shrink-0">
+    <!-- HEADER FIXO -->
+    <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 shadow-sm shrink-0 z-20">
       <button onclick="toggleMenu()" class="md:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
         <i class="fas fa-bars text-xl"></i>
       </button>
@@ -69,8 +81,8 @@
 
     <div id="overlay" onclick="toggleMenu()" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden"></div>
 
-    <!-- ÁREA DE ROLAGEM INDEPENDENTE (O header fica parado) -->
-    <div class="flex-1 overflow-y-auto p-4 sm:p-6 pb-20 relative">
+    <!-- ÁREA DE ROLAGEM INDEPENDENTE -->
+    <div class="flex-1 overflow-y-auto p-4 sm:p-6 pb-20 relative z-10">
       
       <!-- ================= TELA 1: CLIENTES ================= -->
       <div id="clientes" class="screen-content block space-y-6">
@@ -302,7 +314,7 @@
     </div>
   </main>
 
-  <!-- ================= MOLDE DO PDF (Invisível) ================= -->
+  <!-- ================= MOLDE DO PDF (Escondido) ================= -->
   <div id="pdf-molde">
     <div class="border-b-4 border-slate-900 pb-4 mb-6 flex justify-between items-end">
       <div>
@@ -415,11 +427,12 @@
       if(selectOS) selectOS.innerHTML = options;
     }
 
-    /* ORÇAMENTO & PDF */
+    /* O NOVO CÓDIGO DO PDF CORRIGIDO */
     function gerarPDF() {
       const clienteNome = document.getElementById('select-cliente-orcamento').value;
       if (!clienteNome) { alert("Selecione um cliente primeiro!"); return; }
 
+      // 1. Passa os dados pra Div
       const valor = document.getElementById('orc-valor').value || "0";
       const qtd = document.getElementById('orc-qtd').value || "0";
       
@@ -439,9 +452,27 @@
       const obs = document.getElementById('orc-obs').value;
       document.getElementById('pdf-obs').innerText = obs ? obs : "Sem observações adicionais.";
 
-      const opt = { margin: 0, filename: `Orcamento_${clienteNome}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } };
-      alert("Gerando arquivo PDF...");
-      html2pdf().set(opt).from(document.getElementById('pdf-molde')).save();
+      const opt = { 
+        margin: 0, 
+        filename: `Orcamento_${clienteNome}.pdf`, 
+        image: { type: 'jpeg', quality: 0.98 }, 
+        html2canvas: { scale: 2 }, 
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } 
+      };
+      
+      // 2. Tira do display:none para o app renderizar
+      const molde = document.getElementById('pdf-molde');
+      molde.style.display = 'block';
+      
+      alert("Preparando as cores do PDF... O download vai começar em 1 segundo!");
+
+      // 3. Espera 500ms pro Koder pintar a tela invisível e só então tira a foto
+      setTimeout(() => {
+        html2pdf().set(opt).from(molde).save().then(() => {
+          // 4. Volta a esconder a tela do PDF pra não atrapalhar
+          molde.style.display = 'none';
+        });
+      }, 500);
     }
 
     function enviarWhatsApp() {
