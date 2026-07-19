@@ -37,10 +37,10 @@
     .auth-card h2 { margin-bottom: 24px; color: var(--text-primary); }
     .auth-form { display: flex; flex-direction: column; gap: 16px; }
     .auth-toggle { margin-top: 16px; font-size: 14px; color: var(--primary-color); cursor: pointer; text-decoration: underline; }
-    .app-container { display: none; } /* Oculto até login */
+    .app-container { display: none; } /* Oculto até login - JS mostra quando logado */
     
     /* Botões de tabela com flex */
-    .td-actions { display: flex; gap: 8px; }
+    .td-actions { display: flex; gap: 8px; flex-wrap: wrap; }
   </style>
 </head>
 <body>
@@ -63,7 +63,7 @@
   </div>
 
   <!-- ================= SISTEMA PRINCIPAL ================= -->
-  <div class="app-container" id="app-container">
+  <div class="app-container" id="app-container" style="display:none;">
 
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
