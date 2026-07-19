@@ -37,16 +37,10 @@
     .auth-card h2 { margin-bottom: 24px; color: var(--text-primary); }
     .auth-form { display: flex; flex-direction: column; gap: 16px; }
     .auth-toggle { margin-top: 16px; font-size: 14px; color: var(--primary-color); cursor: pointer; text-decoration: underline; }
-    .app-container { display: none; } /* Oculto até login */
+    .app-container { display: none; } /* Oculto até login - JS mostra quando logado */
     
     /* Botões de tabela com flex */
     .td-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-
-    /* Estilos extras para listas de relatórios */
-    .ranking-list { list-style: none; padding: 0; margin: 0; }
-    .ranking-list li { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); }
-    .ranking-list li:last-child { border-bottom: none; }
-    .ranking-list li span:last-child { font-weight: bold; color: var(--primary-color); }
   </style>
 </head>
 <body>
@@ -79,14 +73,30 @@
       </div>
       
       <nav class="nav-menu">
-        <a href="#" class="nav-item active" data-view="view-dashboard"><i class="ph ph-squares-four"></i> Dashboard</a>
-        <a href="#" class="nav-item" data-view="view-clientes"><i class="ph ph-users"></i> Clientes</a>
-        <a href="#" class="nav-item" data-view="view-equipamentos"><i class="ph ph-truck"></i> Equipamentos</a>
-        <a href="#" class="nav-item" data-view="view-agenda"><i class="ph ph-calendar-blank"></i> Agenda</a>
-        <a href="#" class="nav-item" data-view="view-orcamentos"><i class="ph ph-calculator"></i> Orçamentos</a>
-        <a href="#" class="nav-item" data-view="view-os"><i class="ph ph-clipboard-text"></i> Ordens de Serviço</a>
-        <a href="#" class="nav-item" data-view="view-financeiro"><i class="ph ph-currency-dollar"></i> Financeiro</a>
-        <a href="#" class="nav-item" data-view="view-relatorios"><i class="ph ph-chart-bar"></i> Relatórios</a>
+        <a href="#" class="nav-item active" data-view="view-dashboard">
+          <i class="ph ph-squares-four"></i> Dashboard
+        </a>
+        <a href="#" class="nav-item" data-view="view-clientes">
+          <i class="ph ph-users"></i> Clientes
+        </a>
+        <a href="#" class="nav-item" data-view="view-equipamentos">
+          <i class="ph ph-truck"></i> Equipamentos
+        </a>
+        <a href="#" class="nav-item" data-view="view-agenda">
+          <i class="ph ph-calendar-blank"></i> Agenda
+        </a>
+        <a href="#" class="nav-item" data-view="view-orcamentos">
+          <i class="ph ph-calculator"></i> Orçamentos
+        </a>
+        <a href="#" class="nav-item" data-view="view-os">
+          <i class="ph ph-clipboard-text"></i> Ordens de Serviço
+        </a>
+        <a href="#" class="nav-item" data-view="view-financeiro">
+          <i class="ph ph-currency-dollar"></i> Financeiro
+        </a>
+        <a href="#" class="nav-item" data-view="view-relatorios">
+          <i class="ph ph-chart-bar"></i> Relatórios
+        </a>
       </nav>
     </aside>
 
@@ -95,12 +105,18 @@
       
       <!-- Cabeçalho Topo -->
       <header class="header">
-        <button class="menu-toggle" id="menu-toggle"><i class="ph ph-list"></i></button>
+        <button class="menu-toggle" id="menu-toggle">
+          <i class="ph ph-list"></i>
+        </button>
         <h1 class="page-title" id="header-title">Dashboard</h1>
         
         <div class="user-profile" style="display: flex; gap: 16px; align-items: center;">
-          <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary-color); display: flex; align-items: center; justify-content: center; font-weight: bold; color: white;">BE</div>
-          <button id="btn-logout" class="btn" style="background: transparent; color: var(--danger-color); border: 1px solid var(--danger-color); padding: 6px 12px; font-size: 0.8rem; cursor: pointer;">Sair</button>
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary-color); display: flex; align-items: center; justify-content: center; font-weight: bold; color: white;">
+            BE
+          </div>
+          <button id="btn-logout" class="btn" style="background: transparent; color: var(--danger-color); border: 1px solid var(--danger-color); padding: 6px 12px; font-size: 0.8rem; cursor: pointer;">
+            Sair
+          </button>
         </div>
       </header>
 
@@ -145,8 +161,11 @@
         <section id="view-clientes" class="view-section">
           <div class="top-bar-actions">
             <h2>Meus Clientes</h2>
-            <button class="btn btn-primary" onclick="openModal('modal-cliente')"><i class="ph ph-plus"></i> Novo Cliente</button>
+            <button class="btn btn-primary" onclick="openModal('modal-cliente')">
+              <i class="ph ph-plus"></i> Novo Cliente
+            </button>
           </div>
+          
           <div class="glass-card">
             <div class="table-responsive">
               <table>
@@ -158,7 +177,9 @@
                     <th>Ações</th>
                   </tr>
                 </thead>
-                <tbody id="tbody-clientes"></tbody>
+                <tbody id="tbody-clientes">
+                  <!-- Gerado por JS -->
+                </tbody>
               </table>
             </div>
           </div>
@@ -168,8 +189,11 @@
         <section id="view-equipamentos" class="view-section">
           <div class="top-bar-actions">
             <h2>Equipamentos e Frota</h2>
-            <button class="btn btn-primary" onclick="openModal('modal-equip')"><i class="ph ph-plus"></i> Novo Equipamento</button>
+            <button class="btn btn-primary" onclick="openModal('modal-equip')">
+              <i class="ph ph-plus"></i> Novo Equipamento
+            </button>
           </div>
+          
           <div class="glass-card">
             <div class="table-responsive">
               <table>
@@ -177,13 +201,13 @@
                   <tr>
                     <th>Equipamento</th>
                     <th>Horímetro</th>
-                    <th>Última Troca/Manut.</th>
-                    <th>Doc/Seguro</th>
                     <th>Status</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
-                <tbody id="tbody-equipamentos"></tbody>
+                <tbody id="tbody-equipamentos">
+                  <!-- Gerado por JS -->
+                </tbody>
               </table>
             </div>
           </div>
@@ -193,7 +217,9 @@
         <section id="view-agenda" class="view-section">
           <div class="top-bar-actions">
             <h2>Agenda de Obras</h2>
-            <button class="btn btn-primary" onclick="openModal('modal-agenda')"><i class="ph ph-plus"></i> Novo Agendamento</button>
+            <button class="btn btn-primary" onclick="openModal('modal-agenda')">
+              <i class="ph ph-plus"></i> Novo Agendamento
+            </button>
           </div>
           <div class="glass-card">
             <div class="table-responsive">
@@ -202,13 +228,13 @@
                   <tr>
                     <th>Cliente</th>
                     <th>Equipamento</th>
-                    <th>Data</th>
-                    <th>Horário</th>
+                    <th>Data Prevista</th>
                     <th>Status</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
-                <tbody id="tbody-agenda"></tbody>
+                <tbody id="tbody-agenda">
+                </tbody>
               </table>
             </div>
           </div>
@@ -230,9 +256,15 @@
               
               <div class="form-group">
                 <label>Equipamentos e Ferramentas Desejadas</label>
-                <!-- Os checkboxes agora serão gerados automaticamente via Javascript puxando do seu banco -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px;" id="orc-equipamentos">
-                  <!-- Gerado pelo JS -->
+                  <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox" value="Escavadeira Suny"> Escavadeira Suny</label>
+                  <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox" value="Escavadeira Yanmar"> Escavadeira Yanmar</label>
+                  <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox" value="Carregadeira XCMG"> Carregadeira XCMG</label>
+                  <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox" value="MUNK 45 toneladas ARGOS"> MUNK 45 toneladas ARGOS</label>
+                  <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox" value="Perfuratriz (cobrado por metro)"> Perfuratriz (cobrado por metro)</label>
+                  <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox" value="Rompedor (cobrado por hora)"> Rompedor (cobrado por hora)</label>
+                  <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox" value="Conchas (15cm, 20cm, 25cm, 30cm, 35cm, 45cm e 70cm)"> Conchas (15cm a 70cm)</label>
+                  <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox" value="Equipamento Parceiros"> Equipamento Parceiros</label>
                 </div>
               </div>
 
@@ -263,8 +295,12 @@
               </div>
 
               <div style="display: flex; gap: 16px; margin-top: 32px;">
-                <button type="button" class="btn btn-success" style="flex: 1;" onclick="enviarWhatsApp()"><i class="ph ph-whatsapp-logo"></i> Enviar pelo WhatsApp</button>
-                <button type="button" class="btn btn-primary" style="flex: 1; background: #64748b;" onclick="gerarPDF()"><i class="ph ph-file-pdf"></i> Gerar PDF</button>
+                <button type="button" class="btn btn-success" style="flex: 1;" onclick="enviarWhatsApp()">
+                  <i class="ph ph-whatsapp-logo"></i> Enviar pelo WhatsApp
+                </button>
+                <button type="button" class="btn btn-primary" style="flex: 1; background: #64748b;" onclick="gerarPDF()">
+                  <i class="ph ph-file-pdf"></i> Gerar PDF
+                </button>
               </div>
             </form>
           </div>
@@ -274,7 +310,9 @@
         <section id="view-os" class="view-section">
           <div class="top-bar-actions">
             <h2>Ordens de Serviço</h2>
-            <button class="btn btn-primary" onclick="openModal('modal-os')"><i class="ph ph-plus"></i> Nova OS</button>
+            <button class="btn btn-primary" onclick="openModal('modal-os')">
+              <i class="ph ph-plus"></i> Nova OS
+            </button>
           </div>
           <div class="glass-card">
             <div class="table-responsive">
@@ -289,7 +327,8 @@
                     <th>Ações</th>
                   </tr>
                 </thead>
-                <tbody id="tbody-os"></tbody>
+                <tbody id="tbody-os">
+                </tbody>
               </table>
             </div>
           </div>
@@ -298,60 +337,13 @@
         <!-- ================= Financeiro ================= -->
         <section id="view-financeiro" class="view-section">
           <div class="top-bar-actions">
-            <h2>Gestão Financeira</h2>
-            <button class="btn btn-primary" onclick="openModal('modal-fin')"><i class="ph ph-plus"></i> Novo Lançamento</button>
+            <h2>Contas a Pagar e Receber</h2>
+            <button class="btn btn-primary" onclick="openModal('modal-fin')">
+              <i class="ph ph-plus"></i> Novo Lançamento
+            </button>
           </div>
-
-          <!-- Resumo Financeiro -->
-          <div class="grid-cards" style="margin-bottom: 24px;">
-            <div class="glass-card stat-card">
-              <div class="stat-info">
-                <h3>Entradas (Receitas)</h3>
-                <p id="fin-tot-entradas" style="color: var(--accent-color);">R$ 0,00</p>
-              </div>
-            </div>
-            <div class="glass-card stat-card">
-              <div class="stat-info">
-                <h3>Saídas (Despesas)</h3>
-                <p id="fin-tot-saidas" style="color: var(--danger-color);">R$ 0,00</p>
-              </div>
-            </div>
-            <div class="glass-card stat-card">
-              <div class="stat-info">
-                <h3>Fluxo de Caixa (Saldo)</h3>
-                <p id="fin-tot-fluxo" style="color: var(--primary-color);">R$ 0,00</p>
-              </div>
-            </div>
-            <div class="glass-card stat-card">
-              <div class="stat-info">
-                <h3>Contas a Receber</h3>
-                <p id="fin-tot-receber" style="color: var(--accent-color);">R$ 0,00</p>
-              </div>
-            </div>
-            <div class="glass-card stat-card">
-              <div class="stat-info">
-                <h3>Contas a Pagar</h3>
-                <p id="fin-tot-pagar" style="color: var(--warning-color);">R$ 0,00</p>
-              </div>
-            </div>
-            <div class="glass-card stat-card">
-              <div class="stat-info">
-                <h3>Cobranças Pendentes</h3>
-                <p id="fin-tot-pendentes" style="color: var(--danger-color);">0 lançamentos</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Gráfico Financeiro Interno -->
-          <div class="glass-card" style="margin-bottom: 24px;">
-            <h3>Gráfico de Faturamento e Despesas</h3>
-            <canvas id="chartFinanceiroSecao" style="max-height: 250px;"></canvas>
-          </div>
-
-          <!-- Tabela de Lançamentos -->
           <div class="glass-card">
-            <h3>Lançamentos (Pagar e Receber)</h3>
-            <div class="table-responsive" style="margin-top: 16px;">
+            <div class="table-responsive">
               <table>
                 <thead>
                   <tr>
@@ -359,11 +351,11 @@
                     <th>Descrição</th>
                     <th>Tipo</th>
                     <th>Valor</th>
-                    <th>Status</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
-                <tbody id="tbody-fin"></tbody>
+                <tbody id="tbody-fin">
+                </tbody>
               </table>
             </div>
           </div>
@@ -374,52 +366,20 @@
           <div class="top-bar-actions">
             <h2>Relatórios de Desempenho</h2>
           </div>
-          
-          <!-- Cards de Resumo Gerencial -->
-          <div class="grid-cards" style="margin-bottom: 24px;">
-            <div class="glass-card stat-card" style="border-left: 4px solid var(--primary-color);">
-              <div class="stat-info">
-                <h3>Faturamento Mensal</h3>
-                <p id="rel-faturamento-mes">R$ 0,00</p>
-              </div>
+          <div class="glass-card">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+               <div style="padding: 20px; background: rgba(16, 185, 129, 0.1); border-radius: 8px;">
+                 <h3>Total de Receitas</h3>
+                 <p id="rel-receitas" style="font-size: 24px; font-weight: bold; color: var(--accent-color);">R$ 0,00</p>
+               </div>
+               <div style="padding: 20px; background: rgba(239, 68, 68, 0.1); border-radius: 8px;">
+                 <h3>Total de Despesas</h3>
+                 <p id="rel-despesas" style="font-size: 24px; font-weight: bold; color: var(--danger-color);">R$ 0,00</p>
+               </div>
             </div>
-            <div class="glass-card stat-card" style="border-left: 4px solid var(--accent-color);">
-              <div class="stat-info">
-                <h3>Lucro Líquido</h3>
-                <p id="rel-lucro">R$ 0,00</p>
-              </div>
-            </div>
-            <div class="glass-card stat-card" style="border-left: 4px solid var(--warning-color);">
-              <div class="stat-info">
-                <h3>Gastos com Diesel</h3>
-                <p id="rel-diesel">R$ 0,00</p>
-              </div>
-            </div>
-            <div class="glass-card stat-card" style="border-left: 4px solid var(--danger-color);">
-              <div class="stat-info">
-                <h3>Manutenção Total</h3>
-                <p id="rel-manutencao">R$ 0,00</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Top Rankings -->
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
-            <div class="glass-card">
-              <h3 style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-                <i class="ph ph-star" style="color: var(--warning-color);"></i> Clientes que mais contrataram
-              </h3>
-              <ul class="ranking-list" id="lista-top-clientes">
-                <!-- Gerado por JS, vazio inicialmente -->
-              </ul>
-            </div>
-            <div class="glass-card">
-              <h3 style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-                <i class="ph ph-trend-up" style="color: var(--accent-color);"></i> Equipamentos mais requisitados
-              </h3>
-              <ul class="ranking-list" id="lista-top-equipamentos">
-                <!-- Gerado por JS, vazio inicialmente -->
-              </ul>
+            <div style="padding: 20px; background: rgba(59, 130, 246, 0.1); border-radius: 8px; margin-top: 16px;">
+               <h3>Saldo Líquido</h3>
+               <p id="rel-saldo" style="font-size: 24px; font-weight: bold; color: var(--primary-color);">R$ 0,00</p>
             </div>
           </div>
         </section>
@@ -474,7 +434,7 @@
 
     <!-- Modal Equipamento -->
     <div class="modal-overlay" id="modal-equip">
-      <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-content">
         <div class="modal-header">
           <h3 class="modal-title" id="title-modal-equip">Novo Equipamento</h3>
           <button class="btn-close" onclick="closeModal('modal-equip')"><i class="ph ph-x"></i></button>
@@ -487,8 +447,8 @@
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
             <div class="form-group">
-              <label>Horímetro Atual (Hrs)</label>
-              <input type="number" class="form-control" id="eq-hori" placeholder="Ex: 1200">
+              <label>Horímetro Atual</label>
+              <input type="text" class="form-control" id="eq-hori" placeholder="Ex: 1200h">
             </div>
             <div class="form-group">
               <label>Status</label>
@@ -497,26 +457,6 @@
                 <option value="Em Manutenção">Em Manutenção</option>
                 <option value="Alugado">Alugado</option>
               </select>
-            </div>
-            <div class="form-group">
-              <label>Última Troca de Óleo (Km/Hrs ou Data)</label>
-              <input type="text" class="form-control" id="eq-oleo" placeholder="Ex: 1100 Hrs">
-            </div>
-            <div class="form-group">
-              <label>Próxima Manutenção Prevista</label>
-              <input type="text" class="form-control" id="eq-prox-manut" placeholder="Ex: 1300 Hrs ou 15/10/2024">
-            </div>
-            <div class="form-group">
-              <label>Vencimento Documentação</label>
-              <input type="date" class="form-control" id="eq-doc">
-            </div>
-            <div class="form-group">
-              <label>Vencimento Seguro</label>
-              <input type="date" class="form-control" id="eq-seguro">
-            </div>
-            <div class="form-group" style="grid-column: span 2;">
-              <label>Custos Mensais Estimados / Fixos (R$)</label>
-              <input type="number" class="form-control" id="eq-custo" placeholder="0.00" step="0.01">
             </div>
           </div>
         </div>
@@ -538,11 +478,15 @@
           <input type="hidden" id="ag-id" value="">
           <div class="form-group">
             <label>Cliente</label>
-            <select class="form-control" id="ag-cliente"><option value="">Selecione</option></select>
+            <select class="form-control" id="ag-cliente">
+              <option value="">Selecione</option>
+            </select>
           </div>
           <div class="form-group">
             <label>Equipamento</label>
-            <select class="form-control" id="ag-equip"><option value="">Selecione</option></select>
+            <select class="form-control" id="ag-equip">
+              <option value="">Selecione</option>
+            </select>
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
             <div class="form-group">
@@ -550,17 +494,13 @@
               <input type="date" class="form-control" id="ag-data">
             </div>
             <div class="form-group">
-              <label>Horário</label>
-              <input type="time" class="form-control" id="ag-hora">
+              <label>Status</label>
+              <select class="form-control" id="ag-status">
+                <option value="Pendente">Pendente</option>
+                <option value="Confirmado">Confirmado</option>
+                <option value="Concluído">Concluído</option>
+              </select>
             </div>
-          </div>
-          <div class="form-group">
-            <label>Status</label>
-            <select class="form-control" id="ag-status">
-              <option value="Pendente">Pendente</option>
-              <option value="Confirmado">Confirmado</option>
-              <option value="Concluído">Concluído</option>
-            </select>
           </div>
         </div>
         <div class="modal-footer">
@@ -586,12 +526,16 @@
             </div>
             <div class="form-group">
               <label>Cliente</label>
-              <select class="form-control" id="os-cliente"><option value="">Selecione</option></select>
+              <select class="form-control" id="os-cliente">
+                <option value="">Selecione</option>
+              </select>
             </div>
           </div>
           <div class="form-group">
             <label>Equipamento</label>
-            <select class="form-control" id="os-equip"><option value="">Selecione</option></select>
+            <select class="form-control" id="os-equip">
+              <option value="">Selecione</option>
+            </select>
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
             <div class="form-group">
@@ -628,8 +572,8 @@
         <div class="modal-body">
           <input type="hidden" id="fin-id" value="">
           <div class="form-group">
-            <label>Descrição (Identifique se é Manutenção, Diesel, Locação...)</label>
-            <input type="text" class="form-control" id="fin-desc" placeholder="Ex: Locação OS 001 / Diesel / Peças">
+            <label>Descrição</label>
+            <input type="text" class="form-control" id="fin-desc" placeholder="Ex: Locação OS 001">
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
             <div class="form-group">
@@ -644,18 +588,9 @@
               <input type="number" class="form-control" id="fin-valor" placeholder="0.00" step="0.01">
             </div>
           </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-            <div class="form-group">
-              <label>Data</label>
-              <input type="date" class="form-control" id="fin-data">
-            </div>
-            <div class="form-group">
-              <label>Status</label>
-              <select class="form-control" id="fin-status">
-                <option value="Pago">Pago / Recebido</option>
-                <option value="Pendente">Pendente</option>
-              </select>
-            </div>
+          <div class="form-group">
+            <label>Data</label>
+            <input type="date" class="form-control" id="fin-data">
           </div>
         </div>
         <div class="modal-footer">
