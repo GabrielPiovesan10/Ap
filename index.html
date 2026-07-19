@@ -3,480 +3,304 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LocaSys - Gestão de Equipamentos</title>
+  <title>Gestão de Máquinas e Obras</title>
+  <meta name="description" content="Sistema completo para gestão de locação de máquinas, orçamentos e ordens de serviço.">
   
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Biblioteca de PDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
-  <style>
-    /* Estilo do Dropdown */
-    select { 
-      appearance: none; 
-      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); 
-      background-repeat: no-repeat; 
-      background-position: right 1rem center; 
-      background-size: 1em; 
-    }
-  </style>
+  <!-- Estilos -->
+  <link rel="stylesheet" href="app.css">
+  
+  <!-- Ícones Phosphor (Modernos e bonitos) -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  
+  <!-- Chart.js para gráficos -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="bg-gray-100 font-sans text-gray-800" style="margin: 0; padding: 0; height: 100vh; display: flex; overflow: hidden;">
+<body>
 
-  <!-- ================= MENU LATERAL ================= -->
-  <aside id="sidebar" class="fixed z-50 h-full w-64 bg-slate-900 text-white transition-transform duration-300 transform -translate-x-full md:translate-x-0 md:relative md:flex-shrink-0 flex flex-col shadow-2xl">
-    <div class="flex items-center justify-between h-16 px-6 bg-slate-950 flex-shrink-0">
-      <span class="text-xl font-bold tracking-wider">LOCA<span class="text-blue-500">SYS</span></span>
-      <button onclick="toggleMenu()" class="md:hidden text-gray-400 hover:text-white p-2">
-        <i class="fas fa-times text-xl"></i>
-      </button>
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <i class="ph-fill ph-excavator"></i>
+      <span>Loca<span style="color: var(--primary-color)">Sys</span></span>
     </div>
     
-    <nav class="flex-1 overflow-y-auto p-4 space-y-2">
-      <button onclick="mudarTela('clientes', this)" class="menu-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left bg-blue-600 text-white font-medium shadow-md transition-colors active-btn">
-        <i class="fas fa-users w-5 text-center"></i> Clientes
-      </button>
-      <button onclick="mudarTela('orcamentos', this)" class="menu-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-gray-300 hover:bg-slate-800 hover:text-white transition-colors">
-        <i class="fas fa-file-invoice-dollar w-5 text-center"></i> Orçamentos
-      </button>
-      <button onclick="mudarTela('ordens', this)" class="menu-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-gray-300 hover:bg-slate-800 hover:text-white transition-colors">
-        <i class="fas fa-clipboard-check w-5 text-center"></i> Ordens de Serviço
-      </button>
-      <button onclick="mudarTela('financeiro', this)" class="menu-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-gray-300 hover:bg-slate-800 hover:text-white transition-colors">
-        <i class="fas fa-dollar-sign w-5 text-center"></i> Financeiro
-      </button>
-      <button onclick="mudarTela('equipamentos', this)" class="menu-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-gray-300 hover:bg-slate-800 hover:text-white transition-colors">
-        <i class="fas fa-truck w-5 text-center"></i> Equipamentos
-      </button>
-      <button onclick="mudarTela('agenda', this)" class="menu-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-gray-300 hover:bg-slate-800 hover:text-white transition-colors">
-        <i class="fas fa-calendar-alt w-5 text-center"></i> Agenda
-      </button>
-      <button onclick="mudarTela('relatorios', this)" class="menu-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-gray-300 hover:bg-slate-800 hover:text-white transition-colors">
-        <i class="fas fa-chart-line w-5 text-center"></i> Relatórios
-      </button>
+    <nav class="nav-menu">
+      <a href="#" class="nav-item active" data-view="view-dashboard">
+        <i class="ph ph-squares-four"></i> Dashboard
+      </a>
+      <a href="#" class="nav-item" data-view="view-clientes">
+        <i class="ph ph-users"></i> Clientes
+      </a>
+      <a href="#" class="nav-item" data-view="view-equipamentos">
+        <i class="ph ph-truck"></i> Equipamentos
+      </a>
+      <a href="#" class="nav-item" data-view="view-agenda">
+        <i class="ph ph-calendar-blank"></i> Agenda
+      </a>
+      <a href="#" class="nav-item" data-view="view-orcamentos">
+        <i class="ph ph-calculator"></i> Orçamentos
+      </a>
+      <a href="#" class="nav-item" data-view="view-os">
+        <i class="ph ph-clipboard-text"></i> Ordens de Serviço
+      </a>
+      <a href="#" class="nav-item" data-view="view-financeiro">
+        <i class="ph ph-currency-dollar"></i> Financeiro
+      </a>
+      <a href="#" class="nav-item" data-view="view-relatorios">
+        <i class="ph ph-chart-bar"></i> Relatórios
+      </a>
     </nav>
-    <div class="p-4 bg-slate-950 text-xs text-center text-gray-500 flex-shrink-0">
-      Desenvolvido por <span class="font-bold text-gray-300">GP Tech</span>
-    </div>
   </aside>
 
-  <!-- Overlay do Mobile -->
-  <div id="overlay" onclick="toggleMenu()" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
-
-  <!-- ================= ÁREA PRINCIPAL ================= -->
-  <main class="flex-1 flex flex-col h-full min-w-0 relative">
+  <!-- Conteúdo Principal -->
+  <main class="main-content">
     
-    <!-- HEADER -->
-    <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 shadow-sm flex-shrink-0 z-20">
-      <button onclick="toggleMenu()" class="md:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
-        <i class="fas fa-bars text-xl"></i>
+    <!-- Cabeçalho Topo -->
+    <header class="header">
+      <button class="menu-toggle" id="menu-toggle">
+        <i class="ph ph-list"></i>
       </button>
-      <div class="ml-auto font-medium text-gray-700 flex items-center gap-2 cursor-pointer hover:text-blue-600">
-        <i class="fas fa-user-circle text-2xl text-blue-600"></i> Felipe
+      <h1 class="page-title" id="header-title">Dashboard</h1>
+      
+      <div class="user-profile" style="display: flex; gap: 16px; align-items: center;">
+        <i class="ph ph-bell" style="font-size: 1.5rem; color: var(--text-secondary); cursor: pointer;"></i>
+        <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary-color); display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer;">
+          AD
+        </div>
       </div>
     </header>
 
-    <!-- ÁREA DE ROLAGEM ISOLADA (Impede o bug de pular pra cima) -->
-    <div id="scroll-area" class="flex-1 overflow-y-auto p-4 sm:p-6 pb-20 relative z-10 w-full">
+    <!-- Área de Conteúdo Rolável -->
+    <div class="content-area">
       
-      <!-- TELA 1: CLIENTES -->
-      <div id="clientes" class="screen-content max-w-5xl mx-auto space-y-6">
-        <h2 class="text-2xl font-bold text-gray-800">Cadastro de Clientes</h2>
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <form id="form-cliente" class="grid grid-cols-1 md:grid-cols-2 gap-4" onsubmit="salvarCliente(event)">
-            <div class="space-y-1"><label class="text-sm font-semibold text-gray-700">Nome ou Razão Social</label><input type="text" id="cad-nome" required class="w-full border border-gray-300 rounded-md p-2 outline-none focus:border-blue-500" /></div>
-            <div class="space-y-1"><label class="text-sm font-semibold text-gray-700">CPF/CNPJ</label><input type="text" id="cad-doc" class="w-full border border-gray-300 rounded-md p-2 outline-none focus:border-blue-500" /></div>
-            <div class="space-y-1"><label class="text-sm font-semibold text-gray-700">Contato (Pessoa)</label><input type="text" class="w-full border border-gray-300 rounded-md p-2 outline-none focus:border-blue-500" /></div>
-            <div class="space-y-1"><label class="text-sm font-semibold text-gray-700">WhatsApp</label><input type="text" id="cad-whats" required class="w-full border border-gray-300 rounded-md p-2 outline-none focus:border-blue-500" /></div>
-            <div class="col-span-1 md:col-span-2 space-y-1"><label class="text-sm font-semibold text-gray-700">Localização da obra</label><input type="text" class="w-full border border-gray-300 rounded-md p-2 outline-none focus:border-blue-500" /></div>
-            <div class="col-span-1 md:col-span-2 flex justify-end mt-4">
-              <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-medium shadow transition-colors">Salvar Cliente</button>
+      <!-- ================= Dashboard ================= -->
+      <section id="view-dashboard" class="view-section active">
+        <div class="grid-cards">
+          <div class="glass-card stat-card">
+            <div class="stat-icon"><i class="ph ph-currency-dollar"></i></div>
+            <div class="stat-info">
+              <h3>Faturamento (Mês)</h3>
+              <p>R$ 45.320,00</p>
             </div>
-          </form>
+          </div>
+          <div class="glass-card stat-card">
+            <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--warning-color)"><i class="ph ph-clipboard-text"></i></div>
+            <div class="stat-info">
+              <h3>OS em Andamento</h3>
+              <p>12</p>
+            </div>
+          </div>
+          <div class="glass-card stat-card">
+            <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--accent-color)"><i class="ph ph-check-circle"></i></div>
+            <div class="stat-info">
+              <h3>Máquinas Disponíveis</h3>
+              <p>5</p>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <!-- TELA 2: ORÇAMENTOS -->
-      <div id="orcamentos" class="screen-content hidden max-w-5xl mx-auto space-y-6">
-        <h2 class="text-2xl font-bold text-gray-800">Orçamento</h2>
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <form id="form-orcamento" class="space-y-6">
-            <div>
-              <label class="text-sm font-semibold text-gray-700 block mb-2">Selecione o cliente</label>
-              <select id="select-cliente-orcamento" class="w-full border border-gray-300 rounded-md p-3 bg-white outline-none">
-                <option value="" disabled selected>Cadastre um cliente primeiro...</option>
+        <div class="glass-card">
+          <div class="top-bar-actions">
+            <h3>Visão Financeira</h3>
+          </div>
+          <canvas id="chartFaturamento" style="max-height: 300px;"></canvas>
+        </div>
+      </section>
+
+      <!-- ================= Clientes ================= -->
+      <section id="view-clientes" class="view-section">
+        <div class="top-bar-actions">
+          <h2>Meus Clientes</h2>
+          <button class="btn btn-primary" onclick="openModal('modal-cliente')">
+            <i class="ph ph-plus"></i> Novo Cliente
+          </button>
+        </div>
+        
+        <div class="glass-card">
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Contato / WhatsApp</th>
+                  <th>Cidade</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-clientes">
+                <!-- Gerado por JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= Equipamentos ================= -->
+      <section id="view-equipamentos" class="view-section">
+        <div class="top-bar-actions">
+          <h2>Equipamentos e Frota</h2>
+          <button class="btn btn-primary">
+            <i class="ph ph-plus"></i> Novo Equipamento
+          </button>
+        </div>
+        
+        <div class="glass-card">
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Equipamento</th>
+                  <th>Horímetro</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-equipamentos">
+                <!-- Gerado por JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= Orçamentos ================= -->
+      <section id="view-orcamentos" class="view-section">
+        <div class="top-bar-actions">
+          <h2>Orçamentos</h2>
+        </div>
+        <div class="glass-card" style="max-width: 800px; margin: 0 auto;">
+          <form id="form-orcamento">
+            <div class="form-group">
+              <label>Cliente</label>
+              <select class="form-control">
+                <option value="">Selecione o Cliente</option>
+                <option value="1">João da Silva</option>
+                <option value="2">Construtora Alpha</option>
               </select>
             </div>
             
-            <div>
-              <label class="text-sm font-semibold text-gray-700 block mb-3">Escolha os equipamentos:</label>
-              <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                <label class="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" value="Mini Escavadeira" class="maq-chk w-5 h-5 text-blue-600 rounded mr-3" /> <span class="font-medium">Mini Escavadeira</span></label>
-                <label class="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" value="Rompedor" class="maq-chk w-5 h-5 text-blue-600 rounded mr-3" /> <span class="font-medium">Rompedor</span></label>
-                <label class="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" value="Perfuratriz" class="maq-chk w-5 h-5 text-blue-600 rounded mr-3" /> <span class="font-medium">Perfuratriz</span></label>
-                <label class="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" value="Carregadeira" class="maq-chk w-5 h-5 text-blue-600 rounded mr-3" /> <span class="font-medium">Carregadeira</span></label>
-                <label class="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" value="Caminhão Munck" class="maq-chk w-5 h-5 text-blue-600 rounded mr-3" /> <span class="font-medium">Caminhão Munck</span></label>
+            <div class="form-group">
+              <label>Equipamento Desejado</label>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px;">
+                <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox"> Mini Escavadeira</label>
+                <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox"> Rompedor</label>
+                <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox"> Perfuratriz</label>
+                <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox"> Carregadeira</label>
+                <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox"> Caminhão Munck</label>
               </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div><label class="text-sm font-semibold text-gray-700 block mb-1">Valor Unitário (Ex: 150.00)</label><input type="number" step="0.01" id="orc-valor" class="w-full border border-gray-300 rounded-md p-3 outline-none" /></div>
-              <div><label class="text-sm font-semibold text-gray-700 block mb-1">Quantidade</label>
-                <div class="flex gap-2">
-                  <input type="number" id="orc-qtd" class="w-2/3 border border-gray-300 rounded-md p-3 outline-none" placeholder="Ex: 8" />
-                  <select id="orc-tipo" class="w-1/3 border border-gray-300 rounded-md p-3 bg-white outline-none"><option>Horas</option><option>Diárias</option></select>
-                </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              <div class="form-group">
+                <label>Valor (R$)</label>
+                <input type="number" class="form-control" placeholder="0,00">
               </div>
-            </div>
-
-            <div class="flex flex-col sm:flex-row gap-6 p-4 bg-gray-50 rounded-lg border">
-              <label class="flex items-center cursor-pointer"><input type="checkbox" id="orc-combustivel" class="w-5 h-5 text-blue-600 rounded mr-3" /> <span class="font-medium text-gray-700">Combustível incluso</span></label>
-              <label class="flex items-center cursor-pointer"><input type="checkbox" id="orc-operador" class="w-5 h-5 text-blue-600 rounded mr-3" /> <span class="font-medium text-gray-700">Operador incluso</span></label>
-            </div>
-
-            <div><label class="text-sm font-semibold text-gray-700 block mb-1">Observações</label><textarea id="orc-obs" class="w-full border border-gray-300 rounded-md p-3 outline-none" rows="2"></textarea></div>
-          </form>
-        </div>
-        
-        <div class="flex flex-col sm:flex-row justify-end gap-3 mt-4">
-          <button type="button" onclick="gerarPDF()" class="w-full sm:w-auto bg-white border-2 border-gray-300 text-gray-700 px-6 py-3 rounded-lg flex items-center justify-center gap-2 font-bold hover:bg-gray-50 shadow-sm transition-colors">
-            📄 Gerar PDF Profissional
-          </button>
-          <button type="button" onclick="enviarWhatsApp()" class="w-full sm:w-auto bg-[#25D366] hover:bg-[#1ebd5a] text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 font-bold shadow-md transition-colors">
-            📲 Enviar WhatsApp
-          </button>
-        </div>
-      </div>
-
-      <!-- TELA 3: ORDENS DE SERVIÇO -->
-      <div id="ordens" class="screen-content hidden max-w-5xl mx-auto space-y-6">
-        <h2 class="text-2xl font-bold text-gray-800">Ordem de Serviço</h2>
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <form onsubmit="salvarOS(event)">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6">
-              <div class="space-y-1"><label class="text-xs text-gray-500 uppercase font-bold">Número da OS</label><input type="text" id="os-numero" required class="w-full border border-gray-300 rounded-md p-2 outline-none" /></div>
-              <div class="space-y-1">
-                <label class="text-xs text-gray-500 uppercase font-bold">Cliente</label>
-                <select id="select-cliente-os" required class="w-full border border-gray-300 rounded-md p-2 bg-white outline-none">
-                  <option value="" disabled selected>Cadastre um cliente primeiro...</option>
+              <div class="form-group">
+                <label>Tipo de Cobrança</label>
+                <select class="form-control">
+                  <option>Por Hora</option>
+                  <option>Diária</option>
+                  <option>Empreitada / Fechado</option>
                 </select>
               </div>
-              <div class="space-y-1"><label class="text-xs text-gray-500 uppercase font-bold">Data</label><input type="date" required class="w-full border border-gray-300 rounded-md p-2 outline-none" /></div>
-              <div class="space-y-1"><label class="text-xs text-gray-500 uppercase font-bold">Equipamento</label><input type="text" class="w-full border border-gray-300 rounded-md p-2 outline-none" /></div>
             </div>
 
-            <div class="mt-4 flex justify-end">
-              <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium shadow transition-colors">Salvar OS</button>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+              <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox"> Combustível Incluso?</label>
+              <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox"> Operador Incluso?</label>
+            </div>
+
+            <div class="form-group">
+              <label>Observações</label>
+              <textarea class="form-control" rows="3" placeholder="Detalhes adicionais..."></textarea>
+            </div>
+
+            <div style="display: flex; gap: 16px; margin-top: 32px;">
+              <button type="button" class="btn btn-success" style="flex: 1;">
+                <i class="ph ph-whatsapp-logo"></i> Enviar pelo WhatsApp
+              </button>
+              <button type="button" class="btn btn-primary" style="flex: 1; background: #64748b;">
+                <i class="ph ph-file-pdf"></i> Gerar PDF
+              </button>
             </div>
           </form>
         </div>
-      </div>
-
-      <!-- TELA 4: FINANCEIRO -->
-      <div id="financeiro" class="screen-content hidden max-w-5xl mx-auto space-y-6">
-        <h2 class="text-2xl font-bold text-gray-800">Controle Financeiro</h2>
-        
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <div class="bg-white p-4 rounded-xl border-l-4 border-emerald-500 shadow-sm">
-            <p class="text-xs text-gray-500 font-bold uppercase">Entradas</p>
-            <p class="text-xl font-bold text-emerald-600" id="fin-total-entradas">R$ 0,00</p>
-          </div>
-          <div class="bg-white p-4 rounded-xl border-l-4 border-red-500 shadow-sm">
-            <p class="text-xs text-gray-500 font-bold uppercase">Saídas</p>
-            <p class="text-xl font-bold text-red-600" id="fin-total-saidas">R$ 0,00</p>
-          </div>
-          <div class="bg-white p-4 rounded-xl border-l-4 border-blue-500 shadow-sm col-span-2 md:col-span-1">
-            <p class="text-xs text-gray-500 font-bold uppercase">Fluxo de Caixa</p>
-            <p class="text-xl font-bold text-blue-600" id="fin-saldo">R$ 0,00</p>
-          </div>
+      </section>
+      
+      <!-- ================= Outras Views (Simplificadas para demonstração) ================= -->
+      <section id="view-agenda" class="view-section">
+        <div class="glass-card">
+          <h2>Agenda (Calendário em construção)</h2>
+          <p style="color: var(--text-secondary); margin-top: 16px;">Aqui integraremos um calendário completo exibindo alocações por dia.</p>
         </div>
+      </section>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="bg-white rounded-xl shadow-sm border p-5 flex flex-col h-80">
-            <div class="flex justify-between items-center border-b pb-2 mb-2">
-              <h3 class="font-bold text-lg text-emerald-700">Receitas</h3>
-              <button onclick="abrirModalFin('entrada')" class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded text-sm font-bold">Adicionar</button>
-            </div>
-            <div class="overflow-y-auto flex-1">
-              <ul id="lista-entradas" class="divide-y divide-gray-100"></ul>
-            </div>
-          </div>
-          
-          <div class="bg-white rounded-xl shadow-sm border p-5 flex flex-col h-80">
-            <div class="flex justify-between items-center border-b pb-2 mb-2">
-              <h3 class="font-bold text-lg text-red-700">Despesas</h3>
-              <button onclick="abrirModalFin('saida')" class="bg-red-100 text-red-700 px-3 py-1 rounded text-sm font-bold">Adicionar</button>
-            </div>
-            <div class="overflow-y-auto flex-1">
-              <ul id="lista-saidas" class="divide-y divide-gray-100"></ul>
-            </div>
-          </div>
+      <section id="view-os" class="view-section">
+        <div class="glass-card">
+          <h2>Ordens de Serviço</h2>
+          <p style="color: var(--text-secondary); margin-top: 16px;">Módulo para preenchimento de horímetro inicial/final e assinatura digital.</p>
         </div>
-      </div>
+      </section>
 
-      <!-- TELA 5, 6, 7 (Mantidas Simples para Foco) -->
-      <div id="equipamentos" class="screen-content hidden max-w-5xl mx-auto space-y-6"><h2 class="text-2xl font-bold">Equipamentos</h2><p>Em desenvolvimento...</p></div>
-      <div id="agenda" class="screen-content hidden max-w-5xl mx-auto space-y-6"><h2 class="text-2xl font-bold">Agenda</h2><p>Em desenvolvimento...</p></div>
-      <div id="relatorios" class="screen-content hidden max-w-5xl mx-auto space-y-6"><h2 class="text-2xl font-bold">Relatórios</h2><p>Em desenvolvimento...</p></div>
+      <section id="view-financeiro" class="view-section">
+        <div class="glass-card">
+          <h2>Contas a Pagar e Receber</h2>
+          <p style="color: var(--text-secondary); margin-top: 16px;">Gestão de fluxo de caixa.</p>
+        </div>
+      </section>
+
+      <section id="view-relatorios" class="view-section">
+        <div class="glass-card">
+          <h2>Relatórios de Desempenho</h2>
+          <p style="color: var(--text-secondary); margin-top: 16px;">Equipamentos que mais faturaram e custos com manutenção/diesel.</p>
+        </div>
+      </section>
 
     </div>
   </main>
 
-  <!-- ================= MODAL FINANCEIRO ================= -->
-  <div id="modal-fin" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm">
-      <div class="flex justify-between items-center mb-4">
-        <h3 id="modal-fin-titulo" class="text-xl font-bold text-gray-800">Nova Transação</h3>
-        <button type="button" onclick="fecharModalFin()" class="text-gray-400 hover:text-gray-700"><i class="fas fa-times text-xl"></i></button>
+  <!-- Modais -->
+  <div class="modal-overlay" id="modal-cliente">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Novo Cliente</h3>
+        <button class="btn-close" onclick="closeModal('modal-cliente')"><i class="ph ph-x"></i></button>
       </div>
-      <form id="form-fin" onsubmit="salvarFin(event)">
-        <input type="hidden" id="fin-tipo" value="entrada">
-        <div class="space-y-4">
-          <div><label class="block text-sm font-semibold text-gray-700 mb-1">Descrição</label><input type="text" id="fin-desc" required class="w-full border border-gray-300 rounded-md p-2 outline-none"></div>
-          <div><label class="block text-sm font-semibold text-gray-700 mb-1">Valor (R$)</label><input type="number" id="fin-valor" required step="0.01" class="w-full border border-gray-300 rounded-md p-2 outline-none"></div>
-          <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700">Confirmar</button>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Nome Completo / Razão Social</label>
+          <input type="text" class="form-control" placeholder="Digite o nome">
         </div>
-      </form>
+        <div class="form-group">
+          <label>CPF/CNPJ</label>
+          <input type="text" class="form-control" placeholder="000.000.000-00">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label>WhatsApp</label>
+            <input type="text" class="form-control" placeholder="(00) 00000-0000">
+          </div>
+          <div class="form-group">
+            <label>E-mail</label>
+            <input type="email" class="form-control" placeholder="contato@email.com">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Localização da Obra / Endereço</label>
+          <input type="text" class="form-control" placeholder="Rua, número, cidade">
+        </div>
+        <div class="form-group">
+          <label>Observações</label>
+          <textarea class="form-control" rows="2"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" style="background: transparent; color: var(--text-primary); border: 1px solid var(--border-color);" onclick="closeModal('modal-cliente')">Cancelar</button>
+        <button class="btn btn-primary" onclick="closeModal('modal-cliente')">Salvar Cliente</button>
+      </div>
     </div>
   </div>
 
-  <!-- ================= LÓGICA JAVASCRIPT ================= -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      carregarClientes();
-      carregarFinanceiro();
-    });
-
-    // ================= MENU E LAYOUT (Correção do Bug de Pular) =================
-    function toggleMenu() {
-      const sidebar = document.getElementById('sidebar');
-      const overlay = document.getElementById('overlay');
-      sidebar.classList.toggle('-translate-x-full');
-      overlay.classList.toggle('hidden');
-    }
-
-    function mudarTela(idDaTela, botaoClicado) {
-      // Usa a classe padrão hidden do Tailwind
-      document.querySelectorAll('.screen-content').forEach(tela => tela.classList.add('hidden'));
-      document.getElementById(idDaTela).classList.remove('hidden');
-
-      // Atualiza botões
-      document.querySelectorAll('.menu-btn').forEach(btn => {
-        btn.className = "menu-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-gray-300 hover:bg-slate-800 hover:text-white transition-colors";
-      });
-      botaoClicado.className = "menu-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left bg-blue-600 text-white font-medium shadow-md transition-colors active-btn";
-
-      // Fecha sidebar se for mobile
-      if (window.innerWidth < 768 && !document.getElementById('sidebar').classList.contains('-translate-x-full')) { 
-        toggleMenu(); 
-      }
-      
-      // Joga o scroll para o topo suavemente (Evita bug visual)
-      document.getElementById('scroll-area').scrollTop = 0;
-    }
-
-    // ================= FORMATADOR DE MOEDA =================
-    function formatarMoeda(valor) {
-      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
-    }
-
-    // ================= CLIENTES =================
-    function salvarCliente(event) {
-      event.preventDefault();
-      const nome = document.getElementById('cad-nome').value;
-      let clientes = JSON.parse(localStorage.getItem('locasys_clientes')) || [];
-      clientes.push({ nome: nome, whatsapp: document.getElementById('cad-whats').value });
-      localStorage.setItem('locasys_clientes', JSON.stringify(clientes));
-      
-      alert(`Cliente ${nome} salvo com sucesso!`);
-      document.getElementById('form-cliente').reset();
-      carregarClientes();
-    }
-
-    function carregarClientes() {
-      let clientes = JSON.parse(localStorage.getItem('locasys_clientes')) || [];
-      const selectOrcamento = document.getElementById('select-cliente-orcamento');
-      const selectOS = document.getElementById('select-cliente-os');
-      
-      if (clientes.length === 0) return;
-      
-      let options = '<option value="" disabled selected>Selecione um cliente...</option>';
-      clientes.forEach(c => { options += `<option value="${c.nome}">${c.nome}</option>`; });
-      
-      if(selectOrcamento) selectOrcamento.innerHTML = options;
-      if(selectOS) selectOS.innerHTML = options;
-    }
-
-    // ================= GERADOR DE PDF INFALÍVEL =================
-    function gerarPDF() {
-      const clienteNome = document.getElementById('select-cliente-orcamento').value;
-      if (!clienteNome) { 
-        alert("Selecione um cliente para gerar o orçamento."); 
-        return; 
-      }
-
-      const valor = parseFloat(document.getElementById('orc-valor').value || 0);
-      const qtd = parseFloat(document.getElementById('orc-qtd').value || 0);
-      const total = valor * qtd;
-      const tipo = document.getElementById('orc-tipo').value;
-      const dataAtual = new Date().toLocaleDateString('pt-BR');
-      
-      let maquinas = [];
-      document.querySelectorAll('.maq-chk:checked').forEach(chk => maquinas.push(chk.value));
-      const listaEquipamentos = maquinas.length > 0 
-        ? maquinas.map(m => `<li style="margin-bottom: 6px;">${m}</li>`).join('') 
-        : "<li>Nenhum equipamento marcado</li>";
-
-      const combustivel = document.getElementById('orc-combustivel').checked ? "Sim, Incluso" : "Não";
-      const operador = document.getElementById('orc-operador').checked ? "Sim, Incluso" : "Não";
-      const obs = document.getElementById('orc-obs').value || "Sem observações.";
-
-      // SOLUÇÃO PARA O PDF BRANCO: O elemento é fixado na tela (z-index negativo), mas visível pro motor!
-      const pdfContainer = document.createElement('div');
-      Object.assign(pdfContainer.style, {
-        position: 'fixed',
-        top: '0',
-        left: '0',
-        width: '800px', // Medida exata em px para não quebrar em celulares
-        backgroundColor: '#ffffff',
-        zIndex: '-9999', // Escondido do usuário
-        padding: '40px',
-        color: '#1e293b',
-        fontFamily: 'Arial, sans-serif',
-        boxSizing: 'border-box'
-      });
-
-      pdfContainer.innerHTML = `
-        <div style="border-bottom: 4px solid #0f172a; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end;">
-          <div>
-            <h1 style="font-size: 40px; font-weight: 900; letter-spacing: 2px; margin: 0; color: #0f172a;">LOCA<span style="color: #2563eb;">SYS</span></h1>
-            <p style="color: #64748b; font-size: 14px; margin: 4px 0 0 0;">Locação e Gestão de Equipamentos</p>
-          </div>
-          <div style="text-align: right;">
-            <h2 style="font-size: 24px; font-weight: bold; margin: 0; color: #1e293b;">ORÇAMENTO OFICIAL</h2>
-            <p style="font-size: 14px; font-weight: bold; color: #64748b; margin: 4px 0 0 0;">Data: ${dataAtual}</p>
-          </div>
-        </div>
-        
-        <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #e2e8f0;">
-          <h3 style="font-size: 12px; text-transform: uppercase; font-weight: bold; color: #64748b; margin: 0 0 4px 0;">Cliente Solicitante</h3>
-          <p style="font-size: 22px; font-weight: bold; color: #1e293b; margin: 0;">${clienteNome}</p>
-        </div>
-
-        <div style="margin-bottom: 30px;">
-          <h3 style="font-size: 16px; text-transform: uppercase; font-weight: bold; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 16px;">Equipamentos Solicitados</h3>
-          <ul style="margin-left: 20px; color: #334155; font-weight: 500; font-size: 18px;">
-            ${listaEquipamentos}
-          </ul>
-        </div>
-
-        <div style="margin-bottom: 30px; display: flex; justify-content: space-between;">
-          <div style="width: 48%; border: 1px solid #e2e8f0; padding: 20px; border-radius: 8px; text-align: center;">
-            <p style="font-size: 14px; text-transform: uppercase; font-weight: bold; color: #64748b; margin: 0 0 8px 0;">Valor Unitário</p>
-            <p style="font-size: 22px; font-weight: bold; color: #1e293b; margin: 0;">${formatarMoeda(valor)} / ${tipo}</p>
-          </div>
-          <div style="width: 48%; border: 1px solid #bfdbfe; padding: 20px; border-radius: 8px; text-align: center; background: #eff6ff;">
-            <p style="font-size: 14px; text-transform: uppercase; font-weight: bold; color: #2563eb; margin: 0 0 8px 0;">Total Estimado</p>
-            <p style="font-size: 28px; font-weight: 900; color: #1e40af; margin: 0;">${formatarMoeda(total)}</p>
-          </div>
-        </div>
-
-        <div style="margin-bottom: 30px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; padding: 20px 0;">
-          <p style="font-weight: bold; color: #334155; font-size: 16px; margin: 0 0 10px 0;">Combustível: <span style="color: #2563eb;">${combustivel}</span></p>
-          <p style="font-weight: bold; color: #334155; font-size: 16px; margin: 0;">Operador: <span style="color: #2563eb;">${operador}</span></p>
-        </div>
-
-        <div style="margin-bottom: 50px;">
-          <h3 style="font-size: 14px; text-transform: uppercase; font-weight: bold; color: #1e293b; margin: 0 0 8px 0;">Observações Gerais</h3>
-          <p style="color: #475569; background: #f8fafc; padding: 20px; border-radius: 4px; border: 1px solid #f1f5f9; min-height: 80px; margin: 0; font-size: 15px;">${obs}</p>
-        </div>
-
-        <div style="margin-top: 80px; text-align: center;">
-          <div style="border-top: 2px solid #94a3b8; width: 350px; margin: 0 auto 10px auto;"></div>
-          <p style="font-size: 16px; font-weight: bold; color: #475569; margin: 0;">Assinatura do Responsável</p>
-        </div>
-      `;
-
-      document.body.appendChild(pdfContainer);
-      
-      const opt = { 
-        margin: [10, 10, 10, 10], 
-        filename: `Orcamento_${clienteNome}.pdf`, 
-        image: { type: 'jpeg', quality: 0.98 }, 
-        html2canvas: { scale: 2, useCORS: true, windowWidth: 800 }, 
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
-      };
-
-      // Mostra mensagem amigável no botão (opcional)
-      const btn = event?.target;
-      const originalText = btn ? btn.innerHTML : '';
-      if(btn) btn.innerHTML = 'Gerando...';
-
-      // Gera e apaga o elemento invisível
-      html2pdf().set(opt).from(pdfContainer).save().then(() => {
-        document.body.removeChild(pdfContainer);
-        if(btn) btn.innerHTML = originalText;
-      });
-    }
-
-    // ================= WHATSAPP =================
-    function enviarWhatsApp() {
-      const clienteNome = document.getElementById('select-cliente-orcamento').value;
-      if (!clienteNome) { alert("Selecione um cliente primeiro!"); return; }
-      window.open(`https://wa.me/?text=Ol%C3%A1%20${encodeURIComponent(clienteNome)}%2C%20segue%20o%20or%C3%A7amento%20da%20LocaSys.`, '_blank');
-    }
-
-    // ================= FINANCEIRO =================
-    function abrirModalFin(tipo) {
-      document.getElementById('modal-fin').classList.remove('hidden');
-      document.getElementById('fin-tipo').value = tipo;
-      document.getElementById('modal-fin-titulo').innerText = tipo === 'entrada' ? 'Adicionar Receita' : 'Adicionar Despesa';
-    }
-    
-    function fecharModalFin() {
-      document.getElementById('modal-fin').classList.add('hidden');
-      document.getElementById('form-fin').reset();
-    }
-
-    function salvarFin(event) {
-      event.preventDefault();
-      let transacoes = JSON.parse(localStorage.getItem('locasys_fin')) || [];
-      transacoes.push({
-        tipo: document.getElementById('fin-tipo').value,
-        desc: document.getElementById('fin-desc').value,
-        valor: parseFloat(document.getElementById('fin-valor').value)
-      });
-      localStorage.setItem('locasys_fin', JSON.stringify(transacoes));
-      fecharModalFin();
-      carregarFinanceiro();
-    }
-
-    function carregarFinanceiro() {
-      let transacoes = JSON.parse(localStorage.getItem('locasys_fin')) || [];
-      let [tEntradas, tSaidas] = [0, 0];
-      let [hEntradas, hSaidas] = ['', ''];
-
-      transacoes.forEach(t => {
-        if(t.tipo === 'entrada') {
-          tEntradas += t.valor;
-          hEntradas += `<li class="py-3 flex justify-between"><span class="font-medium">${t.desc}</span><span class="font-bold text-emerald-600">${formatarMoeda(t.valor)}</span></li>`;
-        } else {
-          tSaidas += t.valor;
-          hSaidas += `<li class="py-3 flex justify-between"><span class="font-medium">${t.desc}</span><span class="font-bold text-red-600">- ${formatarMoeda(t.valor)}</span></li>`;
-        }
-      });
-
-      document.getElementById('fin-total-entradas').innerText = formatarMoeda(tEntradas);
-      document.getElementById('fin-total-saidas').innerText = formatarMoeda(tSaidas);
-      let saldo = tEntradas - tSaidas;
-      document.getElementById('fin-saldo').innerText = formatarMoeda(saldo);
-      document.getElementById('fin-saldo').className = saldo >= 0 ? "text-xl font-bold text-blue-600" : "text-xl font-bold text-red-600";
-
-      document.getElementById('lista-entradas').innerHTML = hEntradas || '<div class="text-center py-4 text-gray-400">Vazio</div>';
-      document.getElementById('lista-saidas').innerHTML = hSaidas || '<div class="text-center py-4 text-gray-400">Vazio</div>';
-    }
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>
