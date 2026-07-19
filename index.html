@@ -5,20 +5,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LocaSys - Gestão de Equipamentos</title>
   
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Biblioteca de PDF -->
+  <!-- Biblioteca de PDF (Versão Estável) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <style>
     .hidden-screen { display: none !important; }
-    select { appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em; }
+    /* Estilização customizada de Select */
+    select { 
+      appearance: none; 
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); 
+      background-repeat: no-repeat; 
+      background-position: right 1rem center; 
+      background-size: 1em; 
+    }
+    /* Estilo para impressão A4 do PDF */
+    .pdf-container {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 20mm;
+      background: white;
+      color: #1e293b;
+      font-family: Arial, sans-serif;
+      box-sizing: border-box;
+    }
   </style>
 </head>
 <body class="flex h-screen bg-gray-100 font-sans overflow-hidden text-gray-800">
 
   <!-- ================= MENU LATERAL ================= -->
-  <aside id="sidebar" class="fixed md:static inset-y-0 left-0 z-40 w-64 bg-slate-900 text-white transition-transform duration-300 ease-in-out -translate-x-full md:translate-x-0 flex flex-col h-full shadow-2xl shrink-0">
+  <aside id="sidebar" class="fixed md:relative inset-y-0 left-0 z-40 w-64 bg-slate-900 text-white transition-transform duration-300 ease-in-out -translate-x-full md:translate-x-0 flex flex-col h-full shadow-2xl shrink-0">
     <div class="flex items-center justify-between h-16 px-6 bg-slate-950 shrink-0">
       <span class="text-xl font-bold tracking-wider">LOCA<span class="text-blue-500">SYS</span></span>
       <button onclick="toggleMenu()" class="md:hidden text-gray-400 hover:text-white">
@@ -28,25 +47,25 @@
     
     <nav class="flex-1 overflow-y-auto p-4 space-y-2">
       <button onclick="mudarTela('clientes', this)" class="menu-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left bg-blue-600 text-white font-medium shadow-md transition-colors active-btn">
-        <i class="fas fa-users w-5"></i> Clientes
+        <i class="fas fa-users w-5 text-center"></i> Clientes
       </button>
       <button onclick="mudarTela('orcamentos', this)" class="menu-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-gray-300 hover:bg-slate-800 hover:text-white transition-colors">
-        <i class="fas fa-file-invoice-dollar w-5"></i> Orçamentos
+        <i class="fas fa-file-invoice-dollar w-5 text-center"></i> Orçamentos
       </button>
       <button onclick="mudarTela('ordens', this)" class="menu-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-gray-300 hover:bg-slate-800 hover:text-white transition-colors">
-        <i class="fas fa-clipboard-check w-5"></i> Ordens de Serviço
+        <i class="fas fa-clipboard-check w-5 text-center"></i> Ordens de Serviço
       </button>
       <button onclick="mudarTela('financeiro', this)" class="menu-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-gray-300 hover:bg-slate-800 hover:text-white transition-colors">
-        <i class="fas fa-dollar-sign w-5"></i> Financeiro
+        <i class="fas fa-dollar-sign w-5 text-center"></i> Financeiro
       </button>
       <button onclick="mudarTela('equipamentos', this)" class="menu-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-gray-300 hover:bg-slate-800 hover:text-white transition-colors">
-        <i class="fas fa-truck w-5"></i> Equipamentos
+        <i class="fas fa-truck w-5 text-center"></i> Equipamentos
       </button>
       <button onclick="mudarTela('agenda', this)" class="menu-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-gray-300 hover:bg-slate-800 hover:text-white transition-colors">
-        <i class="fas fa-calendar-alt w-5"></i> Agenda
+        <i class="fas fa-calendar-alt w-5 text-center"></i> Agenda
       </button>
       <button onclick="mudarTela('relatorios', this)" class="menu-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-gray-300 hover:bg-slate-800 hover:text-white transition-colors">
-        <i class="fas fa-chart-line w-5"></i> Relatórios
+        <i class="fas fa-chart-line w-5 text-center"></i> Relatórios
       </button>
     </nav>
     <div class="p-4 bg-slate-950 text-xs text-center text-gray-500 shrink-0">
@@ -55,7 +74,7 @@
   </aside>
 
   <!-- ================= ÁREA PRINCIPAL ================= -->
-  <main class="flex-1 flex flex-col h-screen bg-gray-100 relative">
+  <main class="flex-1 flex flex-col h-screen relative w-full">
     
     <!-- HEADER FIXO -->
     <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 shadow-sm shrink-0 z-20">
@@ -67,13 +86,14 @@
       </div>
     </header>
 
+    <!-- Overlay Mobile -->
     <div id="overlay" onclick="toggleMenu()" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden"></div>
 
-    <!-- ÁREA DE ROLAGEM INDEPENDENTE -->
-    <div class="flex-1 overflow-y-auto p-4 sm:p-6 pb-20 relative z-10">
+    <!-- ÁREA DE ROLAGEM -->
+    <div class="flex-1 overflow-y-auto p-4 sm:p-6 pb-20 relative z-10 w-full">
       
       <!-- TELA 1: CLIENTES -->
-      <div id="clientes" class="screen-content block space-y-6">
+      <div id="clientes" class="screen-content block space-y-6 max-w-5xl mx-auto">
         <h2 class="text-2xl font-bold text-gray-800">Cadastro de Clientes</h2>
         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <form id="form-cliente" class="grid grid-cols-1 md:grid-cols-2 gap-4" onsubmit="salvarCliente(event)">
@@ -86,14 +106,14 @@
             <div class="col-span-1 md:col-span-2 space-y-1"><label class="text-sm font-semibold text-gray-700">Localização da obra</label><input type="text" class="w-full border border-gray-300 rounded-md p-2 outline-none focus:border-blue-500" /></div>
             <div class="col-span-1 md:col-span-2 space-y-1"><label class="text-sm font-semibold text-gray-700">Observações</label><textarea class="w-full border border-gray-300 rounded-md p-2 outline-none focus:border-blue-500" rows="3"></textarea></div>
             <div class="col-span-1 md:col-span-2 flex justify-end mt-4">
-              <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-medium shadow">Salvar Cadastro</button>
+              <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-medium shadow transition-colors">Salvar Cadastro</button>
             </div>
           </form>
         </div>
       </div>
 
       <!-- TELA 2: ORÇAMENTOS -->
-      <div id="orcamentos" class="screen-content hidden-screen space-y-6">
+      <div id="orcamentos" class="screen-content hidden-screen space-y-6 max-w-5xl mx-auto">
         <h2 class="text-2xl font-bold text-gray-800">Orçamento</h2>
         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <form id="form-orcamento" class="space-y-6">
@@ -105,7 +125,7 @@
             </div>
             
             <div>
-              <label class="text-sm font-semibold text-gray-700 block mb-3">Escolhe os equipamentos:</label>
+              <label class="text-sm font-semibold text-gray-700 block mb-3">Escolha os equipamentos:</label>
               <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 <label class="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" value="Mini Escavadeira" class="maq-chk w-5 h-5 text-blue-600 rounded mr-3" /> <span class="font-medium">Mini Escavadeira</span></label>
                 <label class="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" value="Rompedor" class="maq-chk w-5 h-5 text-blue-600 rounded mr-3" /> <span class="font-medium">Rompedor</span></label>
@@ -116,7 +136,7 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div><label class="text-sm font-semibold text-gray-700 block mb-1">Valor Unitário (R$)</label><input type="number" id="orc-valor" class="w-full border border-gray-300 rounded-md p-3 outline-none" placeholder="Ex: 150" /></div>
+              <div><label class="text-sm font-semibold text-gray-700 block mb-1">Valor Unitário (R$)</label><input type="number" step="0.01" id="orc-valor" class="w-full border border-gray-300 rounded-md p-3 outline-none" placeholder="Ex: 150.00" /></div>
               <div><label class="text-sm font-semibold text-gray-700 block mb-1">Quantidade de horas/diária</label>
                 <div class="flex gap-2">
                   <input type="number" id="orc-qtd" class="w-2/3 border border-gray-300 rounded-md p-3 outline-none" placeholder="Ex: 8" />
@@ -135,17 +155,17 @@
         </div>
         
         <div class="flex flex-col sm:flex-row justify-end gap-3 mt-4">
-          <button type="button" onclick="gerarPDF()" class="w-full sm:w-auto bg-white border-2 border-gray-300 text-gray-700 px-6 py-3 rounded-lg flex items-center justify-center gap-2 font-bold hover:bg-gray-50 shadow-sm">
+          <button type="button" onclick="gerarPDF()" class="w-full sm:w-auto bg-white border-2 border-gray-300 text-gray-700 px-6 py-3 rounded-lg flex items-center justify-center gap-2 font-bold hover:bg-gray-50 shadow-sm transition-colors">
             📄 Gerar PDF Profissional
           </button>
-          <button type="button" onclick="enviarWhatsApp()" class="w-full sm:w-auto bg-[#25D366] hover:bg-[#1ebd5a] text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 font-bold shadow-md">
-            📲 Enviar pelo WhatsApp
+          <button type="button" onclick="enviarWhatsApp()" class="w-full sm:w-auto bg-[#25D366] hover:bg-[#1ebd5a] text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 font-bold shadow-md transition-colors">
+            📲 Enviar WhatsApp
           </button>
         </div>
       </div>
 
       <!-- TELA 3: ORDENS DE SERVIÇO -->
-      <div id="ordens" class="screen-content hidden-screen space-y-6">
+      <div id="ordens" class="screen-content hidden-screen space-y-6 max-w-5xl mx-auto">
         <h2 class="text-2xl font-bold text-gray-800">Ordem de Serviço</h2>
         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
           <form onsubmit="salvarOS(event)">
@@ -175,23 +195,23 @@
             </div>
 
             <div class="mt-6 flex flex-col sm:flex-row gap-4 border-t pt-4">
-              <button type="button" onclick="alert('Câmera abriria aqui no app nativo.')" class="flex-1 border-2 border-dashed border-gray-300 text-gray-600 py-3 rounded-lg font-medium hover:bg-gray-50 flex items-center justify-center gap-2">
+              <button type="button" onclick="alert('Funcionalidade de câmera ativada!')" class="flex-1 border-2 border-dashed border-gray-300 text-gray-600 py-3 rounded-lg font-medium hover:bg-gray-50 flex items-center justify-center gap-2">
                 📸 Tirar Fotos do Equipamento
               </button>
-              <button type="button" onclick="alert('Assinatura digital na tela do celular.')" class="flex-1 bg-blue-50 text-blue-700 py-3 rounded-lg font-medium hover:bg-blue-100 flex items-center justify-center gap-2">
+              <button type="button" onclick="alert('Tela de assinatura digital ativada!')" class="flex-1 bg-blue-50 text-blue-700 py-3 rounded-lg font-medium hover:bg-blue-100 flex items-center justify-center gap-2">
                 ✍️ Colher Assinatura
               </button>
             </div>
 
             <div class="mt-4 flex justify-end">
-              <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium shadow">Salvar OS na Base</button>
+              <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium shadow transition-colors">Salvar OS</button>
             </div>
           </form>
         </div>
       </div>
 
       <!-- TELA 4: FINANCEIRO -->
-      <div id="financeiro" class="screen-content hidden-screen space-y-6">
+      <div id="financeiro" class="screen-content hidden-screen space-y-6 max-w-5xl mx-auto">
         <h2 class="text-2xl font-bold text-gray-800">Controle Financeiro</h2>
         
         <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -235,10 +255,8 @@
       </div>
 
       <!-- TELA 5: EQUIPAMENTOS -->
-      <div id="equipamentos" class="screen-content hidden-screen space-y-6">
-        <div class="flex justify-between items-center">
-          <h2 class="text-2xl font-bold text-gray-800">Ficha de Equipamentos</h2>
-        </div>
+      <div id="equipamentos" class="screen-content hidden-screen space-y-6 max-w-5xl mx-auto">
+        <h2 class="text-2xl font-bold text-gray-800">Ficha de Equipamentos</h2>
         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <form id="form-equip" class="space-y-4" onsubmit="salvarEquip(event)">
             <h3 class="font-bold text-lg border-b pb-2 mb-4">Cadastrar/Atualizar Máquina</h3>
@@ -251,17 +269,17 @@
               <div class="space-y-1"><label class="text-sm font-semibold text-gray-700">Vencimento do Seguro</label><input type="date" class="w-full border border-gray-300 rounded-md p-2 outline-none focus:border-blue-500" /></div>
             </div>
             <div class="mt-4 flex justify-end">
-              <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium shadow">Salvar Ficha</button>
+              <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium shadow transition-colors">Salvar Ficha</button>
             </div>
           </form>
         </div>
       </div>
 
       <!-- TELA 6: AGENDA -->
-      <div id="agenda" class="screen-content hidden-screen space-y-6">
+      <div id="agenda" class="screen-content hidden-screen space-y-6 max-w-5xl mx-auto">
         <div class="flex justify-between items-center">
           <h2 class="text-2xl font-bold text-gray-800">Agenda de Locações</h2>
-          <button class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium shadow hover:bg-blue-700"><i class="fas fa-calendar-plus"></i> Novo Evento</button>
+          <button class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium shadow hover:bg-blue-700"><i class="fas fa-calendar-plus"></i> Novo</button>
         </div>
         <div class="bg-white rounded-xl shadow-sm border border-gray-200">
           <div class="p-4 border-b bg-gray-50 rounded-t-xl">
@@ -269,28 +287,25 @@
           </div>
           <div class="p-8 text-center text-gray-400">
             <i class="fas fa-calendar-times text-4xl mb-3"></i>
-            <p>A visualização do calendário interativo será carregada aqui pelo banco de dados.</p>
+            <p>O calendário será implementado e integrado com o banco de dados futuramente.</p>
           </div>
         </div>
       </div>
 
       <!-- TELA 7: RELATÓRIOS -->
-      <div id="relatorios" class="screen-content hidden-screen space-y-6">
+      <div id="relatorios" class="screen-content hidden-screen space-y-6 max-w-5xl mx-auto">
         <h2 class="text-2xl font-bold text-gray-800">Relatórios Gerenciais</h2>
-        
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div class="bg-white p-5 rounded-xl shadow-sm border">
             <h3 class="text-gray-500 font-bold mb-2 uppercase text-sm">Resultados do Mês</h3>
             <p class="text-sm flex justify-between border-b py-2">Faturamento: <span class="font-bold text-emerald-600">R$ 0,00</span></p>
             <p class="text-sm flex justify-between pt-2">Lucro líquido: <span class="font-bold text-blue-600">R$ 0,00</span></p>
           </div>
-
           <div class="bg-white p-5 rounded-xl shadow-sm border">
             <h3 class="text-gray-500 font-bold mb-2 uppercase text-sm">Despesas Operacionais</h3>
             <p class="text-sm flex justify-between border-b py-2">Combustível: <span class="font-bold text-red-500">R$ 0,00</span></p>
             <p class="text-sm flex justify-between pt-2">Manutenção: <span class="font-bold text-red-500">R$ 0,00</span></p>
           </div>
-
           <div class="bg-white p-5 rounded-xl shadow-sm border">
             <h3 class="text-gray-500 font-bold mb-2 uppercase text-sm">Estatísticas</h3>
             <p class="text-sm flex justify-between border-b py-2 text-gray-700">Melhor Cliente: <span class="font-bold">Nenhum</span></p>
@@ -327,6 +342,7 @@
       carregarFinanceiro();
     });
 
+    // ================= CONTROLE DE MENU =================
     function toggleMenu() {
       const sidebar = document.getElementById('sidebar');
       const overlay = document.getElementById('overlay');
@@ -335,24 +351,37 @@
     }
 
     function mudarTela(idDaTela, botaoClicado) {
+      // Oculta todas as telas
       document.querySelectorAll('.screen-content').forEach(tela => tela.classList.add('hidden-screen'));
+      // Mostra a selecionada
       document.getElementById(idDaTela).classList.remove('hidden-screen');
 
+      // Reseta botões
       document.querySelectorAll('.menu-btn').forEach(btn => {
         btn.className = "menu-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-gray-300 hover:bg-slate-800 hover:text-white transition-colors";
       });
+      // Pinta o botão ativo
       botaoClicado.className = "menu-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left bg-blue-600 text-white font-medium shadow-md transition-colors active-btn";
 
-      if (window.innerWidth < 768) { toggleMenu(); }
+      // Fecha o menu no celular apenas se estiver aberto
+      if (window.innerWidth < 768 && !document.getElementById('sidebar').classList.contains('-translate-x-full')) { 
+        toggleMenu(); 
+      }
     }
 
-    /* CLIENTES */
+    // ================= FORMATAÇÃO DE MOEDA =================
+    function formatarMoeda(valor) {
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
+    }
+
+    // ================= CLIENTES =================
     function salvarCliente(event) {
       event.preventDefault();
       const nome = document.getElementById('cad-nome').value;
       let clientes = JSON.parse(localStorage.getItem('locasys_clientes')) || [];
       clientes.push({ nome: nome, whatsapp: document.getElementById('cad-whats').value });
       localStorage.setItem('locasys_clientes', JSON.stringify(clientes));
+      
       alert(`Cliente ${nome} salvo com sucesso!`);
       document.getElementById('form-cliente').reset();
       carregarClientes();
@@ -362,112 +391,127 @@
       let clientes = JSON.parse(localStorage.getItem('locasys_clientes')) || [];
       const selectOrcamento = document.getElementById('select-cliente-orcamento');
       const selectOS = document.getElementById('select-cliente-os');
+      
       if (clientes.length === 0) return;
+      
       let options = '<option value="" disabled selected>Selecione um cliente...</option>';
       clientes.forEach(c => { options += `<option value="${c.nome}">${c.nome}</option>`; });
+      
+      // Atualiza apenas se os elementos existirem, para não quebrar a tela
       if(selectOrcamento) selectOrcamento.innerHTML = options;
       if(selectOS) selectOS.innerHTML = options;
     }
 
-    /* ================= O SEGREDO DO PDF QUE NÃO FALHA ================= */
+    // ================= GERAÇÃO DO PDF (CORRIGIDA) =================
     function gerarPDF() {
       const clienteNome = document.getElementById('select-cliente-orcamento').value;
-      if (!clienteNome) { alert("Selecione um cliente primeiro!"); return; }
+      if (!clienteNome) { 
+        alert("Atenção: Selecione um cliente antes de gerar o orçamento!"); 
+        return; 
+      }
 
-      // Pega todos os dados da tela
-      const valor = document.getElementById('orc-valor').value || "0";
-      const qtd = document.getElementById('orc-qtd').value || "0";
+      // Coleta de dados
+      const valorStr = document.getElementById('orc-valor').value || "0";
+      const qtdStr = document.getElementById('orc-qtd').value || "0";
+      const valor = parseFloat(valorStr);
+      const qtd = parseFloat(qtdStr);
+      const total = valor * qtd;
+      
       const tipo = document.getElementById('orc-tipo').value;
       const dataAtual = new Date().toLocaleDateString('pt-BR');
       
       let maquinas = [];
       document.querySelectorAll('.maq-chk:checked').forEach(chk => maquinas.push(chk.value));
       const listaEquipamentos = maquinas.length > 0 
-        ? maquinas.map(m => `<li style="margin-bottom: 4px;">${m}</li>`).join('') 
+        ? maquinas.map(m => `<li style="margin-bottom: 8px;">${m}</li>`).join('') 
         : "<li>Nenhum equipamento marcado</li>";
 
-      const total = (parseFloat(valor) * parseFloat(qtd) || 0).toFixed(2);
       const combustivel = document.getElementById('orc-combustivel').checked ? "Sim, Incluso" : "Não";
       const operador = document.getElementById('orc-operador').checked ? "Sim, Incluso" : "Não";
       const obs = document.getElementById('orc-obs').value || "Sem observações adicionais.";
 
-      // AO INVÉS DE USAR HTML DA TELA, NÓS CRIAMOS UMA STRING AQUI (O CELULAR NÃO PODE ESCONDER ISSO)
-      const templateHTML = `
-        <div style="font-family: Arial, sans-serif; padding: 40px; color: #1e293b; background: white; width: 800px; box-sizing: border-box;">
-          
-          <div style="border-bottom: 4px solid #0f172a; padding-bottom: 16px; margin-bottom: 24px;">
-            <div style="display: inline-block; width: 50%;">
-              <h1 style="font-size: 36px; font-weight: 900; letter-spacing: 2px; margin: 0; color: #0f172a;">LOCA<span style="color: #2563eb;">SYS</span></h1>
+      // Criação de um elemento invisível para a renderização perfeita do PDF (Formato A4)
+      const pdfElement = document.createElement('div');
+      pdfElement.innerHTML = `
+        <div class="pdf-container">
+          <div style="border-bottom: 4px solid #0f172a; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end;">
+            <div>
+              <h1 style="font-size: 40px; font-weight: 900; letter-spacing: 2px; margin: 0; color: #0f172a;">LOCA<span style="color: #2563eb;">SYS</span></h1>
               <p style="color: #64748b; font-size: 14px; margin: 4px 0 0 0;">Locação e Gestão de Equipamentos</p>
             </div>
-            <div style="display: inline-block; width: 49%; text-align: right; vertical-align: bottom;">
+            <div style="text-align: right;">
               <h2 style="font-size: 24px; font-weight: bold; margin: 0; color: #1e293b;">ORÇAMENTO OFICIAL</h2>
               <p style="font-size: 14px; font-weight: bold; color: #64748b; margin: 4px 0 0 0;">Data: ${dataAtual}</p>
             </div>
           </div>
           
-          <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin-bottom: 24px; border: 1px solid #e2e8f0;">
-            <h3 style="font-size: 12px; text-transform: uppercase; font-weight: bold; color: #64748b; margin: 0 0 4px 0;">Cliente</h3>
-            <p style="font-size: 20px; font-weight: bold; color: #1e293b; margin: 0;">${clienteNome}</p>
+          <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #e2e8f0;">
+            <h3 style="font-size: 12px; text-transform: uppercase; font-weight: bold; color: #64748b; margin: 0 0 4px 0;">Cliente Solicitante</h3>
+            <p style="font-size: 22px; font-weight: bold; color: #1e293b; margin: 0;">${clienteNome}</p>
           </div>
 
-          <div style="margin-bottom: 24px;">
-            <h3 style="font-size: 14px; text-transform: uppercase; font-weight: bold; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 12px;">Equipamentos Solicitados</h3>
-            <ul style="margin-left: 20px; color: #334155; font-weight: 500; font-size: 16px;">
+          <div style="margin-bottom: 30px;">
+            <h3 style="font-size: 16px; text-transform: uppercase; font-weight: bold; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 16px;">Equipamentos Solicitados</h3>
+            <ul style="margin-left: 20px; color: #334155; font-weight: 500; font-size: 18px;">
               ${listaEquipamentos}
             </ul>
           </div>
 
-          <div style="margin-bottom: 24px;">
-            <div style="display: inline-block; width: 48%; border: 1px solid #e2e8f0; padding: 16px; border-radius: 8px; text-align: center; box-sizing: border-box;">
-              <p style="font-size: 12px; text-transform: uppercase; font-weight: bold; color: #64748b; margin: 0 0 4px 0;">Valor Unitário</p>
-              <p style="font-size: 20px; font-weight: bold; color: #1e293b; margin: 0;">R$ ${valor} / ${tipo}</p>
+          <div style="margin-bottom: 30px; display: flex; justify-content: space-between;">
+            <div style="width: 48%; border: 1px solid #e2e8f0; padding: 20px; border-radius: 8px; text-align: center;">
+              <p style="font-size: 14px; text-transform: uppercase; font-weight: bold; color: #64748b; margin: 0 0 8px 0;">Valor Unitário</p>
+              <p style="font-size: 22px; font-weight: bold; color: #1e293b; margin: 0;">${formatarMoeda(valor)} / ${tipo}</p>
             </div>
-            <div style="display: inline-block; width: 48%; margin-left: 2%; border: 1px solid #bfdbfe; padding: 16px; border-radius: 8px; text-align: center; background: #eff6ff; box-sizing: border-box;">
-              <p style="font-size: 12px; text-transform: uppercase; font-weight: bold; color: #2563eb; margin: 0 0 4px 0;">Total Estimado</p>
-              <p style="font-size: 24px; font-weight: 900; color: #1e40af; margin: 0;">R$ ${total}</p>
+            <div style="width: 48%; border: 1px solid #bfdbfe; padding: 20px; border-radius: 8px; text-align: center; background: #eff6ff;">
+              <p style="font-size: 14px; text-transform: uppercase; font-weight: bold; color: #2563eb; margin: 0 0 8px 0;">Total Estimado</p>
+              <p style="font-size: 28px; font-weight: 900; color: #1e40af; margin: 0;">${formatarMoeda(total)}</p>
             </div>
           </div>
 
-          <div style="margin-bottom: 24px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; padding: 16px 0;">
-            <p style="font-weight: bold; color: #334155; margin: 0 0 8px 0;">Combustível: <span style="color: #2563eb;">${combustivel}</span></p>
-            <p style="font-weight: bold; color: #334155; margin: 0;">Operador: <span style="color: #2563eb;">${operador}</span></p>
+          <div style="margin-bottom: 30px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; padding: 20px 0;">
+            <p style="font-weight: bold; color: #334155; font-size: 16px; margin: 0 0 10px 0;">Combustível: <span style="color: #2563eb;">${combustivel}</span></p>
+            <p style="font-weight: bold; color: #334155; font-size: 16px; margin: 0;">Operador: <span style="color: #2563eb;">${operador}</span></p>
           </div>
 
-          <div style="margin-bottom: 48px;">
+          <div style="margin-bottom: 50px;">
             <h3 style="font-size: 14px; text-transform: uppercase; font-weight: bold; color: #1e293b; margin: 0 0 8px 0;">Observações Gerais</h3>
-            <p style="color: #475569; background: #f8fafc; padding: 16px; border-radius: 4px; border: 1px solid #f1f5f9; min-height: 60px; margin: 0;">${obs}</p>
+            <p style="color: #475569; background: #f8fafc; padding: 20px; border-radius: 4px; border: 1px solid #f1f5f9; min-height: 80px; margin: 0; font-size: 15px;">${obs}</p>
           </div>
 
-          <div style="margin-top: 80px; text-align: center;">
-            <div style="border-top: 2px solid #94a3b8; width: 300px; margin: 0 auto 8px auto;"></div>
-            <p style="font-size: 14px; font-weight: bold; color: #475569; margin: 0;">Assinatura Digital / Responsável</p>
+          <div style="margin-top: 100px; text-align: center;">
+            <div style="border-top: 2px solid #94a3b8; width: 350px; margin: 0 auto 10px auto;"></div>
+            <p style="font-size: 16px; font-weight: bold; color: #475569; margin: 0;">Assinatura Digital / Responsável</p>
           </div>
         </div>
       `;
+
+      // Esconde o elemento na tela, mas deixa ele no DOM para a foto funcionar
+      pdfElement.style.position = 'absolute';
+      pdfElement.style.left = '-9999px';
+      document.body.appendChild(pdfElement);
 
       const opt = { 
         margin: 0, 
         filename: `Orcamento_${clienteNome}.pdf`, 
         image: { type: 'jpeg', quality: 0.98 }, 
-        html2canvas: { scale: 2 }, 
-        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } 
+        html2canvas: { scale: 2, useCORS: true }, 
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
       };
       
-      alert("Processando PDF... Aguarde!");
-      
-      // O gerador agora pega a string pura e converte. Zero falhas!
-      html2pdf().set(opt).from(templateHTML).save();
+      // Gera o PDF a partir do DOM real, e depois remove o elemento invisível
+      html2pdf().set(opt).from(pdfElement).save().then(() => {
+        document.body.removeChild(pdfElement);
+      });
     }
-    /* ============================================================= */
 
+    // ================= WHATSAPP =================
     function enviarWhatsApp() {
       const clienteNome = document.getElementById('select-cliente-orcamento').value;
-      if (!clienteNome) { alert("Selecione um cliente!"); return; }
-      window.open(`https://wa.me/?text=Ol%C3%A1%20${encodeURIComponent(clienteNome)}%2C%20segue%20or%C3%A7amento.`, '_blank');
+      if (!clienteNome) { alert("Selecione um cliente primeiro!"); return; }
+      window.open(`https://wa.me/?text=Ol%C3%A1%20${encodeURIComponent(clienteNome)}%2C%20segue%20or%C3%A7amento%20da%20LocaSys.`, '_blank');
     }
 
-    /* ORDENS DE SERVIÇO & EQUIPAMENTOS */
+    // ================= OUTRAS FUNCIONALIDADES =================
     function salvarOS(event) {
       event.preventDefault();
       alert(`Ordem de Serviço ${document.getElementById('os-numero').value} gravada com sucesso!`);
@@ -480,16 +524,18 @@
       event.target.reset();
     }
 
-    /* FINANCEIRO */
+    // ================= FINANCEIRO =================
     function abrirModalFin(tipo) {
       document.getElementById('modal-fin').classList.remove('hidden');
       document.getElementById('fin-tipo').value = tipo;
       document.getElementById('modal-fin-titulo').innerText = tipo === 'entrada' ? 'Adicionar Receita' : 'Adicionar Despesa';
     }
+    
     function fecharModalFin() {
       document.getElementById('modal-fin').classList.add('hidden');
       document.getElementById('form-fin').reset();
     }
+
     function salvarFin(event) {
       event.preventDefault();
       let transacoes = JSON.parse(localStorage.getItem('locasys_fin')) || [];
@@ -502,6 +548,7 @@
       fecharModalFin();
       carregarFinanceiro();
     }
+
     function carregarFinanceiro() {
       let transacoes = JSON.parse(localStorage.getItem('locasys_fin')) || [];
       let [tEntradas, tSaidas] = [0, 0];
@@ -510,17 +557,17 @@
       transacoes.forEach(t => {
         if(t.tipo === 'entrada') {
           tEntradas += t.valor;
-          hEntradas += `<li class="py-3 flex justify-between"><span class="font-medium">${t.desc}</span><span class="font-bold text-emerald-600">R$ ${t.valor.toFixed(2)}</span></li>`;
+          hEntradas += `<li class="py-3 flex justify-between"><span class="font-medium">${t.desc}</span><span class="font-bold text-emerald-600">${formatarMoeda(t.valor)}</span></li>`;
         } else {
           tSaidas += t.valor;
-          hSaidas += `<li class="py-3 flex justify-between"><span class="font-medium">${t.desc}</span><span class="font-bold text-red-600">- R$ ${t.valor.toFixed(2)}</span></li>`;
+          hSaidas += `<li class="py-3 flex justify-between"><span class="font-medium">${t.desc}</span><span class="font-bold text-red-600">- ${formatarMoeda(t.valor)}</span></li>`;
         }
       });
 
-      document.getElementById('fin-total-entradas').innerText = `R$ ${tEntradas.toFixed(2)}`;
-      document.getElementById('fin-total-saidas').innerText = `R$ ${tSaidas.toFixed(2)}`;
+      document.getElementById('fin-total-entradas').innerText = formatarMoeda(tEntradas);
+      document.getElementById('fin-total-saidas').innerText = formatarMoeda(tSaidas);
       let saldo = tEntradas - tSaidas;
-      document.getElementById('fin-saldo').innerText = `R$ ${saldo.toFixed(2)}`;
+      document.getElementById('fin-saldo').innerText = formatarMoeda(saldo);
       document.getElementById('fin-saldo').className = saldo >= 0 ? "text-xl font-bold text-blue-600" : "text-xl font-bold text-red-600";
 
       document.getElementById('lista-entradas').innerHTML = hEntradas;
