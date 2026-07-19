@@ -700,6 +700,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const email = document.getElementById('auth-email').value;
     const pass = document.getElementById('auth-pass').value;
     authError.style.display = 'none';
+    authBtn.textContent = isRegistering ? 'Cadastrando...' : 'Entrando...';
+    authBtn.disabled = true;
     try {
       if (isRegistering) {
         await createUserWithEmailAndPassword(auth, email, pass);
@@ -707,8 +709,20 @@ document.addEventListener('DOMContentLoaded', () => {
         await signInWithEmailAndPassword(auth, email, pass);
       }
     } catch (err) {
-      authError.textContent = err.message;
+      const msgs = {
+        'auth/invalid-credential': 'E-mail ou senha incorretos.',
+        'auth/email-already-in-use': 'Este e-mail já está cadastrado.',
+        'auth/weak-password': 'A senha deve ter pelo menos 6 caracteres.',
+        'auth/invalid-email': 'E-mail inválido.',
+        'auth/user-not-found': 'Usuário não encontrado.',
+        'auth/wrong-password': 'Senha incorreta.',
+        'auth/too-many-requests': 'Muitas tentativas. Aguarde alguns minutos.',
+      };
+      authError.textContent = msgs[err.code] || err.message;
       authError.style.display = 'block';
+    } finally {
+      authBtn.textContent = isRegistering ? 'Cadastrar' : 'Entrar';
+      authBtn.disabled = false;
     }
   });
 
@@ -718,7 +732,7 @@ document.addEventListener('DOMContentLoaded', () => {
   onAuthStateChanged(auth, (user) => {
     if (user) {
       document.getElementById('auth-wrapper').style.display = 'none';
-      document.getElementById('app-container').style.display = 'block';
+      document.getElementById('app-container').style.display = 'flex';
       syncData();
     } else {
       document.getElementById('auth-wrapper').style.display = 'flex';
