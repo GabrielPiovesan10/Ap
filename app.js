@@ -1,4 +1,4 @@
- \`Receitas em \${currentYear}\`,
+\`Receitas em \${currentYear}\`,
           data: monthlyData,
           borderColor: '#10b981',
           backgroundColor: 'rgba(16, 185, 129, 0.1)',
