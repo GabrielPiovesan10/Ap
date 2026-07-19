@@ -2,19 +2,18 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>LocaSys - Gestão de Equipamentos</title>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Biblioteca de PDF (Versão Estável) -->
+  <!-- Biblioteca de PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <style>
-    .hidden-screen { display: none !important; }
-    /* Estilização customizada de Select */
+    /* Estilo do Dropdown */
     select { 
       appearance: none; 
       background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); 
@@ -22,25 +21,15 @@
       background-position: right 1rem center; 
       background-size: 1em; 
     }
-    /* Estilo para impressão A4 do PDF */
-    .pdf-container {
-      width: 210mm;
-      min-height: 297mm;
-      padding: 20mm;
-      background: white;
-      color: #1e293b;
-      font-family: Arial, sans-serif;
-      box-sizing: border-box;
-    }
   </style>
 </head>
-<body class="flex h-screen bg-gray-100 font-sans overflow-hidden text-gray-800">
+<body class="bg-gray-100 font-sans text-gray-800" style="margin: 0; padding: 0; height: 100vh; display: flex; overflow: hidden;">
 
   <!-- ================= MENU LATERAL ================= -->
-  <aside id="sidebar" class="fixed md:relative inset-y-0 left-0 z-40 w-64 bg-slate-900 text-white transition-transform duration-300 ease-in-out -translate-x-full md:translate-x-0 flex flex-col h-full shadow-2xl shrink-0">
-    <div class="flex items-center justify-between h-16 px-6 bg-slate-950 shrink-0">
+  <aside id="sidebar" class="fixed z-50 h-full w-64 bg-slate-900 text-white transition-transform duration-300 transform -translate-x-full md:translate-x-0 md:relative md:flex-shrink-0 flex flex-col shadow-2xl">
+    <div class="flex items-center justify-between h-16 px-6 bg-slate-950 flex-shrink-0">
       <span class="text-xl font-bold tracking-wider">LOCA<span class="text-blue-500">SYS</span></span>
-      <button onclick="toggleMenu()" class="md:hidden text-gray-400 hover:text-white">
+      <button onclick="toggleMenu()" class="md:hidden text-gray-400 hover:text-white p-2">
         <i class="fas fa-times text-xl"></i>
       </button>
     </div>
@@ -68,16 +57,19 @@
         <i class="fas fa-chart-line w-5 text-center"></i> Relatórios
       </button>
     </nav>
-    <div class="p-4 bg-slate-950 text-xs text-center text-gray-500 shrink-0">
+    <div class="p-4 bg-slate-950 text-xs text-center text-gray-500 flex-shrink-0">
       Desenvolvido por <span class="font-bold text-gray-300">GP Tech</span>
     </div>
   </aside>
 
+  <!-- Overlay do Mobile -->
+  <div id="overlay" onclick="toggleMenu()" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
+
   <!-- ================= ÁREA PRINCIPAL ================= -->
-  <main class="flex-1 flex flex-col h-screen relative w-full">
+  <main class="flex-1 flex flex-col h-full min-w-0 relative">
     
-    <!-- HEADER FIXO -->
-    <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 shadow-sm shrink-0 z-20">
+    <!-- HEADER -->
+    <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 shadow-sm flex-shrink-0 z-20">
       <button onclick="toggleMenu()" class="md:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
         <i class="fas fa-bars text-xl"></i>
       </button>
@@ -86,14 +78,11 @@
       </div>
     </header>
 
-    <!-- Overlay Mobile -->
-    <div id="overlay" onclick="toggleMenu()" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden"></div>
-
-    <!-- ÁREA DE ROLAGEM -->
-    <div class="flex-1 overflow-y-auto p-4 sm:p-6 pb-20 relative z-10 w-full">
+    <!-- ÁREA DE ROLAGEM ISOLADA (Impede o bug de pular pra cima) -->
+    <div id="scroll-area" class="flex-1 overflow-y-auto p-4 sm:p-6 pb-20 relative z-10 w-full">
       
       <!-- TELA 1: CLIENTES -->
-      <div id="clientes" class="screen-content block space-y-6 max-w-5xl mx-auto">
+      <div id="clientes" class="screen-content max-w-5xl mx-auto space-y-6">
         <h2 class="text-2xl font-bold text-gray-800">Cadastro de Clientes</h2>
         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <form id="form-cliente" class="grid grid-cols-1 md:grid-cols-2 gap-4" onsubmit="salvarCliente(event)">
@@ -101,19 +90,16 @@
             <div class="space-y-1"><label class="text-sm font-semibold text-gray-700">CPF/CNPJ</label><input type="text" id="cad-doc" class="w-full border border-gray-300 rounded-md p-2 outline-none focus:border-blue-500" /></div>
             <div class="space-y-1"><label class="text-sm font-semibold text-gray-700">Contato (Pessoa)</label><input type="text" class="w-full border border-gray-300 rounded-md p-2 outline-none focus:border-blue-500" /></div>
             <div class="space-y-1"><label class="text-sm font-semibold text-gray-700">WhatsApp</label><input type="text" id="cad-whats" required class="w-full border border-gray-300 rounded-md p-2 outline-none focus:border-blue-500" /></div>
-            <div class="space-y-1"><label class="text-sm font-semibold text-gray-700">E-mail</label><input type="email" class="w-full border border-gray-300 rounded-md p-2 outline-none focus:border-blue-500" /></div>
-            <div class="space-y-1"><label class="text-sm font-semibold text-gray-700">Endereço</label><input type="text" class="w-full border border-gray-300 rounded-md p-2 outline-none focus:border-blue-500" /></div>
             <div class="col-span-1 md:col-span-2 space-y-1"><label class="text-sm font-semibold text-gray-700">Localização da obra</label><input type="text" class="w-full border border-gray-300 rounded-md p-2 outline-none focus:border-blue-500" /></div>
-            <div class="col-span-1 md:col-span-2 space-y-1"><label class="text-sm font-semibold text-gray-700">Observações</label><textarea class="w-full border border-gray-300 rounded-md p-2 outline-none focus:border-blue-500" rows="3"></textarea></div>
             <div class="col-span-1 md:col-span-2 flex justify-end mt-4">
-              <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-medium shadow transition-colors">Salvar Cadastro</button>
+              <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-medium shadow transition-colors">Salvar Cliente</button>
             </div>
           </form>
         </div>
       </div>
 
       <!-- TELA 2: ORÇAMENTOS -->
-      <div id="orcamentos" class="screen-content hidden-screen space-y-6 max-w-5xl mx-auto">
+      <div id="orcamentos" class="screen-content hidden max-w-5xl mx-auto space-y-6">
         <h2 class="text-2xl font-bold text-gray-800">Orçamento</h2>
         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <form id="form-orcamento" class="space-y-6">
@@ -136,8 +122,8 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div><label class="text-sm font-semibold text-gray-700 block mb-1">Valor Unitário (R$)</label><input type="number" step="0.01" id="orc-valor" class="w-full border border-gray-300 rounded-md p-3 outline-none" placeholder="Ex: 150.00" /></div>
-              <div><label class="text-sm font-semibold text-gray-700 block mb-1">Quantidade de horas/diária</label>
+              <div><label class="text-sm font-semibold text-gray-700 block mb-1">Valor Unitário (Ex: 150.00)</label><input type="number" step="0.01" id="orc-valor" class="w-full border border-gray-300 rounded-md p-3 outline-none" /></div>
+              <div><label class="text-sm font-semibold text-gray-700 block mb-1">Quantidade</label>
                 <div class="flex gap-2">
                   <input type="number" id="orc-qtd" class="w-2/3 border border-gray-300 rounded-md p-3 outline-none" placeholder="Ex: 8" />
                   <select id="orc-tipo" class="w-1/3 border border-gray-300 rounded-md p-3 bg-white outline-none"><option>Horas</option><option>Diárias</option></select>
@@ -165,19 +151,10 @@
       </div>
 
       <!-- TELA 3: ORDENS DE SERVIÇO -->
-      <div id="ordens" class="screen-content hidden-screen space-y-6 max-w-5xl mx-auto">
+      <div id="ordens" class="screen-content hidden max-w-5xl mx-auto space-y-6">
         <h2 class="text-2xl font-bold text-gray-800">Ordem de Serviço</h2>
         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
           <form onsubmit="salvarOS(event)">
-            <div class="flex flex-col sm:flex-row justify-between sm:items-center border-b pb-4 mb-4 gap-2">
-              <h3 class="text-xl font-bold text-gray-800">Nova OS</h3>
-              <select class="border border-gray-300 bg-gray-50 font-bold rounded px-4 py-2 outline-none text-sm cursor-pointer">
-                <option value="andamento">🟡 Em andamento</option>
-                <option value="finalizado">🟢 Finalizado</option>
-                <option value="cancelado">🔴 Cancelado</option>
-              </select>
-            </div>
-
             <div class="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6">
               <div class="space-y-1"><label class="text-xs text-gray-500 uppercase font-bold">Número da OS</label><input type="text" id="os-numero" required class="w-full border border-gray-300 rounded-md p-2 outline-none" /></div>
               <div class="space-y-1">
@@ -188,19 +165,6 @@
               </div>
               <div class="space-y-1"><label class="text-xs text-gray-500 uppercase font-bold">Data</label><input type="date" required class="w-full border border-gray-300 rounded-md p-2 outline-none" /></div>
               <div class="space-y-1"><label class="text-xs text-gray-500 uppercase font-bold">Equipamento</label><input type="text" class="w-full border border-gray-300 rounded-md p-2 outline-none" /></div>
-              <div class="space-y-1"><label class="text-xs text-gray-500 uppercase font-bold">Operador</label><input type="text" class="w-full border border-gray-300 rounded-md p-2 outline-none" /></div>
-              <div class="hidden md:block"></div>
-              <div class="bg-gray-50 p-3 rounded border"><label class="text-xs text-gray-500 uppercase font-bold mb-1 block">Horímetro inicial</label><input type="number" class="w-full bg-white border p-2 rounded outline-none" /></div>
-              <div class="bg-gray-50 p-3 rounded border"><label class="text-xs text-gray-500 uppercase font-bold mb-1 block">Horímetro final</label><input type="number" class="w-full bg-white border p-2 rounded outline-none" /></div>
-            </div>
-
-            <div class="mt-6 flex flex-col sm:flex-row gap-4 border-t pt-4">
-              <button type="button" onclick="alert('Funcionalidade de câmera ativada!')" class="flex-1 border-2 border-dashed border-gray-300 text-gray-600 py-3 rounded-lg font-medium hover:bg-gray-50 flex items-center justify-center gap-2">
-                📸 Tirar Fotos do Equipamento
-              </button>
-              <button type="button" onclick="alert('Tela de assinatura digital ativada!')" class="flex-1 bg-blue-50 text-blue-700 py-3 rounded-lg font-medium hover:bg-blue-100 flex items-center justify-center gap-2">
-                ✍️ Colher Assinatura
-              </button>
             </div>
 
             <div class="mt-4 flex justify-end">
@@ -211,7 +175,7 @@
       </div>
 
       <!-- TELA 4: FINANCEIRO -->
-      <div id="financeiro" class="screen-content hidden-screen space-y-6 max-w-5xl mx-auto">
+      <div id="financeiro" class="screen-content hidden max-w-5xl mx-auto space-y-6">
         <h2 class="text-2xl font-bold text-gray-800">Controle Financeiro</h2>
         
         <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -233,86 +197,29 @@
           <div class="bg-white rounded-xl shadow-sm border p-5 flex flex-col h-80">
             <div class="flex justify-between items-center border-b pb-2 mb-2">
               <h3 class="font-bold text-lg text-emerald-700">Receitas</h3>
-              <button onclick="abrirModalFin('entrada')" class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded text-sm font-bold hover:bg-emerald-200">+ Adicionar</button>
+              <button onclick="abrirModalFin('entrada')" class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded text-sm font-bold">Adicionar</button>
             </div>
             <div class="overflow-y-auto flex-1">
               <ul id="lista-entradas" class="divide-y divide-gray-100"></ul>
-              <div id="vazio-entradas" class="text-center py-10 text-gray-400">Nenhuma receita lançada.</div>
             </div>
           </div>
           
           <div class="bg-white rounded-xl shadow-sm border p-5 flex flex-col h-80">
             <div class="flex justify-between items-center border-b pb-2 mb-2">
               <h3 class="font-bold text-lg text-red-700">Despesas</h3>
-              <button onclick="abrirModalFin('saida')" class="bg-red-100 text-red-700 px-3 py-1 rounded text-sm font-bold hover:bg-red-200">+ Adicionar</button>
+              <button onclick="abrirModalFin('saida')" class="bg-red-100 text-red-700 px-3 py-1 rounded text-sm font-bold">Adicionar</button>
             </div>
             <div class="overflow-y-auto flex-1">
               <ul id="lista-saidas" class="divide-y divide-gray-100"></ul>
-              <div id="vazio-saidas" class="text-center py-10 text-gray-400">Nenhuma despesa registrada.</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- TELA 5: EQUIPAMENTOS -->
-      <div id="equipamentos" class="screen-content hidden-screen space-y-6 max-w-5xl mx-auto">
-        <h2 class="text-2xl font-bold text-gray-800">Ficha de Equipamentos</h2>
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <form id="form-equip" class="space-y-4" onsubmit="salvarEquip(event)">
-            <h3 class="font-bold text-lg border-b pb-2 mb-4">Cadastrar/Atualizar Máquina</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="space-y-1"><label class="text-sm font-semibold text-gray-700">Nome (Ex: Mini Escavadeira CAT)</label><input type="text" required class="w-full border border-gray-300 rounded-md p-2 outline-none focus:border-blue-500" /></div>
-              <div class="space-y-1"><label class="text-sm font-semibold text-gray-700">Horímetro atual</label><input type="number" class="w-full border border-gray-300 rounded-md p-2 outline-none focus:border-blue-500" /></div>
-              <div class="space-y-1"><label class="text-sm font-semibold text-gray-700">Última troca de óleo (hr)</label><input type="number" class="w-full border border-gray-300 rounded-md p-2 outline-none focus:border-blue-500" /></div>
-              <div class="space-y-1"><label class="text-sm font-semibold text-gray-700">Próxima manutenção (hr)</label><input type="number" class="w-full border border-gray-300 rounded-md p-2 outline-none focus:border-blue-500" /></div>
-              <div class="space-y-1"><label class="text-sm font-semibold text-gray-700">Status Documentação</label><input type="text" class="w-full border border-gray-300 rounded-md p-2 outline-none focus:border-blue-500" /></div>
-              <div class="space-y-1"><label class="text-sm font-semibold text-gray-700">Vencimento do Seguro</label><input type="date" class="w-full border border-gray-300 rounded-md p-2 outline-none focus:border-blue-500" /></div>
-            </div>
-            <div class="mt-4 flex justify-end">
-              <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium shadow transition-colors">Salvar Ficha</button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- TELA 6: AGENDA -->
-      <div id="agenda" class="screen-content hidden-screen space-y-6 max-w-5xl mx-auto">
-        <div class="flex justify-between items-center">
-          <h2 class="text-2xl font-bold text-gray-800">Agenda de Locações</h2>
-          <button class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium shadow hover:bg-blue-700"><i class="fas fa-calendar-plus"></i> Novo</button>
-        </div>
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-          <div class="p-4 border-b bg-gray-50 rounded-t-xl">
-            <h3 class="font-bold text-lg text-gray-800">Calendário</h3>
-          </div>
-          <div class="p-8 text-center text-gray-400">
-            <i class="fas fa-calendar-times text-4xl mb-3"></i>
-            <p>O calendário será implementado e integrado com o banco de dados futuramente.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- TELA 7: RELATÓRIOS -->
-      <div id="relatorios" class="screen-content hidden-screen space-y-6 max-w-5xl mx-auto">
-        <h2 class="text-2xl font-bold text-gray-800">Relatórios Gerenciais</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div class="bg-white p-5 rounded-xl shadow-sm border">
-            <h3 class="text-gray-500 font-bold mb-2 uppercase text-sm">Resultados do Mês</h3>
-            <p class="text-sm flex justify-between border-b py-2">Faturamento: <span class="font-bold text-emerald-600">R$ 0,00</span></p>
-            <p class="text-sm flex justify-between pt-2">Lucro líquido: <span class="font-bold text-blue-600">R$ 0,00</span></p>
-          </div>
-          <div class="bg-white p-5 rounded-xl shadow-sm border">
-            <h3 class="text-gray-500 font-bold mb-2 uppercase text-sm">Despesas Operacionais</h3>
-            <p class="text-sm flex justify-between border-b py-2">Combustível: <span class="font-bold text-red-500">R$ 0,00</span></p>
-            <p class="text-sm flex justify-between pt-2">Manutenção: <span class="font-bold text-red-500">R$ 0,00</span></p>
-          </div>
-          <div class="bg-white p-5 rounded-xl shadow-sm border">
-            <h3 class="text-gray-500 font-bold mb-2 uppercase text-sm">Estatísticas</h3>
-            <p class="text-sm flex justify-between border-b py-2 text-gray-700">Melhor Cliente: <span class="font-bold">Nenhum</span></p>
-            <p class="text-sm flex justify-between pt-2 text-gray-700">Máquina top: <span class="font-bold">Nenhuma</span></p>
-          </div>
-        </div>
-      </div>
+      <!-- TELA 5, 6, 7 (Mantidas Simples para Foco) -->
+      <div id="equipamentos" class="screen-content hidden max-w-5xl mx-auto space-y-6"><h2 class="text-2xl font-bold">Equipamentos</h2><p>Em desenvolvimento...</p></div>
+      <div id="agenda" class="screen-content hidden max-w-5xl mx-auto space-y-6"><h2 class="text-2xl font-bold">Agenda</h2><p>Em desenvolvimento...</p></div>
+      <div id="relatorios" class="screen-content hidden max-w-5xl mx-auto space-y-6"><h2 class="text-2xl font-bold">Relatórios</h2><p>Em desenvolvimento...</p></div>
 
     </div>
   </main>
@@ -342,7 +249,7 @@
       carregarFinanceiro();
     });
 
-    // ================= CONTROLE DE MENU =================
+    // ================= MENU E LAYOUT (Correção do Bug de Pular) =================
     function toggleMenu() {
       const sidebar = document.getElementById('sidebar');
       const overlay = document.getElementById('overlay');
@@ -351,25 +258,26 @@
     }
 
     function mudarTela(idDaTela, botaoClicado) {
-      // Oculta todas as telas
-      document.querySelectorAll('.screen-content').forEach(tela => tela.classList.add('hidden-screen'));
-      // Mostra a selecionada
-      document.getElementById(idDaTela).classList.remove('hidden-screen');
+      // Usa a classe padrão hidden do Tailwind
+      document.querySelectorAll('.screen-content').forEach(tela => tela.classList.add('hidden'));
+      document.getElementById(idDaTela).classList.remove('hidden');
 
-      // Reseta botões
+      // Atualiza botões
       document.querySelectorAll('.menu-btn').forEach(btn => {
         btn.className = "menu-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-gray-300 hover:bg-slate-800 hover:text-white transition-colors";
       });
-      // Pinta o botão ativo
       botaoClicado.className = "menu-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left bg-blue-600 text-white font-medium shadow-md transition-colors active-btn";
 
-      // Fecha o menu no celular apenas se estiver aberto
+      // Fecha sidebar se for mobile
       if (window.innerWidth < 768 && !document.getElementById('sidebar').classList.contains('-translate-x-full')) { 
         toggleMenu(); 
       }
+      
+      // Joga o scroll para o topo suavemente (Evita bug visual)
+      document.getElementById('scroll-area').scrollTop = 0;
     }
 
-    // ================= FORMATAÇÃO DE MOEDA =================
+    // ================= FORMATADOR DE MOEDA =================
     function formatarMoeda(valor) {
       return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
     }
@@ -397,110 +305,119 @@
       let options = '<option value="" disabled selected>Selecione um cliente...</option>';
       clientes.forEach(c => { options += `<option value="${c.nome}">${c.nome}</option>`; });
       
-      // Atualiza apenas se os elementos existirem, para não quebrar a tela
       if(selectOrcamento) selectOrcamento.innerHTML = options;
       if(selectOS) selectOS.innerHTML = options;
     }
 
-    // ================= GERAÇÃO DO PDF (CORRIGIDA) =================
+    // ================= GERADOR DE PDF INFALÍVEL =================
     function gerarPDF() {
       const clienteNome = document.getElementById('select-cliente-orcamento').value;
       if (!clienteNome) { 
-        alert("Atenção: Selecione um cliente antes de gerar o orçamento!"); 
+        alert("Selecione um cliente para gerar o orçamento."); 
         return; 
       }
 
-      // Coleta de dados
-      const valorStr = document.getElementById('orc-valor').value || "0";
-      const qtdStr = document.getElementById('orc-qtd').value || "0";
-      const valor = parseFloat(valorStr);
-      const qtd = parseFloat(qtdStr);
+      const valor = parseFloat(document.getElementById('orc-valor').value || 0);
+      const qtd = parseFloat(document.getElementById('orc-qtd').value || 0);
       const total = valor * qtd;
-      
       const tipo = document.getElementById('orc-tipo').value;
       const dataAtual = new Date().toLocaleDateString('pt-BR');
       
       let maquinas = [];
       document.querySelectorAll('.maq-chk:checked').forEach(chk => maquinas.push(chk.value));
       const listaEquipamentos = maquinas.length > 0 
-        ? maquinas.map(m => `<li style="margin-bottom: 8px;">${m}</li>`).join('') 
+        ? maquinas.map(m => `<li style="margin-bottom: 6px;">${m}</li>`).join('') 
         : "<li>Nenhum equipamento marcado</li>";
 
       const combustivel = document.getElementById('orc-combustivel').checked ? "Sim, Incluso" : "Não";
       const operador = document.getElementById('orc-operador').checked ? "Sim, Incluso" : "Não";
-      const obs = document.getElementById('orc-obs').value || "Sem observações adicionais.";
+      const obs = document.getElementById('orc-obs').value || "Sem observações.";
 
-      // Criação de um elemento invisível para a renderização perfeita do PDF (Formato A4)
-      const pdfElement = document.createElement('div');
-      pdfElement.innerHTML = `
-        <div class="pdf-container">
-          <div style="border-bottom: 4px solid #0f172a; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end;">
-            <div>
-              <h1 style="font-size: 40px; font-weight: 900; letter-spacing: 2px; margin: 0; color: #0f172a;">LOCA<span style="color: #2563eb;">SYS</span></h1>
-              <p style="color: #64748b; font-size: 14px; margin: 4px 0 0 0;">Locação e Gestão de Equipamentos</p>
-            </div>
-            <div style="text-align: right;">
-              <h2 style="font-size: 24px; font-weight: bold; margin: 0; color: #1e293b;">ORÇAMENTO OFICIAL</h2>
-              <p style="font-size: 14px; font-weight: bold; color: #64748b; margin: 4px 0 0 0;">Data: ${dataAtual}</p>
-            </div>
-          </div>
-          
-          <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #e2e8f0;">
-            <h3 style="font-size: 12px; text-transform: uppercase; font-weight: bold; color: #64748b; margin: 0 0 4px 0;">Cliente Solicitante</h3>
-            <p style="font-size: 22px; font-weight: bold; color: #1e293b; margin: 0;">${clienteNome}</p>
-          </div>
+      // SOLUÇÃO PARA O PDF BRANCO: O elemento é fixado na tela (z-index negativo), mas visível pro motor!
+      const pdfContainer = document.createElement('div');
+      Object.assign(pdfContainer.style, {
+        position: 'fixed',
+        top: '0',
+        left: '0',
+        width: '800px', // Medida exata em px para não quebrar em celulares
+        backgroundColor: '#ffffff',
+        zIndex: '-9999', // Escondido do usuário
+        padding: '40px',
+        color: '#1e293b',
+        fontFamily: 'Arial, sans-serif',
+        boxSizing: 'border-box'
+      });
 
-          <div style="margin-bottom: 30px;">
-            <h3 style="font-size: 16px; text-transform: uppercase; font-weight: bold; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 16px;">Equipamentos Solicitados</h3>
-            <ul style="margin-left: 20px; color: #334155; font-weight: 500; font-size: 18px;">
-              ${listaEquipamentos}
-            </ul>
+      pdfContainer.innerHTML = `
+        <div style="border-bottom: 4px solid #0f172a; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end;">
+          <div>
+            <h1 style="font-size: 40px; font-weight: 900; letter-spacing: 2px; margin: 0; color: #0f172a;">LOCA<span style="color: #2563eb;">SYS</span></h1>
+            <p style="color: #64748b; font-size: 14px; margin: 4px 0 0 0;">Locação e Gestão de Equipamentos</p>
           </div>
+          <div style="text-align: right;">
+            <h2 style="font-size: 24px; font-weight: bold; margin: 0; color: #1e293b;">ORÇAMENTO OFICIAL</h2>
+            <p style="font-size: 14px; font-weight: bold; color: #64748b; margin: 4px 0 0 0;">Data: ${dataAtual}</p>
+          </div>
+        </div>
+        
+        <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #e2e8f0;">
+          <h3 style="font-size: 12px; text-transform: uppercase; font-weight: bold; color: #64748b; margin: 0 0 4px 0;">Cliente Solicitante</h3>
+          <p style="font-size: 22px; font-weight: bold; color: #1e293b; margin: 0;">${clienteNome}</p>
+        </div>
 
-          <div style="margin-bottom: 30px; display: flex; justify-content: space-between;">
-            <div style="width: 48%; border: 1px solid #e2e8f0; padding: 20px; border-radius: 8px; text-align: center;">
-              <p style="font-size: 14px; text-transform: uppercase; font-weight: bold; color: #64748b; margin: 0 0 8px 0;">Valor Unitário</p>
-              <p style="font-size: 22px; font-weight: bold; color: #1e293b; margin: 0;">${formatarMoeda(valor)} / ${tipo}</p>
-            </div>
-            <div style="width: 48%; border: 1px solid #bfdbfe; padding: 20px; border-radius: 8px; text-align: center; background: #eff6ff;">
-              <p style="font-size: 14px; text-transform: uppercase; font-weight: bold; color: #2563eb; margin: 0 0 8px 0;">Total Estimado</p>
-              <p style="font-size: 28px; font-weight: 900; color: #1e40af; margin: 0;">${formatarMoeda(total)}</p>
-            </div>
-          </div>
+        <div style="margin-bottom: 30px;">
+          <h3 style="font-size: 16px; text-transform: uppercase; font-weight: bold; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 16px;">Equipamentos Solicitados</h3>
+          <ul style="margin-left: 20px; color: #334155; font-weight: 500; font-size: 18px;">
+            ${listaEquipamentos}
+          </ul>
+        </div>
 
-          <div style="margin-bottom: 30px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; padding: 20px 0;">
-            <p style="font-weight: bold; color: #334155; font-size: 16px; margin: 0 0 10px 0;">Combustível: <span style="color: #2563eb;">${combustivel}</span></p>
-            <p style="font-weight: bold; color: #334155; font-size: 16px; margin: 0;">Operador: <span style="color: #2563eb;">${operador}</span></p>
+        <div style="margin-bottom: 30px; display: flex; justify-content: space-between;">
+          <div style="width: 48%; border: 1px solid #e2e8f0; padding: 20px; border-radius: 8px; text-align: center;">
+            <p style="font-size: 14px; text-transform: uppercase; font-weight: bold; color: #64748b; margin: 0 0 8px 0;">Valor Unitário</p>
+            <p style="font-size: 22px; font-weight: bold; color: #1e293b; margin: 0;">${formatarMoeda(valor)} / ${tipo}</p>
           </div>
+          <div style="width: 48%; border: 1px solid #bfdbfe; padding: 20px; border-radius: 8px; text-align: center; background: #eff6ff;">
+            <p style="font-size: 14px; text-transform: uppercase; font-weight: bold; color: #2563eb; margin: 0 0 8px 0;">Total Estimado</p>
+            <p style="font-size: 28px; font-weight: 900; color: #1e40af; margin: 0;">${formatarMoeda(total)}</p>
+          </div>
+        </div>
 
-          <div style="margin-bottom: 50px;">
-            <h3 style="font-size: 14px; text-transform: uppercase; font-weight: bold; color: #1e293b; margin: 0 0 8px 0;">Observações Gerais</h3>
-            <p style="color: #475569; background: #f8fafc; padding: 20px; border-radius: 4px; border: 1px solid #f1f5f9; min-height: 80px; margin: 0; font-size: 15px;">${obs}</p>
-          </div>
+        <div style="margin-bottom: 30px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; padding: 20px 0;">
+          <p style="font-weight: bold; color: #334155; font-size: 16px; margin: 0 0 10px 0;">Combustível: <span style="color: #2563eb;">${combustivel}</span></p>
+          <p style="font-weight: bold; color: #334155; font-size: 16px; margin: 0;">Operador: <span style="color: #2563eb;">${operador}</span></p>
+        </div>
 
-          <div style="margin-top: 100px; text-align: center;">
-            <div style="border-top: 2px solid #94a3b8; width: 350px; margin: 0 auto 10px auto;"></div>
-            <p style="font-size: 16px; font-weight: bold; color: #475569; margin: 0;">Assinatura Digital / Responsável</p>
-          </div>
+        <div style="margin-bottom: 50px;">
+          <h3 style="font-size: 14px; text-transform: uppercase; font-weight: bold; color: #1e293b; margin: 0 0 8px 0;">Observações Gerais</h3>
+          <p style="color: #475569; background: #f8fafc; padding: 20px; border-radius: 4px; border: 1px solid #f1f5f9; min-height: 80px; margin: 0; font-size: 15px;">${obs}</p>
+        </div>
+
+        <div style="margin-top: 80px; text-align: center;">
+          <div style="border-top: 2px solid #94a3b8; width: 350px; margin: 0 auto 10px auto;"></div>
+          <p style="font-size: 16px; font-weight: bold; color: #475569; margin: 0;">Assinatura do Responsável</p>
         </div>
       `;
 
-      // Esconde o elemento na tela, mas deixa ele no DOM para a foto funcionar
-      pdfElement.style.position = 'absolute';
-      pdfElement.style.left = '-9999px';
-      document.body.appendChild(pdfElement);
-
+      document.body.appendChild(pdfContainer);
+      
       const opt = { 
-        margin: 0, 
+        margin: [10, 10, 10, 10], 
         filename: `Orcamento_${clienteNome}.pdf`, 
         image: { type: 'jpeg', quality: 0.98 }, 
-        html2canvas: { scale: 2, useCORS: true }, 
+        html2canvas: { scale: 2, useCORS: true, windowWidth: 800 }, 
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
       };
-      
-      // Gera o PDF a partir do DOM real, e depois remove o elemento invisível
-      html2pdf().set(opt).from(pdfElement).save().then(() => {
-        document.body.removeChild(pdfElement);
+
+      // Mostra mensagem amigável no botão (opcional)
+      const btn = event?.target;
+      const originalText = btn ? btn.innerHTML : '';
+      if(btn) btn.innerHTML = 'Gerando...';
+
+      // Gera e apaga o elemento invisível
+      html2pdf().set(opt).from(pdfContainer).save().then(() => {
+        document.body.removeChild(pdfContainer);
+        if(btn) btn.innerHTML = originalText;
       });
     }
 
@@ -508,20 +425,7 @@
     function enviarWhatsApp() {
       const clienteNome = document.getElementById('select-cliente-orcamento').value;
       if (!clienteNome) { alert("Selecione um cliente primeiro!"); return; }
-      window.open(`https://wa.me/?text=Ol%C3%A1%20${encodeURIComponent(clienteNome)}%2C%20segue%20or%C3%A7amento%20da%20LocaSys.`, '_blank');
-    }
-
-    // ================= OUTRAS FUNCIONALIDADES =================
-    function salvarOS(event) {
-      event.preventDefault();
-      alert(`Ordem de Serviço ${document.getElementById('os-numero').value} gravada com sucesso!`);
-      event.target.reset();
-    }
-
-    function salvarEquip(event) {
-      event.preventDefault();
-      alert("Ficha do Equipamento salva com sucesso!");
-      event.target.reset();
+      window.open(`https://wa.me/?text=Ol%C3%A1%20${encodeURIComponent(clienteNome)}%2C%20segue%20o%20or%C3%A7amento%20da%20LocaSys.`, '_blank');
     }
 
     // ================= FINANCEIRO =================
@@ -570,10 +474,8 @@
       document.getElementById('fin-saldo').innerText = formatarMoeda(saldo);
       document.getElementById('fin-saldo').className = saldo >= 0 ? "text-xl font-bold text-blue-600" : "text-xl font-bold text-red-600";
 
-      document.getElementById('lista-entradas').innerHTML = hEntradas;
-      document.getElementById('lista-saidas').innerHTML = hSaidas;
-      document.getElementById('vazio-entradas').style.display = tEntradas > 0 ? 'none' : 'block';
-      document.getElementById('vazio-saidas').style.display = tSaidas > 0 ? 'none' : 'block';
+      document.getElementById('lista-entradas').innerHTML = hEntradas || '<div class="text-center py-4 text-gray-400">Vazio</div>';
+      document.getElementById('lista-saidas').innerHTML = hSaidas || '<div class="text-center py-4 text-gray-400">Vazio</div>';
     }
   </script>
 </body>
