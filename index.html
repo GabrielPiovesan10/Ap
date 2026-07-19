@@ -14,6 +14,9 @@
   
   <!-- Chart.js para gráficos -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- html2pdf.js para gerar PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
 
@@ -21,7 +24,7 @@
   <aside class="sidebar" id="sidebar">
     <div class="brand">
       <i class="ph-fill ph-excavator"></i>
-      <span>Loca<span style="color: var(--primary-color)">Sys</span></span>
+      <span>Bianchin <span style="color: var(--primary-color)">Escavações</span></span>
     </div>
     
     <nav class="nav-menu">
@@ -123,7 +126,7 @@
                 <tr>
                   <th>Nome</th>
                   <th>Contato / WhatsApp</th>
-                  <th>Cidade</th>
+                  <th>Endereço</th>
                   <th>Ações</th>
                 </tr>
               </thead>
@@ -172,54 +175,56 @@
           <form id="form-orcamento">
             <div class="form-group">
               <label>Cliente</label>
-              <select class="form-control">
+              <select class="form-control" id="orc-cliente">
                 <option value="">Selecione o Cliente</option>
-                <option value="1">João da Silva</option>
-                <option value="2">Construtora Alpha</option>
               </select>
             </div>
             
             <div class="form-group">
-              <label>Equipamento Desejado</label>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px;">
-                <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox"> Mini Escavadeira</label>
-                <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox"> Rompedor</label>
-                <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox"> Perfuratriz</label>
-                <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox"> Carregadeira</label>
-                <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox"> Caminhão Munck</label>
+              <label>Equipamentos e Ferramentas Desejadas</label>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px;" id="orc-equipamentos">
+                <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox" value="Escavadeira Suny"> Escavadeira Suny</label>
+                <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox" value="Escavadeira Yanmar"> Escavadeira Yanmar</label>
+                <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox" value="Carregadeira XCMG"> Carregadeira XCMG</label>
+                <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox" value="MUNK 45 toneladas ARGOS"> MUNK 45 toneladas ARGOS</label>
+                <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox" value="Perfuratriz (cobrado por metro)"> Perfuratriz (cobrado por metro)</label>
+                <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox" value="Rompedor (cobrado por hora)"> Rompedor (cobrado por hora)</label>
+                <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox" value="Conchas (15cm, 20cm, 25cm, 30cm, 35cm, 45cm e 70cm)"> Conchas (15cm a 70cm)</label>
+                <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox" value="Equipamento Parceiros"> Equipamento Parceiros</label>
               </div>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
               <div class="form-group">
                 <label>Valor (R$)</label>
-                <input type="number" class="form-control" placeholder="0,00">
+                <input type="number" class="form-control" id="orc-valor" placeholder="0,00">
               </div>
               <div class="form-group">
                 <label>Tipo de Cobrança</label>
-                <select class="form-control">
-                  <option>Por Hora</option>
-                  <option>Diária</option>
-                  <option>Empreitada / Fechado</option>
+                <select class="form-control" id="orc-cobranca">
+                  <option value="Por Hora">Por Hora</option>
+                  <option value="Por Metro">Por Metro</option>
+                  <option value="Diária">Diária</option>
+                  <option value="Empreitada / Fechado">Empreitada / Fechado</option>
                 </select>
               </div>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
-              <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox"> Combustível Incluso?</label>
-              <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox"> Operador Incluso?</label>
+              <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox" id="orc-combustivel"> Combustível Incluso?</label>
+              <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox" id="orc-operador"> Operador Incluso?</label>
             </div>
 
             <div class="form-group">
               <label>Observações</label>
-              <textarea class="form-control" rows="3" placeholder="Detalhes adicionais..."></textarea>
+              <textarea class="form-control" rows="3" id="orc-obs" placeholder="Detalhes adicionais..."></textarea>
             </div>
 
             <div style="display: flex; gap: 16px; margin-top: 32px;">
-              <button type="button" class="btn btn-success" style="flex: 1;">
+              <button type="button" class="btn btn-success" style="flex: 1;" onclick="enviarWhatsApp()">
                 <i class="ph ph-whatsapp-logo"></i> Enviar pelo WhatsApp
               </button>
-              <button type="button" class="btn btn-primary" style="flex: 1; background: #64748b;">
+              <button type="button" class="btn btn-primary" style="flex: 1; background: #64748b;" onclick="gerarPDF()">
                 <i class="ph ph-file-pdf"></i> Gerar PDF
               </button>
             </div>
@@ -269,34 +274,34 @@
       <div class="modal-body">
         <div class="form-group">
           <label>Nome Completo / Razão Social</label>
-          <input type="text" class="form-control" placeholder="Digite o nome">
+          <input type="text" class="form-control" id="cli-nome" placeholder="Digite o nome">
         </div>
         <div class="form-group">
           <label>CPF/CNPJ</label>
-          <input type="text" class="form-control" placeholder="000.000.000-00">
+          <input type="text" class="form-control" id="cli-cpf" placeholder="000.000.000-00">
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
           <div class="form-group">
             <label>WhatsApp</label>
-            <input type="text" class="form-control" placeholder="(00) 00000-0000">
+            <input type="text" class="form-control" id="cli-whats" placeholder="(00) 00000-0000">
           </div>
           <div class="form-group">
             <label>E-mail</label>
-            <input type="email" class="form-control" placeholder="contato@email.com">
+            <input type="email" class="form-control" id="cli-email" placeholder="contato@email.com">
           </div>
         </div>
         <div class="form-group">
           <label>Localização da Obra / Endereço</label>
-          <input type="text" class="form-control" placeholder="Rua, número, cidade">
+          <input type="text" class="form-control" id="cli-endereco" placeholder="Rua, número, cidade">
         </div>
         <div class="form-group">
           <label>Observações</label>
-          <textarea class="form-control" rows="2"></textarea>
+          <textarea class="form-control" id="cli-obs" rows="2"></textarea>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn" style="background: transparent; color: var(--text-primary); border: 1px solid var(--border-color);" onclick="closeModal('modal-cliente')">Cancelar</button>
-        <button class="btn btn-primary" onclick="closeModal('modal-cliente')">Salvar Cliente</button>
+        <button class="btn btn-primary" onclick="salvarCliente()">Salvar Cliente</button>
       </div>
     </div>
   </div>
