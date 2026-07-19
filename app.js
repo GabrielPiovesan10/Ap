@@ -29,6 +29,8 @@ let equipamentos = [];
 let agenda = [];
 let os = [];
 let financas = [];
+let chartInstanceDash = null;
+let chartInstanceFin = null;
 
 // ==========================================
 // UTILITÁRIOS
@@ -50,12 +52,12 @@ window.openModal = function(modalId) {
     document.getElementById('title-modal-cliente').textContent = "Novo Cliente";
   } else if (modalId === 'modal-equip') {
     document.getElementById('eq-id').value = '';
-    document.getElementById('eq-nome').value = '';
-    document.getElementById('eq-hori').value = '';
+    ['eq-nome', 'eq-hori', 'eq-oleo', 'eq-prox-manut', 'eq-doc', 'eq-seguro', 'eq-custo'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('title-modal-equip').textContent = "Novo Equipamento";
   } else if (modalId === 'modal-agenda') {
     document.getElementById('ag-id').value = '';
     document.getElementById('ag-data').value = '';
+    document.getElementById('ag-hora').value = '';
     document.getElementById('title-modal-agenda').textContent = "Novo Agendamento";
   } else if (modalId === 'modal-os') {
     document.getElementById('os-id').value = '';
@@ -68,6 +70,7 @@ window.openModal = function(modalId) {
     document.getElementById('fin-desc').value = '';
     document.getElementById('fin-valor').value = '';
     document.getElementById('fin-data').value = '';
+    document.getElementById('fin-status').value = 'Pago';
     document.getElementById('title-modal-fin').textContent = "Novo Lançamento";
   }
   document.getElementById(modalId).classList.add('active');
@@ -86,6 +89,7 @@ function renderAll() {
   renderAgenda();
   renderOS();
   renderFinanceiro();
+  renderRelatorios();
   renderDashboard();
 }
 
@@ -102,12 +106,14 @@ function renderClientes() {
           <td>
             <div class="td-actions">
               <button class="btn btn-primary" style="padding:4px 8px;font-size:0.8rem;" onclick="editarCliente('${c.id}')">Editar</button>
-              <button class="btn btn-danger" style="padding:4px 8px;font-size:0.8rem;background:var(--danger-color);color:white;border:none;" onclick="removerCliente('${c.id}')">Remover</button>
+              <button class="btn btn-danger" style="padding:4px 8px;font-size:0.8rem;background:var(--danger-color);color:white;border:none;" onclick="removerCliente('${c.id}')">Excluir</button>
             </div>
           </td>
         </tr>`;
     });
   }
+  
+  // Atualiza os selects
   ['orc-cliente', 'ag-cliente', 'os-cliente'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
@@ -128,17 +134,27 @@ function renderEquipamentos() {
       tbody.innerHTML += `
         <tr>
           <td>${e.nome}</td>
-          <td>${e.horimetro}</td>
+          <td>${e.horimetro || '0'} Hrs</td>
+          <td style="font-size: 0.85rem; color: var(--text-secondary);">
+            Troca: ${e.oleo || '-'}<br>
+            Prox: ${e.proxManut || '-'}
+          </td>
+          <td style="font-size: 0.85rem; color: var(--text-secondary);">
+            Doc: ${formatDate(e.doc)}<br>
+            Seg: ${formatDate(e.seguro)}
+          </td>
           <td><span class="badge ${badge}">${e.status}</span></td>
           <td>
             <div class="td-actions">
               <button class="btn btn-primary" style="padding:4px 8px;font-size:0.8rem;" onclick="editarEquip('${e.id}')">Editar</button>
-              <button class="btn btn-danger" style="padding:4px 8px;font-size:0.8rem;background:var(--danger-color);color:white;border:none;" onclick="removerEquip('${e.id}')">Remover</button>
+              <button class="btn btn-danger" style="padding:4px 8px;font-size:0.8rem;background:var(--danger-color);color:white;border:none;" onclick="removerEquip('${e.id}')">Excluir</button>
             </div>
           </td>
         </tr>`;
     });
   }
+  
+  // Atualiza selects
   ['ag-equip', 'os-equip'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
@@ -157,16 +173,22 @@ function renderAgenda() {
     agenda.forEach((a) => {
       const cliName = (clientes.find(c => c.id === a.clienteId) || {}).nome || 'Desconhecido';
       const eqName = (equipamentos.find(e => e.id === a.equipId) || {}).nome || 'Desconhecido';
+      
+      let badgeStatus = 'badge-warning'; // Pendente
+      if(a.status === 'Confirmado') badgeStatus = 'badge-primary';
+      if(a.status === 'Concluído') badgeStatus = 'badge-success';
+
       tbody.innerHTML += `
         <tr>
           <td>${cliName}</td>
           <td>${eqName}</td>
           <td>${formatDate(a.data)}</td>
-          <td>${a.status}</td>
+          <td>${a.hora || '-'}</td>
+          <td><span class="badge ${badgeStatus}">${a.status}</span></td>
           <td>
             <div class="td-actions">
               <button class="btn btn-primary" style="padding:4px 8px;font-size:0.8rem;" onclick="editarAgenda('${a.id}')">Editar</button>
-              <button class="btn btn-danger" style="padding:4px 8px;font-size:0.8rem;background:var(--danger-color);color:white;border:none;" onclick="removerAgenda('${a.id}')">Remover</button>
+              <button class="btn btn-danger" style="padding:4px 8px;font-size:0.8rem;background:var(--danger-color);color:white;border:none;" onclick="removerAgenda('${a.id}')">Excluir</button>
             </div>
           </td>
         </tr>`;
@@ -181,17 +203,19 @@ function renderOS() {
     os.forEach((o) => {
       const cliName = (clientes.find(c => c.id === o.clienteId) || {}).nome || 'Desconhecido';
       const eqName = (equipamentos.find(e => e.id === o.equipId) || {}).nome || 'Desconhecido';
+      const badge = o.status === 'Finalizada' ? 'badge-success' : 'badge-warning';
+      
       tbody.innerHTML += `
         <tr>
-          <td>${o.numero}</td>
+          <td><strong>${o.numero}</strong></td>
           <td>${cliName}</td>
           <td>${eqName}</td>
           <td>${o.hini || '-'} / ${o.hfim || '-'}</td>
-          <td>${o.status}</td>
+          <td><span class="badge ${badge}">${o.status}</span></td>
           <td>
             <div class="td-actions">
               <button class="btn btn-primary" style="padding:4px 8px;font-size:0.8rem;" onclick="editarOS('${o.id}')">Editar</button>
-              <button class="btn btn-danger" style="padding:4px 8px;font-size:0.8rem;background:var(--danger-color);color:white;border:none;" onclick="removerOS('${o.id}')">Remover</button>
+              <button class="btn btn-danger" style="padding:4px 8px;font-size:0.8rem;background:var(--danger-color);color:white;border:none;" onclick="removerOS('${o.id}')">Excluir</button>
             </div>
           </td>
         </tr>`;
@@ -199,65 +223,193 @@ function renderOS() {
   }
 }
 
-let chartInstance = null;
-
 function renderFinanceiro() {
   const tbody = document.getElementById('tbody-fin');
-  let totalReceitas = 0;
-  let totalDespesas = 0;
+  
+  let entradas = 0, saidas = 0, receber = 0, pagar = 0, qtdPendentes = 0;
+  const mensalLabels = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+  const receitasMes = new Array(12).fill(0);
+  const despesasMes = new Array(12).fill(0);
+  const currentYear = new Date().getFullYear();
 
   if (tbody) {
     tbody.innerHTML = '';
     const sorted = [...financas].sort((a, b) => new Date(a.data) - new Date(b.data));
+    
     sorted.forEach((f) => {
       const val = Number(f.valor);
-      if (f.tipo === 'Receita') totalReceitas += val; else totalDespesas += val;
+      const isPago = f.status === 'Pago';
+      
+      // Totais dos Cards Financeiros
+      if (f.tipo === 'Receita') {
+        if (isPago) entradas += val;
+        else { receber += val; qtdPendentes++; }
+      } else {
+        if (isPago) saidas += val;
+        else { pagar += val; qtdPendentes++; }
+      }
+
+      // Dados pro gráfico financeiro (apenas pagos do ano atual)
+      if (f.data && isPago) {
+        const [y, m] = f.data.split('-');
+        if (parseInt(y) === currentYear) {
+          if (f.tipo === 'Receita') receitasMes[parseInt(m) - 1] += val;
+          else despesasMes[parseInt(m) - 1] += val;
+        }
+      }
+
+      // Render Table
+      const corTipo = f.tipo === 'Receita' ? 'var(--accent-color)' : 'var(--danger-color)';
+      const corStatus = isPago ? 'badge-success' : 'badge-danger';
+      
       tbody.innerHTML += `
         <tr>
           <td>${formatDate(f.data)}</td>
           <td>${f.desc}</td>
-          <td style="color:${f.tipo === 'Receita' ? 'var(--accent-color)' : 'var(--danger-color)'}">${f.tipo}</td>
+          <td style="color:${corTipo}; font-weight:bold;">${f.tipo}</td>
           <td>${formatMoney(f.valor)}</td>
+          <td><span class="badge ${corStatus}">${f.status || 'Pago'}</span></td>
           <td>
             <div class="td-actions">
               <button class="btn btn-primary" style="padding:4px 8px;font-size:0.8rem;" onclick="editarFin('${f.id}')">Editar</button>
-              <button class="btn btn-danger" style="padding:4px 8px;font-size:0.8rem;background:var(--danger-color);color:white;border:none;" onclick="removerFin('${f.id}')">Remover</button>
+              <button class="btn btn-danger" style="padding:4px 8px;font-size:0.8rem;background:var(--danger-color);color:white;border:none;" onclick="removerFin('${f.id}')">Excluir</button>
             </div>
           </td>
         </tr>`;
     });
   }
 
-  const relReceitas = document.getElementById('rel-receitas');
-  if (relReceitas) {
-    relReceitas.textContent = formatMoney(totalReceitas);
-    document.getElementById('rel-despesas').textContent = formatMoney(totalDespesas);
-    document.getElementById('rel-saldo').textContent = formatMoney(totalReceitas - totalDespesas);
+  // Atualizar DOM Financeiro
+  const elEntradas = document.getElementById('fin-tot-entradas');
+  if (elEntradas) {
+    elEntradas.textContent = formatMoney(entradas);
+    document.getElementById('fin-tot-saidas').textContent = formatMoney(saidas);
+    document.getElementById('fin-tot-fluxo').textContent = formatMoney(entradas - saidas);
+    document.getElementById('fin-tot-receber').textContent = formatMoney(receber);
+    document.getElementById('fin-tot-pagar').textContent = formatMoney(pagar);
+    document.getElementById('fin-tot-pendentes').textContent = `${qtdPendentes} lançamentos`;
+  }
+
+  // Renderizar Gráfico de Finanças
+  const ctxFin = document.getElementById('chartFinanceiroSecao');
+  if (ctxFin && window.Chart) {
+    if (chartInstanceFin) chartInstanceFin.destroy();
+    chartInstanceFin = new Chart(ctxFin, {
+      type: 'bar',
+      data: {
+        labels: mensalLabels,
+        datasets: [
+          { label: 'Receitas', data: receitasMes, backgroundColor: '#10b981' },
+          { label: 'Despesas', data: despesasMes, backgroundColor: '#ef4444' }
+        ]
+      },
+      options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+  }
+}
+
+function renderRelatorios() {
+  const hj = new Date();
+  const mesAtual = hj.getMonth() + 1; // 1 a 12
+  const anoAtual = hj.getFullYear();
+
+  let fatMes = 0;
+  let despMes = 0;
+  let gastoDiesel = 0;
+  let gastoManutencao = 0;
+
+  // Processar Finanças para Relatórios
+  financas.forEach(f => {
+    if (!f.data || f.status !== 'Pago') return; // Conta apenas o que foi realizado/pago
+    
+    const [y, m] = f.data.split('-');
+    const val = Number(f.valor);
+    const desc = (f.desc || '').toLowerCase();
+
+    // Filtros de Mês Atual
+    if (parseInt(y) === anoAtual && parseInt(m) === mesAtual) {
+      if (f.tipo === 'Receita') fatMes += val;
+      if (f.tipo === 'Despesa') despMes += val;
+    }
+
+    // Filtros por Palavra-Chave (Diesel e Manutenção - Histórico Total do Ano)
+    if (parseInt(y) === anoAtual && f.tipo === 'Despesa') {
+      if (desc.includes('diesel') || desc.includes('combustivel') || desc.includes('combustível')) {
+        gastoDiesel += val;
+      }
+      if (desc.includes('manuten') || desc.includes('peça') || desc.includes('peca') || desc.includes('oficina') || desc.includes('óleo')) {
+        gastoManutencao += val;
+      }
+    }
+  });
+
+  // Atualizar DOM Relatórios Superiores
+  const elFatMes = document.getElementById('rel-faturamento-mes');
+  if (elFatMes) {
+    elFatMes.textContent = formatMoney(fatMes);
+    document.getElementById('rel-lucro').textContent = formatMoney(fatMes - despMes);
+    document.getElementById('rel-lucro').style.color = (fatMes - despMes) >= 0 ? 'var(--accent-color)' : 'var(--danger-color)';
+    document.getElementById('rel-diesel').textContent = formatMoney(gastoDiesel);
+    document.getElementById('rel-manutencao').textContent = formatMoney(gastoManutencao);
+  }
+
+  // --- Rankings (Top Clientes e Top Equipamentos baseados em volume de OS) ---
+  const contagemClientes = {};
+  const contagemEquips = {};
+
+  os.forEach(o => {
+    if (o.clienteId) contagemClientes[o.clienteId] = (contagemClientes[o.clienteId] || 0) + 1;
+    if (o.equipId) contagemEquips[o.equipId] = (contagemEquips[o.equipId] || 0) + 1;
+  });
+
+  // Top Clientes
+  const topClientes = Object.keys(contagemClientes)
+    .map(id => ({ id, count: contagemClientes[id], nome: (clientes.find(c => c.id === id) || {}).nome || 'Desconhecido' }))
+    .sort((a, b) => b.count - a.count).slice(0, 5); // Pega os 5 primeiros
+
+  const listaCli = document.getElementById('lista-top-clientes');
+  if (listaCli) {
+    listaCli.innerHTML = topClientes.length ? '' : '<li><span>Nenhum dado de OS ainda.</span></li>';
+    topClientes.forEach((cli, index) => {
+      listaCli.innerHTML += `<li><span>${index + 1}. ${cli.nome}</span> <span>${cli.count} OS(s)</span></li>`;
+    });
+  }
+
+  // Top Equipamentos
+  const topEquips = Object.keys(contagemEquips)
+    .map(id => ({ id, count: contagemEquips[id], nome: (equipamentos.find(e => e.id === id) || {}).nome || 'Desconhecido' }))
+    .sort((a, b) => b.count - a.count).slice(0, 5);
+
+  const listaEq = document.getElementById('lista-top-equipamentos');
+  if (listaEq) {
+    listaEq.innerHTML = topEquips.length ? '' : '<li><span>Nenhum dado de OS ainda.</span></li>';
+    topEquips.forEach((eq, index) => {
+      listaEq.innerHTML += `<li><span>${index + 1}. ${eq.nome}</span> <span>${eq.count} Serviço(s)</span></li>`;
+    });
   }
 }
 
 function renderDashboard() {
-  const hj = new Date();
-  const currentMonth = hj.getMonth();
-  const currentYear = hj.getFullYear();
-  let fatMes = 0;
+  // Gráfico do Dashboard Principal (Somente Receitas Pagas)
+  const currentYear = new Date().getFullYear();
   const monthLabels = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
   const monthlyData = new Array(12).fill(0);
+  let fatMesAtual = 0;
+  const mesAtual = new Date().getMonth();
 
   financas.forEach(f => {
-    if (f.tipo === 'Receita' && f.data) {
+    if (f.tipo === 'Receita' && f.status === 'Pago' && f.data) {
       const [y, m] = f.data.split('-');
       const fMonth = parseInt(m) - 1;
-      const fYear = parseInt(y);
-      if (fYear === currentYear) {
+      if (parseInt(y) === currentYear) {
         monthlyData[fMonth] += Number(f.valor);
-        if (fMonth === currentMonth) fatMes += Number(f.valor);
+        if (fMonth === mesAtual) fatMesAtual += Number(f.valor);
       }
     }
   });
 
   const dashFat = document.getElementById('dash-fat');
-  if (dashFat) dashFat.textContent = formatMoney(fatMes);
+  if (dashFat) dashFat.textContent = formatMoney(fatMesAtual);
 
   const dashOs = document.getElementById('dash-os');
   if (dashOs) dashOs.textContent = os.filter(o => o.status === 'Em Andamento').length;
@@ -265,15 +417,15 @@ function renderDashboard() {
   const dashMaq = document.getElementById('dash-maq');
   if (dashMaq) dashMaq.textContent = equipamentos.filter(e => e.status === 'Operacional').length;
 
-  const ctx = document.getElementById('chartFaturamento');
-  if (ctx && window.Chart) {
-    if (chartInstance) chartInstance.destroy();
-    chartInstance = new Chart(ctx, {
+  const ctxDash = document.getElementById('chartFaturamento');
+  if (ctxDash && window.Chart) {
+    if (chartInstanceDash) chartInstanceDash.destroy();
+    chartInstanceDash = new Chart(ctxDash, {
       type: 'line',
       data: {
         labels: monthLabels,
         datasets: [{
-          label: `Receitas em ${currentYear}`,
+          label: `Faturamento em ${currentYear}`,
           data: monthlyData,
           borderColor: '#10b981',
           backgroundColor: 'rgba(16, 185, 129, 0.1)',
@@ -285,8 +437,8 @@ function renderDashboard() {
         responsive: true,
         plugins: { legend: { display: true } },
         scales: {
-          y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { color: '#64748b' } },
-          x: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { color: '#64748b' } }
+          y: { grid: { color: 'rgba(0,0,0,0.05)' } },
+          x: { grid: { color: 'rgba(0,0,0,0.05)' } }
         }
       }
     });
@@ -308,11 +460,9 @@ window.salvarCliente = async function() {
   if (!nome || !whats) return alert("Nome e WhatsApp são obrigatórios!");
   const data = { nome, cpf, whats, email, endereco, obs };
 
-  if (id) {
-    await updateDoc(doc(db, "clientes", id), data);
-  } else {
-    await addDoc(collection(db, "clientes"), data);
-  }
+  if (id) await updateDoc(doc(db, "clientes", id), data);
+  else await addDoc(collection(db, "clientes"), data);
+  
   closeModal('modal-cliente');
 };
 
@@ -331,7 +481,7 @@ window.editarCliente = function(id) {
 };
 
 window.removerCliente = async function(id) {
-  if (confirm('Remover este cliente?')) await deleteDoc(doc(db, "clientes", id));
+  if (confirm('Remover este cliente permanentemente?')) await deleteDoc(doc(db, "clientes", id));
 };
 
 // ==========================================
@@ -342,15 +492,26 @@ window.salvarEquip = async function() {
   const nome = document.getElementById('eq-nome').value;
   const horimetro = document.getElementById('eq-hori').value;
   const status = document.getElementById('eq-status').value;
+  
+  // Novos campos
+  const oleo = document.getElementById('eq-oleo').value;
+  const proxManut = document.getElementById('eq-prox-manut').value;
+  const docVenc = document.getElementById('eq-doc').value;
+  const seguroVenc = document.getElementById('eq-seguro').value;
+  const custo = document.getElementById('eq-custo').value;
 
   if (!nome) return alert("Nome do equipamento é obrigatório!");
-  const data = { nome, horimetro: horimetro || '0', status };
+  
+  const data = { 
+    nome, 
+    horimetro: horimetro || '0', 
+    status,
+    oleo, proxManut, doc: docVenc, seguro: seguroVenc, custo: Number(custo || 0)
+  };
 
-  if (id) {
-    await updateDoc(doc(db, "equipamentos", id), data);
-  } else {
-    await addDoc(collection(db, "equipamentos"), data);
-  }
+  if (id) await updateDoc(doc(db, "equipamentos", id), data);
+  else await addDoc(collection(db, "equipamentos"), data);
+  
   closeModal('modal-equip');
 };
 
@@ -361,6 +522,14 @@ window.editarEquip = function(id) {
   document.getElementById('eq-nome').value = e.nome || '';
   document.getElementById('eq-hori').value = e.horimetro || '';
   document.getElementById('eq-status').value = e.status || 'Operacional';
+  
+  // Populando novos campos
+  document.getElementById('eq-oleo').value = e.oleo || '';
+  document.getElementById('eq-prox-manut').value = e.proxManut || '';
+  document.getElementById('eq-doc').value = e.doc || '';
+  document.getElementById('eq-seguro').value = e.seguro || '';
+  document.getElementById('eq-custo').value = e.custo || '';
+
   document.getElementById('title-modal-equip').textContent = "Editar Equipamento";
   document.getElementById('modal-equip').classList.add('active');
 };
@@ -377,16 +546,15 @@ window.salvarAgenda = async function() {
   const clienteId = document.getElementById('ag-cliente').value;
   const equipId = document.getElementById('ag-equip').value;
   const dataPrev = document.getElementById('ag-data').value;
+  const hora = document.getElementById('ag-hora').value; // Novo Campo
   const status = document.getElementById('ag-status').value;
 
-  if (!clienteId || !equipId || !dataPrev) return alert("Preencha os campos obrigatórios!");
-  const data = { clienteId, equipId, data: dataPrev, status };
+  if (!clienteId || !equipId || !dataPrev) return alert("Preencha Cliente, Equipamento e Data!");
+  const data = { clienteId, equipId, data: dataPrev, hora, status };
 
-  if (id) {
-    await updateDoc(doc(db, "agenda", id), data);
-  } else {
-    await addDoc(collection(db, "agenda"), data);
-  }
+  if (id) await updateDoc(doc(db, "agenda", id), data);
+  else await addDoc(collection(db, "agenda"), data);
+  
   closeModal('modal-agenda');
 };
 
@@ -397,6 +565,7 @@ window.editarAgenda = function(id) {
   document.getElementById('ag-cliente').value = a.clienteId || '';
   document.getElementById('ag-equip').value = a.equipId || '';
   document.getElementById('ag-data').value = a.data || '';
+  document.getElementById('ag-hora').value = a.hora || '';
   document.getElementById('ag-status').value = a.status || 'Pendente';
   document.getElementById('title-modal-agenda').textContent = "Editar Agendamento";
   document.getElementById('modal-agenda').classList.add('active');
@@ -421,11 +590,9 @@ window.salvarOS = async function() {
   if (!numero || !clienteId || !equipId) return alert("Preencha Nº OS, Cliente e Equipamento!");
   const data = { numero, clienteId, equipId, hini, hfim, status };
 
-  if (id) {
-    await updateDoc(doc(db, "os", id), data);
-  } else {
-    await addDoc(collection(db, "os"), data);
-  }
+  if (id) await updateDoc(doc(db, "os", id), data);
+  else await addDoc(collection(db, "os"), data);
+  
   closeModal('modal-os');
 };
 
@@ -456,15 +623,14 @@ window.salvarFin = async function() {
   const tipo = document.getElementById('fin-tipo').value;
   const valor = document.getElementById('fin-valor').value;
   const dataLanc = document.getElementById('fin-data').value;
+  const status = document.getElementById('fin-status').value; // Novo Campo
 
-  if (!desc || !valor || !dataLanc) return alert("Preencha todos os campos!");
-  const data = { desc, tipo, valor: Number(valor), data: dataLanc };
+  if (!desc || !valor || !dataLanc) return alert("Preencha Descrição, Valor e Data!");
+  const data = { desc, tipo, valor: Number(valor), data: dataLanc, status };
 
-  if (id) {
-    await updateDoc(doc(db, "financas", id), data);
-  } else {
-    await addDoc(collection(db, "financas"), data);
-  }
+  if (id) await updateDoc(doc(db, "financas", id), data);
+  else await addDoc(collection(db, "financas"), data);
+  
   closeModal('modal-fin');
 };
 
@@ -476,12 +642,13 @@ window.editarFin = function(id) {
   document.getElementById('fin-tipo').value = f.tipo || 'Receita';
   document.getElementById('fin-valor').value = f.valor || '';
   document.getElementById('fin-data').value = f.data || '';
+  document.getElementById('fin-status').value = f.status || 'Pago'; // Puxa o status antigo ou define como pago
   document.getElementById('title-modal-fin').textContent = "Editar Lançamento";
   document.getElementById('modal-fin').classList.add('active');
 };
 
 window.removerFin = async function(id) {
-  if (confirm('Remover lançamento?')) await deleteDoc(doc(db, "financas", id));
+  if (confirm('Remover lançamento financeiro?')) await deleteDoc(doc(db, "financas", id));
 };
 
 // ==========================================
@@ -676,6 +843,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (s.id === targetView) s.classList.add('active');
       });
       if (window.innerWidth <= 768) sidebar.classList.remove('mobile-open');
+      
+      // Força o re-render dos gráficos caso a tela deles seja ativada (corrige bugs visuais de abas escondidas)
+      if (targetView === 'view-dashboard' || targetView === 'view-financeiro') {
+         setTimeout(renderAll, 100);
+      }
     });
   });
 
