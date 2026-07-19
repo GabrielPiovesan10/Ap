@@ -41,6 +41,12 @@
     
     /* Botões de tabela com flex */
     .td-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    /* Estilos extras para listas de relatórios */
+    .ranking-list { list-style: none; padding: 0; margin: 0; }
+    .ranking-list li { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); }
+    .ranking-list li:last-child { border-bottom: none; }
+    .ranking-list li span:last-child { font-weight: bold; color: var(--primary-color); }
   </style>
 </head>
 <body>
@@ -201,6 +207,8 @@
                   <tr>
                     <th>Equipamento</th>
                     <th>Horímetro</th>
+                    <th>Última Troca/Manut.</th>
+                    <th>Doc/Seguro</th>
                     <th>Status</th>
                     <th>Ações</th>
                   </tr>
@@ -228,7 +236,8 @@
                   <tr>
                     <th>Cliente</th>
                     <th>Equipamento</th>
-                    <th>Data Prevista</th>
+                    <th>Data</th>
+                    <th>Horário</th>
                     <th>Status</th>
                     <th>Ações</th>
                   </tr>
@@ -337,13 +346,62 @@
         <!-- ================= Financeiro ================= -->
         <section id="view-financeiro" class="view-section">
           <div class="top-bar-actions">
-            <h2>Contas a Pagar e Receber</h2>
+            <h2>Gestão Financeira</h2>
             <button class="btn btn-primary" onclick="openModal('modal-fin')">
               <i class="ph ph-plus"></i> Novo Lançamento
             </button>
           </div>
+
+          <!-- Resumo Financeiro -->
+          <div class="grid-cards" style="margin-bottom: 24px;">
+            <div class="glass-card stat-card">
+              <div class="stat-info">
+                <h3>Entradas (Receitas)</h3>
+                <p id="fin-tot-entradas" style="color: var(--accent-color);">R$ 0,00</p>
+              </div>
+            </div>
+            <div class="glass-card stat-card">
+              <div class="stat-info">
+                <h3>Saídas (Despesas)</h3>
+                <p id="fin-tot-saidas" style="color: var(--danger-color);">R$ 0,00</p>
+              </div>
+            </div>
+            <div class="glass-card stat-card">
+              <div class="stat-info">
+                <h3>Fluxo de Caixa (Saldo)</h3>
+                <p id="fin-tot-fluxo" style="color: var(--primary-color);">R$ 0,00</p>
+              </div>
+            </div>
+            <div class="glass-card stat-card">
+              <div class="stat-info">
+                <h3>Contas a Receber</h3>
+                <p id="fin-tot-receber" style="color: var(--accent-color);">R$ 0,00</p>
+              </div>
+            </div>
+            <div class="glass-card stat-card">
+              <div class="stat-info">
+                <h3>Contas a Pagar</h3>
+                <p id="fin-tot-pagar" style="color: var(--warning-color);">R$ 0,00</p>
+              </div>
+            </div>
+            <div class="glass-card stat-card">
+              <div class="stat-info">
+                <h3>Cobranças Pendentes</h3>
+                <p id="fin-tot-pendentes" style="color: var(--danger-color);">0 lançamentos</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gráfico Financeiro Interno -->
+          <div class="glass-card" style="margin-bottom: 24px;">
+            <h3>Gráfico de Faturamento e Despesas</h3>
+            <canvas id="chartFinanceiroSecao" style="max-height: 250px;"></canvas>
+          </div>
+
+          <!-- Tabela de Lançamentos -->
           <div class="glass-card">
-            <div class="table-responsive">
+            <h3>Lançamentos (Pagar e Receber)</h3>
+            <div class="table-responsive" style="margin-top: 16px;">
               <table>
                 <thead>
                   <tr>
@@ -351,6 +409,7 @@
                     <th>Descrição</th>
                     <th>Tipo</th>
                     <th>Valor</th>
+                    <th>Status</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
@@ -366,20 +425,58 @@
           <div class="top-bar-actions">
             <h2>Relatórios de Desempenho</h2>
           </div>
-          <div class="glass-card">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-               <div style="padding: 20px; background: rgba(16, 185, 129, 0.1); border-radius: 8px;">
-                 <h3>Total de Receitas</h3>
-                 <p id="rel-receitas" style="font-size: 24px; font-weight: bold; color: var(--accent-color);">R$ 0,00</p>
-               </div>
-               <div style="padding: 20px; background: rgba(239, 68, 68, 0.1); border-radius: 8px;">
-                 <h3>Total de Despesas</h3>
-                 <p id="rel-despesas" style="font-size: 24px; font-weight: bold; color: var(--danger-color);">R$ 0,00</p>
-               </div>
+          
+          <!-- Cards de Resumo Gerencial -->
+          <div class="grid-cards" style="margin-bottom: 24px;">
+            <div class="glass-card stat-card" style="border-left: 4px solid var(--primary-color);">
+              <div class="stat-info">
+                <h3>Faturamento Mensal</h3>
+                <p id="rel-faturamento-mes">R$ 0,00</p>
+              </div>
             </div>
-            <div style="padding: 20px; background: rgba(59, 130, 246, 0.1); border-radius: 8px; margin-top: 16px;">
-               <h3>Saldo Líquido</h3>
-               <p id="rel-saldo" style="font-size: 24px; font-weight: bold; color: var(--primary-color);">R$ 0,00</p>
+            <div class="glass-card stat-card" style="border-left: 4px solid var(--accent-color);">
+              <div class="stat-info">
+                <h3>Lucro Líquido</h3>
+                <p id="rel-lucro">R$ 0,00</p>
+              </div>
+            </div>
+            <div class="glass-card stat-card" style="border-left: 4px solid var(--warning-color);">
+              <div class="stat-info">
+                <h3>Gastos com Diesel</h3>
+                <p id="rel-diesel">R$ 0,00</p>
+              </div>
+            </div>
+            <div class="glass-card stat-card" style="border-left: 4px solid var(--danger-color);">
+              <div class="stat-info">
+                <h3>Manutenção Total</h3>
+                <p id="rel-manutencao">R$ 0,00</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top Rankings -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+            <div class="glass-card">
+              <h3 style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                <i class="ph ph-star" style="color: var(--warning-color);"></i> Clientes que mais contrataram
+              </h3>
+              <ul class="ranking-list" id="lista-top-clientes">
+                <!-- Gerado por JS (Exemplo visual abaixo) -->
+                <li><span>1. Cliente Exemplo A</span> <span>R$ 15.000,00</span></li>
+                <li><span>2. Cliente Exemplo B</span> <span>R$ 12.300,00</span></li>
+                <li><span>3. Construtora XYZ</span> <span>R$ 8.900,00</span></li>
+              </ul>
+            </div>
+            <div class="glass-card">
+              <h3 style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                <i class="ph ph-trend-up" style="color: var(--accent-color);"></i> Equipamento que mais faturou
+              </h3>
+              <ul class="ranking-list" id="lista-top-equipamentos">
+                <!-- Gerado por JS (Exemplo visual abaixo) -->
+                <li><span>1. Escavadeira Suny</span> <span>R$ 25.000,00</span></li>
+                <li><span>2. Munk 45 Toneladas</span> <span>R$ 18.000,00</span></li>
+                <li><span>3. Escavadeira Yanmar</span> <span>R$ 11.200,00</span></li>
+              </ul>
             </div>
           </div>
         </section>
@@ -432,23 +529,25 @@
       </div>
     </div>
 
-    <!-- Modal Equipamento -->
+    <!-- Modal Equipamento (Atualizado com novos campos) -->
     <div class="modal-overlay" id="modal-equip">
-      <div class="modal-content">
+      <div class="modal-content" style="max-width: 600px;">
         <div class="modal-header">
           <h3 class="modal-title" id="title-modal-equip">Novo Equipamento</h3>
           <button class="btn-close" onclick="closeModal('modal-equip')"><i class="ph ph-x"></i></button>
         </div>
         <div class="modal-body">
           <input type="hidden" id="eq-id" value="">
+          
           <div class="form-group">
             <label>Nome do Equipamento/Ferramenta</label>
             <input type="text" class="form-control" id="eq-nome" placeholder="Ex: Escavadeira Suny">
           </div>
+          
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
             <div class="form-group">
-              <label>Horímetro Atual</label>
-              <input type="text" class="form-control" id="eq-hori" placeholder="Ex: 1200h">
+              <label>Horímetro Atual (Hrs)</label>
+              <input type="number" class="form-control" id="eq-hori" placeholder="Ex: 1200">
             </div>
             <div class="form-group">
               <label>Status</label>
@@ -457,6 +556,29 @@
                 <option value="Em Manutenção">Em Manutenção</option>
                 <option value="Alugado">Alugado</option>
               </select>
+            </div>
+            
+            <div class="form-group">
+              <label>Última Troca de Óleo (Km/Hrs ou Data)</label>
+              <input type="text" class="form-control" id="eq-oleo" placeholder="Ex: 1100 Hrs">
+            </div>
+            <div class="form-group">
+              <label>Próxima Manutenção Prevista</label>
+              <input type="text" class="form-control" id="eq-prox-manut" placeholder="Ex: 1300 Hrs ou 15/10/2024">
+            </div>
+
+            <div class="form-group">
+              <label>Vencimento Documentação</label>
+              <input type="date" class="form-control" id="eq-doc">
+            </div>
+            <div class="form-group">
+              <label>Vencimento Seguro</label>
+              <input type="date" class="form-control" id="eq-seguro">
+            </div>
+
+            <div class="form-group" style="grid-column: span 2;">
+              <label>Custos Mensais Estimados / Fixos (R$)</label>
+              <input type="number" class="form-control" id="eq-custo" placeholder="0.00" step="0.01">
             </div>
           </div>
         </div>
@@ -467,7 +589,7 @@
       </div>
     </div>
 
-    <!-- Modal Agenda -->
+    <!-- Modal Agenda (Atualizado com Horário) -->
     <div class="modal-overlay" id="modal-agenda">
       <div class="modal-content">
         <div class="modal-header">
@@ -494,13 +616,17 @@
               <input type="date" class="form-control" id="ag-data">
             </div>
             <div class="form-group">
-              <label>Status</label>
-              <select class="form-control" id="ag-status">
-                <option value="Pendente">Pendente</option>
-                <option value="Confirmado">Confirmado</option>
-                <option value="Concluído">Concluído</option>
-              </select>
+              <label>Horário</label>
+              <input type="time" class="form-control" id="ag-hora">
             </div>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select class="form-control" id="ag-status">
+              <option value="Pendente">Pendente</option>
+              <option value="Confirmado">Confirmado</option>
+              <option value="Concluído">Concluído</option>
+            </select>
           </div>
         </div>
         <div class="modal-footer">
@@ -562,7 +688,7 @@
       </div>
     </div>
 
-    <!-- Modal Finanças -->
+    <!-- Modal Finanças (Atualizado com Status Pagar/Receber) -->
     <div class="modal-overlay" id="modal-fin">
       <div class="modal-content">
         <div class="modal-header">
@@ -572,8 +698,8 @@
         <div class="modal-body">
           <input type="hidden" id="fin-id" value="">
           <div class="form-group">
-            <label>Descrição</label>
-            <input type="text" class="form-control" id="fin-desc" placeholder="Ex: Locação OS 001">
+            <label>Descrição (Identifique se é Manutenção, Diesel, Locação...)</label>
+            <input type="text" class="form-control" id="fin-desc" placeholder="Ex: Locação OS 001 / Diesel / Peças">
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
             <div class="form-group">
@@ -588,9 +714,18 @@
               <input type="number" class="form-control" id="fin-valor" placeholder="0.00" step="0.01">
             </div>
           </div>
-          <div class="form-group">
-            <label>Data</label>
-            <input type="date" class="form-control" id="fin-data">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+              <label>Data</label>
+              <input type="date" class="form-control" id="fin-data">
+            </div>
+            <div class="form-group">
+              <label>Status</label>
+              <select class="form-control" id="fin-status">
+                <option value="Pago">Pago / Recebido</option>
+                <option value="Pendente">Pendente</option>
+              </select>
+            </div>
           </div>
         </div>
         <div class="modal-footer">
