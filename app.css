@@ -1,16 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --bg-color: #0f172a; /* Slate 900 */
-  --sidebar-bg: rgba(30, 41, 59, 0.7); /* Slate 800 with opacity */
+  --bg-color: #0f172a;
+  --surface-color: #1e293b;
+  --sidebar-bg: rgba(30, 41, 59, 0.85);
   --card-bg: rgba(30, 41, 59, 0.5);
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
-  --primary-color: #3b82f6; /* Blue 500 */
+  --primary-color: #3b82f6;
   --primary-hover: #2563eb;
-  --accent-color: #10b981; /* Emerald 500 */
-  --danger-color: #ef4444; /* Red 500 */
-  --warning-color: #f59e0b; /* Amber 500 */
+  --accent-color: #10b981;
+  --danger-color: #ef4444;
+  --warning-color: #f59e0b;
   --border-color: rgba(255, 255, 255, 0.1);
   --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   --blur: blur(12px);
@@ -30,7 +31,14 @@ body {
     radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
   color: var(--text-primary);
   min-height: 100vh;
+  overflow: hidden;
+}
+
+/* Container principal do sistema (mostrado após login) */
+.app-container {
   display: flex;
+  width: 100vw;
+  height: 100vh;
   overflow: hidden;
 }
 
