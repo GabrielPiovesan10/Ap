@@ -3,13 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Bianchin Escavações | Gestão</title>
+  <title>Sistema de Gestão | Locação de Máquinas</title>
   <meta name="description" content="Sistema completo para gestão de locação de máquinas, orçamentos e ordens de serviço.">
   
-  <!-- Fontes do Google (Inter para visual moderno) -->
+  <!-- Fontes do Google -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Arquivo de Estilos -->
+  <link rel="stylesheet" href="app.css">
   
   <!-- Ícones Phosphor -->
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -17,215 +20,32 @@
   <!-- Bibliotecas Auxiliares -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
-  <style>
-    /* ================= DESIGN SYSTEM & VARIÁVEIS ================= */
-    :root {
-      /* Cores Tema Máquinas Pesadas (Slate + Amber) */
-      --primary-color: #F59E0B; /* Amarelo/Âmbar Máquina */
-      --primary-hover: #D97706;
-      --bg-color: #F1F5F9;      /* Fundo cinza bem claro */
-      --surface-color: #FFFFFF; /* Fundo dos cards */
-      --sidebar-bg: #0F172A;    /* Slate escuro */
-      --sidebar-hover: #1E293B;
-      --text-main: #0F172A;
-      --text-muted: #64748B;
-      --border-color: #E2E8F0;
-      
-      /* Status */
-      --success-color: #10B981;
-      --danger-color: #EF4444;
-      --warning-color: #F59E0B;
-      --info-color: #3B82F6;
-      
-      /* Sombras & Bordas */
-      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-      --radius: 8px;
-    }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-    
-    body { background-color: var(--bg-color); color: var(--text-main); -webkit-font-smoothing: antialiased; }
-
-    /* ================= COMPONENTES GERAIS ================= */
-    .btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      padding: 10px 16px; border-radius: var(--radius); border: none;
-      font-weight: 500; font-size: 0.9rem; cursor: pointer; transition: all 0.2s;
-    }
-    .btn-primary { background-color: var(--primary-color); color: #fff; }
-    .btn-primary:hover { background-color: var(--primary-hover); }
-    .btn-success { background-color: var(--success-color); color: #fff; }
-    
-    .form-control {
-      width: 100%; padding: 10px 14px; border: 1px solid var(--border-color);
-      border-radius: var(--radius); font-size: 0.95rem; background: #fff;
-      transition: border-color 0.2s;
-    }
-    .form-control:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1); }
-    
-    .form-group { margin-bottom: 16px; }
-    .form-group label { display: block; margin-bottom: 6px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
-
-    .glass-card {
-      background: var(--surface-color); border-radius: var(--radius); padding: 24px;
-      box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); margin-bottom: 24px;
-    }
-
-    .top-bar-actions {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
-    }
-    .top-bar-actions h2, .top-bar-actions h3 { font-size: 1.25rem; font-weight: 600; }
-
-    /* ================= TELA DE LOGIN ================= */
-    .auth-wrapper {
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: var(--sidebar-bg);
-      background-image: radial-gradient(circle at top right, #1E293B, #0F172A);
-      display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 20px;
-    }
-    .auth-card {
-      background: var(--surface-color); padding: 40px; border-radius: 12px;
-      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); width: 100%; max-width: 420px;
-      text-align: center;
-    }
-    .auth-card h2 { margin-bottom: 24px; color: var(--text-main); font-weight: 700; }
-    .auth-form { display: flex; flex-direction: column; gap: 16px; }
-    .auth-toggle { margin-top: 24px; font-size: 0.9rem; color: var(--text-muted); cursor: pointer; }
-    .auth-toggle:hover { color: var(--primary-color); }
-
-    /* ================= LAYOUT PRINCIPAL ================= */
-    .app-container { display: flex; min-height: 100vh; }
-    
-    /* Sidebar */
-    .sidebar {
-      width: 260px; background: var(--sidebar-bg); color: #fff;
-      display: flex; flex-direction: column; position: fixed;
-      height: 100vh; top: 0; left: 0; z-index: 100; transition: transform 0.3s ease;
-    }
-    .sidebar .brand {
-      padding: 24px; font-size: 1.2rem; font-weight: 700;
-      display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--sidebar-hover);
-    }
-    .sidebar .brand i { font-size: 1.8rem; color: var(--primary-color); }
-    .nav-menu { padding: 16px 0; display: flex; flex-direction: column; gap: 4px; }
-    .nav-item {
-      padding: 12px 24px; display: flex; align-items: center; gap: 12px;
-      color: #94A3B8; text-decoration: none; font-size: 0.95rem; font-weight: 500;
-      transition: all 0.2s; border-left: 3px solid transparent;
-    }
-    .nav-item i { font-size: 1.25rem; }
-    .nav-item:hover, .nav-item.active {
-      background: var(--sidebar-hover); color: #fff; border-left-color: var(--primary-color);
-    }
-
-    /* Conteúdo Principal */
-    .main-content { margin-left: 260px; flex: 1; display: flex; flex-direction: column; width: calc(100% - 260px); }
-    
-    .header {
-      background: var(--surface-color); padding: 16px 32px;
-      display: flex; justify-content: space-between; align-items: center;
-      border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 90;
-    }
-    .menu-toggle { display: none; background: none; border: none; font-size: 1.5rem; color: var(--text-main); cursor: pointer; }
-    
-    .content-area { padding: 32px; overflow-y: auto; }
-    .view-section { display: none; animation: fadeIn 0.3s ease; }
-    .view-section.active { display: block; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-    /* ================= DASHBOARD & GRIDS ================= */
-    .grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 24px; }
-    .stat-card { display: flex; align-items: center; gap: 20px; padding: 24px; margin-bottom: 0;}
-    .stat-icon {
-      width: 56px; height: 56px; border-radius: 12px; display: flex;
-      align-items: center; justify-content: center; font-size: 1.8rem;
-      background: rgba(15, 23, 42, 0.05); color: var(--sidebar-bg);
-    }
-    .stat-info h3 { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-    .stat-info p { font-size: 1.8rem; font-weight: 700; color: var(--text-main); margin-top: 4px; }
-
-    /* ================= TABELAS ================= */
-    .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    table { width: 100%; border-collapse: collapse; white-space: nowrap; }
-    th, td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border-color); }
-    th { background: #F8FAFC; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
-    tr:hover { background-color: #F8FAFC; }
-    .td-actions { display: flex; gap: 8px; }
-    .td-actions .btn { padding: 6px 10px; font-size: 1rem; } /* Botões menores na tabela */
-
-    /* ================= MODAIS ================= */
-    .modal-overlay {
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
-      display: none; align-items: center; justify-content: center; z-index: 1000;
-      padding: 20px;
-    }
-    .modal-overlay.active { display: flex; }
-    .modal-content {
-      background: var(--surface-color); width: 100%; max-width: 600px;
-      border-radius: 12px; box-shadow: var(--shadow-md); max-height: 90vh; overflow-y: auto;
-    }
-    .modal-header {
-      padding: 20px 24px; border-bottom: 1px solid var(--border-color);
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .modal-title { font-size: 1.1rem; font-weight: 600; }
-    .btn-close { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted); }
-    .modal-body { padding: 24px; }
-    .modal-footer {
-      padding: 16px 24px; border-top: 1px solid var(--border-color);
-      display: flex; justify-content: flex-end; gap: 12px; background: #F8FAFC; border-radius: 0 0 12px 12px;
-    }
-    
-    /* Layouts Auxiliares */
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .grid-checkbox { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
-    .checkbox-label { display: flex; align-items: center; gap: 8px; color: var(--text-main); font-size: 0.9rem; cursor: pointer; }
-    .checkbox-label input { width: 16px; height: 16px; accent-color: var(--primary-color); }
-
-    /* ================= RESPONSIVIDADE (MOBILE) ================= */
-    @media (max-width: 768px) {
-      .sidebar { transform: translateX(-100%); }
-      .sidebar.mobile-open { transform: translateX(0); }
-      .main-content { margin-left: 0; width: 100%; }
-      .menu-toggle { display: block; }
-      .header { padding: 16px; }
-      .content-area { padding: 16px; }
-      .grid-2, .grid-checkbox { grid-template-columns: 1fr; } /* Empilha formulários no celular */
-      .top-bar-actions { flex-direction: column; align-items: stretch; }
-      .top-bar-actions .btn { width: 100%; }
-    }
-    
-    /* Overlay escuro para quando o menu mobile estiver aberto */
-    .mobile-menu-overlay {
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.5); z-index: 90; display: none;
-    }
-    .mobile-menu-overlay.active { display: block; }
-  </style>
 </head>
 <body>
 
   <!-- ================= TELA DE LOGIN ================= -->
   <div class="auth-wrapper" id="auth-wrapper">
     <div class="auth-card">
-      <div style="font-size: 56px; color: var(--primary-color); margin-bottom: 16px;">
-        <i class="ph-fill ph-excavator"></i>
+      
+      <!-- Espaço para a Logo da Empresa -->
+      <div style="margin-bottom: 32px; text-align: center;">
+        <!-- Substitua 'sua-logo.png' pelo caminho real do arquivo de imagem da logo -->
+        <img src="sua-logo.png" alt="Logo da Empresa" style="max-width: 200px; height: auto; object-fit: contain;">
       </div>
-      <h2 id="auth-title">Bianchin Escavações</h2>
-      <p style="color: var(--text-muted); margin-bottom: 24px; font-size: 0.9rem;">Acesse o painel de gestão</p>
       
       <form class="auth-form" id="auth-form">
-        <input type="email" id="auth-email" class="form-control" placeholder="Seu e-mail corporativo" required>
-        <input type="password" id="auth-pass" class="form-control" placeholder="Sua senha" required>
-        <button type="submit" class="btn btn-primary" id="auth-btn" style="padding: 12px; font-size: 1rem;">Entrar no Sistema</button>
+        <input type="email" id="auth-email" class="form-control" placeholder="E-mail corporativo" required>
+        <input type="password" id="auth-pass" class="form-control" placeholder="Senha" required>
+        <button type="submit" class="btn btn-primary" id="auth-btn" style="padding: 12px; font-size: 1rem; width: 100%;">Entrar no Sistema</button>
       </form>
       
-      <div class="auth-toggle" id="auth-toggle">Esqueci minha senha</div>
-      <p id="auth-error" style="color: var(--danger-color); margin-top: 12px; display: none; font-size: 0.85rem; font-weight: 500;"></p>
+      <!-- Links organizados e separados -->
+      <div style="display: flex; justify-content: space-between; margin-top: 24px; font-size: 0.9rem; font-weight: 500;">
+        <a href="#" id="auth-register-toggle" style="color: var(--primary-color); text-decoration: none;">Criar conta</a>
+        <a href="#" id="auth-forgot-pass" style="color: var(--text-secondary); text-decoration: none;">Esqueci a senha</a>
+      </div>
+      
+      <p id="auth-error" style="color: var(--danger-color); margin-top: 16px; display: none; font-size: 0.85rem; font-weight: 500;"></p>
     </div>
   </div>
 
@@ -237,9 +57,10 @@
 
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
-      <div class="brand">
-        <i class="ph-fill ph-excavator"></i>
-        <span>Bianchin <span style="color: var(--primary-color)">Gestão</span></span>
+      
+      <!-- Espaço para a Logo no Menu Lateral (versão deitada/branca se possível) -->
+      <div class="brand" style="justify-content: center; padding: 24px 16px;">
+         <img src="sua-logo-branca.png" alt="Logo da Empresa" style="max-width: 180px; height: auto; object-fit: contain;">
       </div>
       
       <nav class="nav-menu">
@@ -279,12 +100,12 @@
           <button class="menu-toggle" id="menu-toggle">
             <i class="ph ph-list"></i>
           </button>
-          <h1 class="page-title" id="header-title" style="font-size: 1.25rem; font-weight: 600;">Dashboard</h1>
+          <h1 class="page-title" id="header-title">Dashboard</h1>
         </div>
         
         <div class="user-profile" style="display: flex; gap: 16px; align-items: center;">
           <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary-color); display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 0.9rem;">
-            BE
+            ADM
           </div>
           <button id="btn-logout" class="btn" style="background: transparent; color: var(--danger-color); border: 1px solid var(--border-color); padding: 6px 12px; font-size: 0.85rem;">
             <i class="ph ph-sign-out"></i> Sair
@@ -299,7 +120,7 @@
         <section id="view-dashboard" class="view-section active">
           <div class="grid-cards">
             <div class="glass-card stat-card">
-              <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--success-color)"><i class="ph ph-currency-dollar"></i></div>
+              <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--accent-color)"><i class="ph ph-currency-dollar"></i></div>
               <div class="stat-info">
                 <h3>Faturamento (Mês)</h3>
                 <p id="dash-fat">R$ 0,00</p>
@@ -543,16 +364,16 @@
           <div class="glass-card">
             <div class="grid-2">
                <div style="padding: 24px; background: rgba(16, 185, 129, 0.1); border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2);">
-                 <h3 style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase;">Total de Receitas</h3>
-                 <p id="rel-receitas" style="font-size: 2rem; font-weight: 700; color: var(--success-color); margin-top: 8px;">R$ 0,00</p>
+                 <h3 style="font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase;">Total de Receitas</h3>
+                 <p id="rel-receitas" style="font-size: 2rem; font-weight: 700; color: var(--accent-color); margin-top: 8px;">R$ 0,00</p>
                </div>
                <div style="padding: 24px; background: rgba(239, 68, 68, 0.1); border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.2);">
-                 <h3 style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase;">Total de Despesas</h3>
+                 <h3 style="font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase;">Total de Despesas</h3>
                  <p id="rel-despesas" style="font-size: 2rem; font-weight: 700; color: var(--danger-color); margin-top: 8px;">R$ 0,00</p>
                </div>
             </div>
             <div style="padding: 24px; background: rgba(59, 130, 246, 0.1); border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.2); margin-top: 24px;">
-               <h3 style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase;">Saldo Líquido</h3>
+               <h3 style="font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase;">Saldo Líquido</h3>
                <p id="rel-saldo" style="font-size: 2rem; font-weight: 700; color: var(--info-color); margin-top: 8px;">R$ 0,00</p>
             </div>
           </div>
@@ -600,7 +421,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn" style="background: transparent; color: var(--text-main); border: 1px solid var(--border-color);" onclick="closeModal('modal-cliente')">Cancelar</button>
+          <button class="btn" style="background: transparent; color: var(--text-primary); border: 1px solid var(--border-color);" onclick="closeModal('modal-cliente')">Cancelar</button>
           <button class="btn btn-primary" onclick="salvarCliente()">Salvar</button>
         </div>
       </div>
@@ -635,7 +456,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn" style="background: transparent; border: 1px solid var(--border-color);" onclick="closeModal('modal-equip')">Cancelar</button>
+          <button class="btn" style="background: transparent; color: var(--text-primary); border: 1px solid var(--border-color);" onclick="closeModal('modal-equip')">Cancelar</button>
           <button class="btn btn-primary" onclick="salvarEquip()">Salvar</button>
         </div>
       </div>
@@ -678,7 +499,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn" style="background: transparent; border: 1px solid var(--border-color);" onclick="closeModal('modal-agenda')">Cancelar</button>
+          <button class="btn" style="background: transparent; color: var(--text-primary); border: 1px solid var(--border-color);" onclick="closeModal('modal-agenda')">Cancelar</button>
           <button class="btn btn-primary" onclick="salvarAgenda()">Salvar</button>
         </div>
       </div>
@@ -730,7 +551,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn" style="background: transparent; border: 1px solid var(--border-color);" onclick="closeModal('modal-os')">Cancelar</button>
+          <button class="btn" style="background: transparent; color: var(--text-primary); border: 1px solid var(--border-color);" onclick="closeModal('modal-os')">Cancelar</button>
           <button class="btn btn-primary" onclick="salvarOS()">Salvar</button>
         </div>
       </div>
@@ -768,7 +589,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn" style="background: transparent; border: 1px solid var(--border-color);" onclick="closeModal('modal-fin')">Cancelar</button>
+          <button class="btn" style="background: transparent; color: var(--text-primary); border: 1px solid var(--border-color);" onclick="closeModal('modal-fin')">Cancelar</button>
           <button class="btn btn-primary" onclick="salvarFin()">Salvar</button>
         </div>
       </div>
@@ -776,38 +597,7 @@
 
   </div> <!-- Fim app-container -->
 
+  <!-- Script Principal -->
   <script type="module" src="app.js"></script>
-  
-  <!-- Script extra apenas para controlar o Menu Mobile visualmente -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const menuToggle = document.getElementById('menu-toggle');
-      const sidebar = document.getElementById('sidebar');
-      const overlay = document.getElementById('mobile-overlay');
-
-      if(menuToggle && sidebar && overlay) {
-        menuToggle.addEventListener('click', () => {
-          sidebar.classList.add('mobile-open');
-          overlay.classList.add('active');
-        });
-
-        overlay.addEventListener('click', () => {
-          sidebar.classList.remove('mobile-open');
-          overlay.classList.remove('active');
-        });
-        
-        // Fecha o menu ao clicar em um link (no celular)
-        const navItems = document.querySelectorAll('.nav-item');
-        navItems.forEach(item => {
-          item.addEventListener('click', () => {
-            if (window.innerWidth <= 768) {
-              sidebar.classList.remove('mobile-open');
-              overlay.classList.remove('active');
-            }
-          });
-        });
-      }
-    });
-  </script>
 </body>
 </html>
