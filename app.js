@@ -72,11 +72,14 @@ window.openModal = function(modalId) {
     document.getElementById('eq-id').value = '';
     ['eq-nome', 'eq-hori', 'eq-oleo', 'eq-manut', 'eq-doc', 'eq-seguro', 'eq-custos'].forEach(id => document.getElementById(id).value = '');
     
-    // Limpa a foto
+    // Limpa a foto e categoria
     const eqImagem = document.getElementById('eq-imagem');
     if(eqImagem) eqImagem.value = '';
     window.currentEquipFoto = null;
     
+    const eqCat = document.getElementById('eq-categoria');
+    if(eqCat) eqCat.value = 'Equipamentos';
+
     document.getElementById('eq-status').value = 'Operacional';
     document.getElementById('title-modal-equip').textContent = "Novo Equipamento";
   } else if (modalId === 'modal-agenda') {
@@ -150,58 +153,83 @@ function renderClientes() {
   });
 }
 
-// ATUALIZADO: Renderização de Equipamentos em Formato de Cards bonitões
+// ATUALIZADO: Renderização de Equipamentos separados por CATEGORIA
 function renderEquipamentos() {
   const grid = document.getElementById('grid-equipamentos');
+  
+  // Primeiro, vamos organizar os equipamentos por categoria
+  const grupos = {
+    'Equipamentos': [],
+    'Ferramentas adicionais': [],
+    'Equipamento Parceiros': []
+  };
+
+  equipamentos.forEach((e) => {
+    const cat = e.categoria || 'Equipamentos'; 
+    if(!grupos[cat]) grupos[cat] = []; // Caso surja uma categoria nova
+    grupos[cat].push(e);
+  });
+
   if (grid) {
-    grid.innerHTML = ''; // Limpa os estáticos para injetar os do banco
-    equipamentos.forEach((e) => {
-      
-      // Cores para os status
-      let colorClass = 'var(--info-color)';
-      let bgClass = 'rgba(59, 130, 246, 0.1)';
-      if(e.status === 'Operacional') { colorClass = 'var(--accent-color)'; bgClass = 'rgba(16,185,129,0.1)'; }
-      else if(e.status === 'Alugado') { colorClass = 'var(--warning-color)'; bgClass = 'rgba(245, 158, 11, 0.1)'; }
-      else if(e.status === 'Em Manutenção') { colorClass = 'var(--danger-color)'; bgClass = 'rgba(239, 68, 68, 0.1)'; }
+    grid.innerHTML = ''; // Limpa a grade
+    
+    // Agora renderizamos grupo por grupo criando blocos visuais
+    for (let categoria in grupos) {
+      if (grupos[categoria].length > 0) {
+        
+        // Título da Categoria bonitão
+        grid.innerHTML += `
+          <div style="grid-column: 1 / -1; margin-top: 16px; margin-bottom: 8px;">
+            <h3 style="color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 8px;">
+              <i class="ph ph-tag" style="margin-right: 6px; color: var(--primary-color);"></i>${categoria}
+            </h3>
+          </div>
+        `;
 
-      // Se tiver foto no banco exibe ela, senão exibe o ícone padrão
-      const imgHtml = e.fotoBase64 
-        ? `<img src="${e.fotoBase64}" alt="${e.nome}" style="width: 100%; height: 100%; object-fit: cover;">`
-        : `<i class="ph ph-image" style="font-size: 3rem; color: #9ca3af;"></i>`;
+        // Cards dos equipamentos daquela categoria
+        grupos[categoria].forEach((e) => {
+          let colorClass = 'var(--info-color)';
+          let bgClass = 'rgba(59, 130, 246, 0.1)';
+          if(e.status === 'Operacional') { colorClass = 'var(--accent-color)'; bgClass = 'rgba(16,185,129,0.1)'; }
+          else if(e.status === 'Alugado') { colorClass = 'var(--warning-color)'; bgClass = 'rgba(245, 158, 11, 0.1)'; }
+          else if(e.status === 'Em Manutenção') { colorClass = 'var(--danger-color)'; bgClass = 'rgba(239, 68, 68, 0.1)'; }
 
-      grid.innerHTML += `
-        <div class="glass-card equip-card" style="padding: 16px; display: flex; flex-direction: column; gap: 12px; border-radius: 12px;">
-          <!-- Área da Imagem -->
-          <div style="width: 100%; height: 180px; background-color: #f3f4f6; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-            ${imgHtml}
-          </div>
-          
-          <!-- Informações -->
-          <div>
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-              <h3 style="margin: 0 0 8px 0; font-size: 1.1rem; color: var(--text-primary);">${e.nome}</h3>
-              <span style="padding: 4px 8px; background: ${bgClass}; color: ${colorClass}; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">${e.status}</span>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; color: var(--text-secondary);">
-              <span style="display: flex; align-items: center; gap: 6px;"><i class="ph ph-clock" style="font-size: 1rem;"></i> Horímetro: <strong>${e.horimetro || '0'}h</strong></span>
-              <span style="display: flex; align-items: center; gap: 6px;"><i class="ph ph-wrench" style="font-size: 1rem;"></i> Próx. Manut.: <strong>${formatDate(e.manutencao) || '-'}</strong></span>
-            </div>
-          </div>
-          
-          <!-- Botões -->
-          <div style="display: flex; gap: 8px; margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border-color);">
-            <button class="btn" style="flex: 1; padding: 8px; font-size: 0.85rem; background: transparent; border: 1px solid var(--primary-color); color: var(--primary-color);" onclick="editarEquip('${e.id}')">
-              <i class="ph ph-pencil"></i> Editar
-            </button>
-            <button class="btn" style="padding: 8px; font-size: 0.85rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--danger-color);" onclick="removerEquip('${e.id}')">
-              <i class="ph ph-trash"></i>
-            </button>
-          </div>
-        </div>`;
-    });
+          const imgHtml = e.fotoBase64 
+            ? `<img src="${e.fotoBase64}" alt="${e.nome}" style="width: 100%; height: 100%; object-fit: cover;">`
+            : `<i class="ph ph-image" style="font-size: 3rem; color: #9ca3af;"></i>`;
+
+          grid.innerHTML += `
+            <div class="glass-card equip-card" style="padding: 16px; display: flex; flex-direction: column; gap: 12px; border-radius: 12px;">
+              <div style="width: 100%; height: 180px; background-color: #f3f4f6; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                ${imgHtml}
+              </div>
+              
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                  <h3 style="margin: 0 0 8px 0; font-size: 1.1rem; color: var(--text-primary);">${e.nome}</h3>
+                  <span style="padding: 4px 8px; background: ${bgClass}; color: ${colorClass}; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">${e.status}</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; color: var(--text-secondary);">
+                  <span style="display: flex; align-items: center; gap: 6px;"><i class="ph ph-clock" style="font-size: 1rem;"></i> Horímetro: <strong>${e.horimetro || '0'}h</strong></span>
+                  <span style="display: flex; align-items: center; gap: 6px;"><i class="ph ph-wrench" style="font-size: 1rem;"></i> Próx. Manut.: <strong>${formatDate(e.manutencao) || '-'}</strong></span>
+                </div>
+              </div>
+              
+              <div style="display: flex; gap: 8px; margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border-color);">
+                <button class="btn" style="flex: 1; padding: 8px; font-size: 0.85rem; background: transparent; border: 1px solid var(--primary-color); color: var(--primary-color);" onclick="editarEquip('${e.id}')">
+                  <i class="ph ph-pencil"></i> Editar
+                </button>
+                <button class="btn" style="padding: 8px; font-size: 0.85rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--danger-color);" onclick="removerEquip('${e.id}')">
+                  <i class="ph ph-trash"></i>
+                </button>
+              </div>
+            </div>`;
+        });
+      }
+    }
   }
 
-  // Preenche os selects da agenda e OS
+  // Preenche os selects da agenda e OS com Categorias também (opcional)
   ['ag-equip', 'os-equip'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
@@ -211,6 +239,29 @@ function renderEquipamentos() {
       el.value = prev;
     }
   });
+
+  // Renderiza Dinamicamente os Checkboxes do Orçamento!
+  renderCheckboxesOrcamento(grupos);
+}
+
+// NOVA FUNÇÃO: Gera os checkboxes da aba Orçamento via JavaScript, agrupados bonitinhos!
+function renderCheckboxesOrcamento(grupos) {
+  const container = document.getElementById('orc-equipamentos');
+  if (!container) return;
+  
+  let html = '';
+  for (let categoria in grupos) {
+    if (grupos[categoria].length > 0) {
+      // Título da Categoria no Checkbox
+      html += `<div style="grid-column: 1 / -1; margin-top: 10px; color: var(--primary-color); font-weight: 600; font-size: 0.9rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">${categoria.toUpperCase()}</div>`;
+      
+      // As caixinhas
+      grupos[categoria].forEach(e => {
+        html += `<label class="checkbox-label" style="display:flex; align-items:center;"><input type="checkbox" value="${e.nome}"> ${e.nome}</label>`;
+      });
+    }
+  }
+  container.innerHTML = html;
 }
 
 function renderAgenda() {
@@ -277,13 +328,11 @@ function renderFinanceiro() {
     const isReceita = f.tipo === 'Receita';
     const isPago = f.statusPagamento === 'Pago';
 
-    // Lógica para os Cards Financeiros
     if (isReceita && isPago) entradas += val;
     if (!isReceita && isPago) saidas += val;
     if (isReceita && !isPago) { aReceber += val; pendentes++; }
     if (!isReceita && !isPago) aPagar += val;
 
-    // Preenche a tabela
     if (tbody) {
       const badgeCor = isPago ? 'badge-success' : (f.statusPagamento === 'Atrasado' ? 'badge-danger' : 'badge-warning');
       tbody.innerHTML += `
@@ -303,7 +352,6 @@ function renderFinanceiro() {
     }
   });
 
-  // Atualiza Dados na Tela
   const elEntradas = document.getElementById('fin-entradas');
   if (elEntradas) {
     elEntradas.textContent = formatMoney(entradas);
@@ -314,7 +362,6 @@ function renderFinanceiro() {
     document.getElementById('fin-pendentes').textContent = pendentes;
   }
 
-  // Gráfico Financeiro Secundário (Pizza ou Barra)
   const ctx = document.getElementById('chartFinanceiroSecundario');
   if (ctx && window.Chart) {
     if (chartInstanceSecundario) chartInstanceSecundario.destroy();
@@ -348,7 +395,6 @@ function renderRelatorios() {
   const currentMonth = hj.getMonth();
   const currentYear = hj.getFullYear();
 
-  // Calcula Finanças
   financas.forEach(f => {
     const val = Number(f.valor);
     if (f.tipo === 'Receita') {
@@ -374,7 +420,6 @@ function renderRelatorios() {
     document.getElementById('rel-manutencao').textContent = formatMoney(custoManut);
   }
 
-  // Calcula Rankings (Top Clientes e Top Equipamentos)
   const osPorCliente = {};
   const osPorEquip = {};
 
@@ -412,12 +457,10 @@ function renderDashboard() {
   let fatMes = 0;
   const monthLabels = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
   
-  // Duas linhas no gráfico
   const faturamentoData = new Array(12).fill(0);
   const lucroData = new Array(12).fill(0);
 
   financas.forEach(f => {
-    // Só contabiliza no gráfico se a conta já estiver paga/recebida
     if (f.data && f.statusPagamento === 'Pago') {
       const [y, m] = f.data.split('-');
       const fMonth = parseInt(m) - 1;
@@ -426,10 +469,10 @@ function renderDashboard() {
       if (fYear === currentYear) {
         if (f.tipo === 'Receita') {
           faturamentoData[fMonth] += Number(f.valor);
-          lucroData[fMonth] += Number(f.valor); // Soma no lucro
+          lucroData[fMonth] += Number(f.valor); 
           if (fMonth === currentMonth) fatMes += Number(f.valor);
         } else if (f.tipo === 'Despesa') {
-          lucroData[fMonth] -= Number(f.valor); // Subtrai do lucro
+          lucroData[fMonth] -= Number(f.valor); 
         }
       }
     }
@@ -526,11 +569,16 @@ window.removerCliente = async function(id) {
 };
 
 // ==========================================
-// CRUD - EQUIPAMENTOS (COM UPLOAD DE FOTO)
+// CRUD - EQUIPAMENTOS (COM CATEGORIA)
 // ==========================================
 window.salvarEquip = async function() {
   const id = document.getElementById('eq-id').value;
   const nome = document.getElementById('eq-nome').value;
+  
+  // Pegando o campo Categoria (se existir no HTML)
+  const selectCat = document.getElementById('eq-categoria');
+  const categoria = selectCat ? selectCat.value : 'Equipamentos';
+
   const horimetro = document.getElementById('eq-hori').value;
   const status = document.getElementById('eq-status').value;
   const oleo = document.getElementById('eq-oleo').value;
@@ -541,14 +589,13 @@ window.salvarEquip = async function() {
 
   if (!nome) return alert("Nome do equipamento é obrigatório!");
 
-  // Pega o arquivo da imagem inserido no modal
   const inputImagem = document.getElementById('eq-imagem');
   const fotoFile = inputImagem ? inputImagem.files[0] : null;
 
-  // Usa a mesma função de comprimir imagem para economizar espaço
   compressImage(fotoFile, async (fotoB64) => {
     const data = { 
       nome, 
+      categoria, // Categoria salva no banco!
       horimetro: horimetro || '0', 
       status,
       oleo,
@@ -573,6 +620,10 @@ window.editarEquip = function(id) {
   if (!e) return;
   document.getElementById('eq-id').value = e.id;
   document.getElementById('eq-nome').value = e.nome || '';
+  
+  const selectCat = document.getElementById('eq-categoria');
+  if(selectCat) selectCat.value = e.categoria || 'Equipamentos';
+  
   document.getElementById('eq-hori').value = e.horimetro || '';
   document.getElementById('eq-status').value = e.status || 'Operacional';
   document.getElementById('eq-oleo').value = e.oleo || '';
@@ -581,7 +632,6 @@ window.editarEquip = function(id) {
   document.getElementById('eq-seguro').value = e.seguro || '';
   document.getElementById('eq-custos').value = e.custosAcumulados || '';
   
-  // Mantém a foto na memória para não sumir ao editar outras informações
   window.currentEquipFoto = e.fotoBase64 || null;
   
   document.getElementById('title-modal-equip').textContent = "Editar Equipamento";
@@ -632,7 +682,7 @@ window.removerAgenda = async function(id) {
 };
 
 // ==========================================
-// CRUD - ORDENS DE SERVIÇO (COM FOTOS E AUTOMAÇÃO)
+// CRUD - ORDENS DE SERVIÇO 
 // ==========================================
 window.salvarOS = async function() {
   const id = document.getElementById('os-id').value;
@@ -645,11 +695,9 @@ window.salvarOS = async function() {
 
   if (!numero || !clienteId || !equipId) return alert("Preencha Nº OS, Cliente e Equipamento!");
 
-  // Arquivos
   const fotoFile = document.getElementById('os-foto').files[0];
   const assFile = document.getElementById('os-assinatura').files[0];
 
-  // Processa Imagens Base64 se existirem
   compressImage(fotoFile, async (fotoB64) => {
     compressImage(assFile, async (assB64) => {
       
@@ -665,16 +713,12 @@ window.salvarOS = async function() {
         await addDoc(collection(db, "os"), data);
       }
 
-      // ---------------------------------------------------------
-      // NOVA AUTOMAÇÃO: ATUALIZA O STATUS DO EQUIPAMENTO SOZINHO
-      // ---------------------------------------------------------
       try {
         const novoStatusEquip = (status === 'Finalizada') ? 'Operacional' : 'Alugado';
         await updateDoc(doc(db, "equipamentos", equipId), { status: novoStatusEquip });
       } catch (err) {
         console.error("Erro ao atualizar o equipamento:", err);
       }
-      // ---------------------------------------------------------
 
       closeModal('modal-os');
     });
@@ -692,7 +736,6 @@ window.editarOS = function(id) {
   document.getElementById('os-hfim').value = o.hfim || '';
   document.getElementById('os-status').value = o.status || 'Em Andamento';
   
-  // Salva as fotos atuais em memória caso ele só edite o texto
   window.currentOSFoto = o.fotoBase64 || null;
   window.currentOSAssinatura = o.assinaturaBase64 || null;
 
@@ -703,8 +746,6 @@ window.editarOS = function(id) {
 window.removerOS = async function(id) {
   if (confirm('Remover OS?')) {
     const o = os.find(x => x.id === id);
-    
-    // Automação: Se você deletar uma OS que estava em andamento, devolve a máquina pro pátio
     if (o && o.equipId && o.status !== 'Finalizada') {
       try {
         await updateDoc(doc(db, "equipamentos", o.equipId), { status: 'Operacional' });
@@ -712,7 +753,6 @@ window.removerOS = async function(id) {
         console.error("Erro ao liberar equipamento:", e);
       }
     }
-    
     await deleteDoc(doc(db, "os", id));
   }
 };
@@ -766,7 +806,7 @@ window.removerFin = async function(id) {
 };
 
 // ==========================================
-// ORÇAMENTOS - WHATSAPP E PDF (COM LOGO)
+// ORÇAMENTOS - WHATSAPP E PDF
 // ==========================================
 window.obterDadosOrcamento = function() {
   const clienteId = document.getElementById('orc-cliente').value;
@@ -811,7 +851,6 @@ window.gerarPDF = function() {
   const divPDF = document.createElement('div');
   divPDF.style.cssText = 'padding:40px;font-family:Arial,Helvetica,sans-serif;color:#334155;background:#ffffff;';
 
-  // ATUALIZADO: Adicionado cabeçalho com espaço pra colocar a sua logo direto no documento gerado.
   divPDF.innerHTML = `
     <div style="border-bottom:3px solid #F59E0B;padding-bottom:20px;margin-bottom:30px;display:flex;justify-content:space-between;align-items:center;">
       <div style="display:flex; align-items:center; gap: 15px;">
@@ -892,15 +931,18 @@ function syncData() {
     equipamentos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     if (equipamentos.length === 0 && !seeded) {
       seeded = true;
+      // BANCO DE DADOS INICIAL AGRUPADO (exatamente como você pediu!)
       const defaults = [
-        { nome: 'Escavadeira Suny', horimetro: '0', status: 'Operacional' },
-        { nome: 'Escavadeira Yanmar', horimetro: '0', status: 'Operacional' },
-        { nome: 'Carregadeira XCMG', horimetro: '0', status: 'Operacional' },
-        { nome: 'MUNK 45 toneladas ARGOS', horimetro: '0', status: 'Operacional' },
-        { nome: 'Equipamento Parceiros', horimetro: '0', status: 'Operacional' },
-        { nome: 'Perfuratriz (cobrado por metro)', horimetro: '0', status: 'Operacional' },
-        { nome: 'Rompedor (cobrado por hora)', horimetro: '0', status: 'Operacional' },
-        { nome: 'Conchas (15cm a 70cm)', horimetro: '0', status: 'Operacional' }
+        { nome: 'Escavadeira Suny', horimetro: '0', status: 'Operacional', categoria: 'Equipamentos' },
+        { nome: 'Escavadeira Yanmar', horimetro: '0', status: 'Operacional', categoria: 'Equipamentos' },
+        { nome: 'Carregadeira XCMG', horimetro: '0', status: 'Operacional', categoria: 'Equipamentos' },
+        { nome: 'MUNK 45 toneladas ARGOS', horimetro: '0', status: 'Operacional', categoria: 'Equipamentos' },
+        
+        { nome: 'Perfuratriz (cobrado por metro)', horimetro: '0', status: 'Operacional', categoria: 'Ferramentas adicionais' },
+        { nome: 'Rompedor (cobrado por hora)', horimetro: '0', status: 'Operacional', categoria: 'Ferramentas adicionais' },
+        { nome: 'Conchas (medidas 15cm, 20cm, 25cm, 30cm, 35cm 45cm e 70cm)', horimetro: '0', status: 'Operacional', categoria: 'Ferramentas adicionais' },
+        
+        { nome: 'Equipamento Parceiros', horimetro: '0', status: 'Operacional', categoria: 'Equipamento Parceiros' }
       ];
       for (const e of defaults) {
         await addDoc(collection(db, "equipamentos"), e);
