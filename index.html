@@ -29,7 +29,6 @@
       
       <!-- Espaço para a Logo da Empresa -->
       <div style="margin-bottom: 32px; text-align: center;">
-        <!-- Substitua 'sua-logo.png' pelo caminho real do arquivo de imagem da logo -->
         <img src="sua-logo.PNG" alt="Logo da Empresa" style="max-width: 200px; height: auto; object-fit: contain;">
       </div>
       
@@ -173,7 +172,6 @@
                   </tr>
                 </thead>
                 <tbody id="tbody-clientes">
-                  <!-- Gerado por JS -->
                 </tbody>
               </table>
             </div>
@@ -196,12 +194,12 @@
                   <tr>
                     <th>Equipamento</th>
                     <th>Horímetro</th>
+                    <th>Próx. Manutenção</th>
                     <th>Status</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody id="tbody-equipamentos">
-                  <!-- Gerado por JS -->
                 </tbody>
               </table>
             </div>
@@ -223,7 +221,8 @@
                   <tr>
                     <th>Cliente</th>
                     <th>Equipamento</th>
-                    <th>Data Prevista</th>
+                    <th>Data</th>
+                    <th>Horário</th>
                     <th>Status</th>
                     <th>Ações</th>
                   </tr>
@@ -332,11 +331,45 @@
         <!-- ================= Financeiro ================= -->
         <section id="view-financeiro" class="view-section">
           <div class="top-bar-actions">
-            <h2>Financeiro</h2>
+            <h2>Resumo Financeiro</h2>
             <button class="btn btn-primary" onclick="openModal('modal-fin')">
               <i class="ph ph-plus"></i> Novo Lançamento
             </button>
           </div>
+
+          <!-- Novos Cards do Financeiro -->
+          <div class="grid-cards" style="margin-bottom: 24px;">
+            <div class="glass-card stat-card" style="border-left: 4px solid var(--accent-color);">
+              <div class="stat-info"><h3>Entradas</h3><p id="fin-entradas">R$ 0,00</p></div>
+            </div>
+            <div class="glass-card stat-card" style="border-left: 4px solid var(--danger-color);">
+              <div class="stat-info"><h3>Saídas</h3><p id="fin-saidas">R$ 0,00</p></div>
+            </div>
+            <div class="glass-card stat-card" style="border-left: 4px solid var(--info-color);">
+              <div class="stat-info"><h3>Fluxo de Caixa</h3><p id="fin-fluxo">R$ 0,00</p></div>
+            </div>
+          </div>
+
+          <div class="grid-cards" style="margin-bottom: 24px;">
+            <div class="glass-card stat-card">
+              <div class="stat-info"><h3>Contas a Receber</h3><p id="fin-receber" style="color: var(--info-color);">R$ 0,00</p></div>
+            </div>
+            <div class="glass-card stat-card">
+              <div class="stat-info"><h3>Contas a Pagar</h3><p id="fin-pagar" style="color: var(--danger-color);">R$ 0,00</p></div>
+            </div>
+            <div class="glass-card stat-card">
+              <div class="stat-info"><h3>Cobranças Pendentes</h3><p id="fin-pendentes" style="color: var(--warning-color);">0</p></div>
+            </div>
+          </div>
+
+          <div class="glass-card" style="margin-bottom: 24px;">
+            <h3>Gráfico de Faturamento / Fluxo</h3>
+            <div style="position: relative; height: 300px; width: 100%;">
+              <canvas id="chartFinanceiroSecundario"></canvas>
+            </div>
+          </div>
+
+          <!-- Tabela Financeira Existente -->
           <div class="glass-card" style="padding: 0;">
             <div class="table-responsive">
               <table>
@@ -344,7 +377,8 @@
                   <tr>
                     <th>Data</th>
                     <th>Descrição</th>
-                    <th>Tipo</th>
+                    <th>Categoria</th>
+                    <th>Status</th>
                     <th>Valor</th>
                     <th>Ações</th>
                   </tr>
@@ -364,17 +398,41 @@
           <div class="glass-card">
             <div class="grid-2">
                <div style="padding: 24px; background: rgba(16, 185, 129, 0.1); border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2);">
-                 <h3 style="font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase;">Total de Receitas</h3>
-                 <p id="rel-receitas" style="font-size: 2rem; font-weight: 700; color: var(--accent-color); margin-top: 8px;">R$ 0,00</p>
+                 <h3 style="font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase;">Faturamento (Mês)</h3>
+                 <p id="rel-faturamento-mes" style="font-size: 2rem; font-weight: 700; color: var(--accent-color); margin-top: 8px;">R$ 0,00</p>
                </div>
-               <div style="padding: 24px; background: rgba(239, 68, 68, 0.1); border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.2);">
-                 <h3 style="font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase;">Total de Despesas</h3>
-                 <p id="rel-despesas" style="font-size: 2rem; font-weight: 700; color: var(--danger-color); margin-top: 8px;">R$ 0,00</p>
+               <div style="padding: 24px; background: rgba(59, 130, 246, 0.1); border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.2);">
+                 <h3 style="font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase;">Lucro Líquido</h3>
+                 <p id="rel-lucro" style="font-size: 2rem; font-weight: 700; color: var(--info-color); margin-top: 8px;">R$ 0,00</p>
                </div>
             </div>
-            <div style="padding: 24px; background: rgba(59, 130, 246, 0.1); border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.2); margin-top: 24px;">
-               <h3 style="font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase;">Saldo Líquido</h3>
-               <p id="rel-saldo" style="font-size: 2rem; font-weight: 700; color: var(--info-color); margin-top: 8px;">R$ 0,00</p>
+
+            <!-- Custos Operacionais -->
+            <div class="grid-2" style="margin-top: 24px;">
+              <div style="padding: 24px; background: rgba(245, 158, 11, 0.1); border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.2);">
+                <h3 style="font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase;">Gastos com Diesel</h3>
+                <p id="rel-diesel" style="font-size: 1.5rem; font-weight: 700; color: var(--warning-color); margin-top: 8px;">R$ 0,00</p>
+              </div>
+              <div style="padding: 24px; background: rgba(239, 68, 68, 0.1); border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.2);">
+                <h3 style="font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase;">Gastos com Manutenção</h3>
+                <p id="rel-manutencao" style="font-size: 1.5rem; font-weight: 700; color: var(--danger-color); margin-top: 8px;">R$ 0,00</p>
+              </div>
+            </div>
+
+            <!-- Rankings -->
+            <div class="grid-2" style="margin-top: 24px; gap: 24px;">
+              <div style="padding: 24px; border: 1px solid var(--border-color); border-radius: 12px;">
+                <h3 style="font-size: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 16px;">Clientes que mais contrataram</h3>
+                <ul id="rel-top-clientes" style="list-style: none; padding: 0; margin: 0; line-height: 1.8;">
+                  <!-- Preenchido pelo JS -->
+                </ul>
+              </div>
+              <div style="padding: 24px; border: 1px solid var(--border-color); border-radius: 12px;">
+                <h3 style="font-size: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 16px;">Equipamento que mais faturou</h3>
+                <ul id="rel-top-equips" style="list-style: none; padding: 0; margin: 0; line-height: 1.8;">
+                  <!-- Preenchido pelo JS -->
+                </ul>
+              </div>
             </div>
           </div>
         </section>
@@ -427,9 +485,9 @@
       </div>
     </div>
 
-    <!-- Modal Equipamento -->
+    <!-- Modal Equipamento (ATUALIZADO) -->
     <div class="modal-overlay" id="modal-equip">
-      <div class="modal-content">
+      <div class="modal-content" style="max-width: 600px;">
         <div class="modal-header">
           <h3 class="modal-title" id="title-modal-equip">Novo Equipamento</h3>
           <button class="btn-close" onclick="closeModal('modal-equip')"><i class="ph ph-x"></i></button>
@@ -440,6 +498,7 @@
             <label>Nome do Equipamento/Ferramenta</label>
             <input type="text" class="form-control" id="eq-nome" placeholder="Ex: Escavadeira Suny">
           </div>
+          
           <div class="grid-2">
             <div class="form-group">
               <label>Horímetro Atual</label>
@@ -454,6 +513,33 @@
               </select>
             </div>
           </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Última Troca de Óleo</label>
+              <input type="date" class="form-control" id="eq-oleo">
+            </div>
+            <div class="form-group">
+              <label>Próxima Manutenção</label>
+              <input type="date" class="form-control" id="eq-manut">
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Documentação</label>
+              <input type="text" class="form-control" id="eq-doc" placeholder="Ex: IPVA Pago">
+            </div>
+            <div class="form-group">
+              <label>Seguro (Vencimento)</label>
+              <input type="date" class="form-control" id="eq-seguro">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Custos Acumulados (R$)</label>
+            <input type="number" class="form-control" id="eq-custos" placeholder="0.00" step="0.01">
+          </div>
         </div>
         <div class="modal-footer">
           <button class="btn" style="background: transparent; color: var(--text-primary); border: 1px solid var(--border-color);" onclick="closeModal('modal-equip')">Cancelar</button>
@@ -462,7 +548,7 @@
       </div>
     </div>
 
-    <!-- Modal Agenda -->
+    <!-- Modal Agenda (ATUALIZADO) -->
     <div class="modal-overlay" id="modal-agenda">
       <div class="modal-content">
         <div class="modal-header">
@@ -489,13 +575,17 @@
               <input type="date" class="form-control" id="ag-data">
             </div>
             <div class="form-group">
-              <label>Status</label>
-              <select class="form-control" id="ag-status">
-                <option value="Pendente">Pendente</option>
-                <option value="Confirmado">Confirmado</option>
-                <option value="Concluído">Concluído</option>
-              </select>
+              <label>Horário</label>
+              <input type="time" class="form-control" id="ag-hora">
             </div>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select class="form-control" id="ag-status">
+              <option value="Pendente">Pendente</option>
+              <option value="Confirmado">Confirmado</option>
+              <option value="Concluído">Concluído</option>
+            </select>
           </div>
         </div>
         <div class="modal-footer">
@@ -505,9 +595,9 @@
       </div>
     </div>
 
-    <!-- Modal OS -->
+    <!-- Modal OS (ATUALIZADO) -->
     <div class="modal-overlay" id="modal-os">
-      <div class="modal-content">
+      <div class="modal-content" style="max-width: 600px;">
         <div class="modal-header">
           <h3 class="modal-title" id="title-modal-os">Nova Ordem de Serviço</h3>
           <button class="btn-close" onclick="closeModal('modal-os')"><i class="ph ph-x"></i></button>
@@ -542,6 +632,20 @@
               <input type="number" class="form-control" id="os-hfim" placeholder="0">
             </div>
           </div>
+          
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Anexar Foto (Opcional)</label>
+              <input type="file" class="form-control" id="os-foto" accept="image/*" style="padding-top: 10px;">
+            </div>
+            <div class="form-group">
+              <label>Assinatura do Cliente</label>
+              <!-- Espaço para o cliente assinar ou enviar foto da assinatura -->
+              <input type="file" class="form-control" id="os-assinatura" accept="image/*" style="padding-top: 10px;">
+              <small style="color: var(--text-secondary); font-size: 0.75rem;">(Anexe a foto da assinatura ou recibo)</small>
+            </div>
+          </div>
+
           <div class="form-group">
             <label>Status</label>
             <select class="form-control" id="os-status">
@@ -557,7 +661,7 @@
       </div>
     </div>
 
-    <!-- Modal Finanças -->
+    <!-- Modal Finanças (ATUALIZADO) -->
     <div class="modal-overlay" id="modal-fin">
       <div class="modal-content">
         <div class="modal-header">
@@ -570,6 +674,7 @@
             <label>Descrição</label>
             <input type="text" class="form-control" id="fin-desc" placeholder="Ex: Locação OS 001">
           </div>
+          
           <div class="grid-2">
             <div class="form-group">
               <label>Tipo</label>
@@ -583,6 +688,28 @@
               <input type="number" class="form-control" id="fin-valor" placeholder="0.00" step="0.01">
             </div>
           </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Categoria</label>
+              <select class="form-control" id="fin-cat">
+                <option value="Serviço">Serviço/Locação</option>
+                <option value="Diesel">Diesel</option>
+                <option value="Manutenção">Manutenção</option>
+                <option value="Impostos">Impostos</option>
+                <option value="Outros">Outros</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Status do Pagamento</label>
+              <select class="form-control" id="fin-status">
+                <option value="Pago">Pago / Recebido</option>
+                <option value="Pendente">Pendente (A Pagar/Receber)</option>
+                <option value="Atrasado">Atrasado</option>
+              </select>
+            </div>
+          </div>
+
           <div class="form-group">
             <label>Data</label>
             <input type="date" class="form-control" id="fin-data">
