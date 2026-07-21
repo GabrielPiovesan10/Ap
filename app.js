@@ -71,6 +71,12 @@ window.openModal = function(modalId) {
   } else if (modalId === 'modal-equip') {
     document.getElementById('eq-id').value = '';
     ['eq-nome', 'eq-hori', 'eq-oleo', 'eq-manut', 'eq-doc', 'eq-seguro', 'eq-custos'].forEach(id => document.getElementById(id).value = '');
+    
+    // Limpa a foto
+    const eqImagem = document.getElementById('eq-imagem');
+    if(eqImagem) eqImagem.value = '';
+    window.currentEquipFoto = null;
+    
     document.getElementById('eq-status').value = 'Operacional';
     document.getElementById('title-modal-equip').textContent = "Novo Equipamento";
   } else if (modalId === 'modal-agenda') {
@@ -144,27 +150,58 @@ function renderClientes() {
   });
 }
 
+// ATUALIZADO: Renderização de Equipamentos em Formato de Cards bonitões
 function renderEquipamentos() {
-  const tbody = document.getElementById('tbody-equipamentos');
-  if (tbody) {
-    tbody.innerHTML = '';
+  const grid = document.getElementById('grid-equipamentos');
+  if (grid) {
+    grid.innerHTML = ''; // Limpa os estáticos para injetar os do banco
     equipamentos.forEach((e) => {
-      const badge = e.status === 'Operacional' ? 'badge-success' : (e.status === 'Alugado' ? 'badge-warning' : 'badge-danger');
-      tbody.innerHTML += `
-        <tr>
-          <td>${e.nome}</td>
-          <td>${e.horimetro || '0'}</td>
-          <td>${formatDate(e.manutencao) || '-'}</td>
-          <td><span class="badge ${badge}">${e.status}</span></td>
-          <td>
-            <div class="td-actions">
-              <button class="btn btn-primary" style="padding:4px 8px;font-size:0.8rem;" onclick="editarEquip('${e.id}')">Editar</button>
-              <button class="btn btn-danger" style="padding:4px 8px;font-size:0.8rem;background:var(--danger-color);color:white;border:none;" onclick="removerEquip('${e.id}')">Remover</button>
+      
+      // Cores para os status
+      let colorClass = 'var(--info-color)';
+      let bgClass = 'rgba(59, 130, 246, 0.1)';
+      if(e.status === 'Operacional') { colorClass = 'var(--accent-color)'; bgClass = 'rgba(16,185,129,0.1)'; }
+      else if(e.status === 'Alugado') { colorClass = 'var(--warning-color)'; bgClass = 'rgba(245, 158, 11, 0.1)'; }
+      else if(e.status === 'Em Manutenção') { colorClass = 'var(--danger-color)'; bgClass = 'rgba(239, 68, 68, 0.1)'; }
+
+      // Se tiver foto no banco exibe ela, senão exibe o ícone padrão
+      const imgHtml = e.fotoBase64 
+        ? `<img src="${e.fotoBase64}" alt="${e.nome}" style="width: 100%; height: 100%; object-fit: cover;">`
+        : `<i class="ph ph-image" style="font-size: 3rem; color: #9ca3af;"></i>`;
+
+      grid.innerHTML += `
+        <div class="glass-card equip-card" style="padding: 16px; display: flex; flex-direction: column; gap: 12px; border-radius: 12px;">
+          <!-- Área da Imagem -->
+          <div style="width: 100%; height: 180px; background-color: #f3f4f6; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+            ${imgHtml}
+          </div>
+          
+          <!-- Informações -->
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <h3 style="margin: 0 0 8px 0; font-size: 1.1rem; color: var(--text-primary);">${e.nome}</h3>
+              <span style="padding: 4px 8px; background: ${bgClass}; color: ${colorClass}; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">${e.status}</span>
             </div>
-          </td>
-        </tr>`;
+            <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; color: var(--text-secondary);">
+              <span style="display: flex; align-items: center; gap: 6px;"><i class="ph ph-clock" style="font-size: 1rem;"></i> Horímetro: <strong>${e.horimetro || '0'}h</strong></span>
+              <span style="display: flex; align-items: center; gap: 6px;"><i class="ph ph-wrench" style="font-size: 1rem;"></i> Próx. Manut.: <strong>${formatDate(e.manutencao) || '-'}</strong></span>
+            </div>
+          </div>
+          
+          <!-- Botões -->
+          <div style="display: flex; gap: 8px; margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border-color);">
+            <button class="btn" style="flex: 1; padding: 8px; font-size: 0.85rem; background: transparent; border: 1px solid var(--primary-color); color: var(--primary-color);" onclick="editarEquip('${e.id}')">
+              <i class="ph ph-pencil"></i> Editar
+            </button>
+            <button class="btn" style="padding: 8px; font-size: 0.85rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--danger-color);" onclick="removerEquip('${e.id}')">
+              <i class="ph ph-trash"></i>
+            </button>
+          </div>
+        </div>`;
     });
   }
+
+  // Preenche os selects da agenda e OS
   ['ag-equip', 'os-equip'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
@@ -489,7 +526,7 @@ window.removerCliente = async function(id) {
 };
 
 // ==========================================
-// CRUD - EQUIPAMENTOS
+// CRUD - EQUIPAMENTOS (COM UPLOAD DE FOTO)
 // ==========================================
 window.salvarEquip = async function() {
   const id = document.getElementById('eq-id').value;
@@ -503,23 +540,32 @@ window.salvarEquip = async function() {
   const custos = document.getElementById('eq-custos').value;
 
   if (!nome) return alert("Nome do equipamento é obrigatório!");
-  const data = { 
-    nome, 
-    horimetro: horimetro || '0', 
-    status,
-    oleo,
-    manutencao,
-    documentacao: docum,
-    seguro,
-    custosAcumulados: Number(custos || 0)
-  };
 
-  if (id) {
-    await updateDoc(doc(db, "equipamentos", id), data);
-  } else {
-    await addDoc(collection(db, "equipamentos"), data);
-  }
-  closeModal('modal-equip');
+  // Pega o arquivo da imagem inserido no modal
+  const inputImagem = document.getElementById('eq-imagem');
+  const fotoFile = inputImagem ? inputImagem.files[0] : null;
+
+  // Usa a mesma função de comprimir imagem para economizar espaço
+  compressImage(fotoFile, async (fotoB64) => {
+    const data = { 
+      nome, 
+      horimetro: horimetro || '0', 
+      status,
+      oleo,
+      manutencao,
+      documentacao: docum,
+      seguro,
+      custosAcumulados: Number(custos || 0),
+      fotoBase64: fotoB64 || window.currentEquipFoto || null
+    };
+
+    if (id) {
+      await updateDoc(doc(db, "equipamentos", id), data);
+    } else {
+      await addDoc(collection(db, "equipamentos"), data);
+    }
+    closeModal('modal-equip');
+  });
 };
 
 window.editarEquip = function(id) {
@@ -534,6 +580,9 @@ window.editarEquip = function(id) {
   document.getElementById('eq-doc').value = e.documentacao || '';
   document.getElementById('eq-seguro').value = e.seguro || '';
   document.getElementById('eq-custos').value = e.custosAcumulados || '';
+  
+  // Mantém a foto na memória para não sumir ao editar outras informações
+  window.currentEquipFoto = e.fotoBase64 || null;
   
   document.getElementById('title-modal-equip').textContent = "Editar Equipamento";
   document.getElementById('modal-equip').classList.add('active');
@@ -717,7 +766,7 @@ window.removerFin = async function(id) {
 };
 
 // ==========================================
-// ORÇAMENTOS - WHATSAPP E PDF
+// ORÇAMENTOS - WHATSAPP E PDF (COM LOGO)
 // ==========================================
 window.obterDadosOrcamento = function() {
   const clienteId = document.getElementById('orc-cliente').value;
@@ -757,20 +806,26 @@ window.enviarWhatsApp = function() {
 window.gerarPDF = function() {
   const dados = obterDadosOrcamento();
   if (!dados) return;
+  
   const dataAtual = new Date().toLocaleDateString('pt-BR');
   const divPDF = document.createElement('div');
   divPDF.style.cssText = 'padding:40px;font-family:Arial,Helvetica,sans-serif;color:#334155;background:#ffffff;';
 
+  // ATUALIZADO: Adicionado cabeçalho com espaço pra colocar a sua logo direto no documento gerado.
   divPDF.innerHTML = `
     <div style="border-bottom:3px solid #F59E0B;padding-bottom:20px;margin-bottom:30px;display:flex;justify-content:space-between;align-items:center;">
-      <div>
-        <h1 style="color:#0f172a;margin:0;font-size:28px;text-transform:uppercase;">Bianchin Escavações</h1>
-        <p style="margin:5px 0 0;color:#64748b;font-size:14px;">Orçamento de Locação</p>
+      <div style="display:flex; align-items:center; gap: 15px;">
+        <img src="sua-logo.PNG" alt="Logo" style="max-height: 80px;" />
+        <div>
+          <h1 style="color:#0f172a;margin:0;font-size:24px;text-transform:uppercase;">Bianchin Escavações</h1>
+          <p style="margin:5px 0 0;color:#64748b;font-size:14px;">Proposta Comercial de Locação</p>
+        </div>
       </div>
       <div style="text-align:right;color:#64748b;font-size:14px;">
         <p style="margin:0;">Data: <strong style="color:#334155;">${dataAtual}</strong></p>
       </div>
     </div>
+    
     <div style="margin-bottom:30px;background:#f8fafc;padding:20px;border-radius:8px;border:1px solid #e2e8f0;">
       <h3 style="margin-top:0;color:#0f172a;border-bottom:1px solid #cbd5e1;padding-bottom:10px;font-size:18px;">Dados do Cliente</h3>
       <table style="width:100%;font-size:14px;">
