@@ -1,9 +1,8 @@
 // ==========================================
 // FIREBASE - BANCO DE DADOS NA NUVEM
-// Usando CDN para HTML puro (sem npm/bundler)
 // ==========================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -275,18 +274,19 @@ function renderDashboard() {
         datasets: [{
           label: `Receitas em ${currentYear}`,
           data: monthlyData,
-          borderColor: '#10b981',
-          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          borderColor: '#F59E0B',
+          backgroundColor: 'rgba(245, 158, 11, 0.1)',
           tension: 0.4,
           fill: true
         }]
       },
       options: {
         responsive: true,
-        plugins: { legend: { display: true } },
+        maintainAspectRatio: false,
+        plugins: { legend: { display: true, labels: {color: '#f8fafc'} } },
         scales: {
-          y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { color: '#64748b' } },
-          x: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { color: '#64748b' } }
+          y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+          x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }
         }
       }
     });
@@ -294,8 +294,9 @@ function renderDashboard() {
 }
 
 // ==========================================
-// CRUD - CLIENTES
+// CRUD (CLIENTES, EQUIP, AGENDA, OS, FIN)
 // ==========================================
+// ... (Todo o CRUD é mantido idêntico)
 window.salvarCliente = async function() {
   const id = document.getElementById('cli-id').value;
   const nome = document.getElementById('cli-nome').value;
@@ -334,9 +335,6 @@ window.removerCliente = async function(id) {
   if (confirm('Remover este cliente?')) await deleteDoc(doc(db, "clientes", id));
 };
 
-// ==========================================
-// CRUD - EQUIPAMENTOS
-// ==========================================
 window.salvarEquip = async function() {
   const id = document.getElementById('eq-id').value;
   const nome = document.getElementById('eq-nome').value;
@@ -369,9 +367,6 @@ window.removerEquip = async function(id) {
   if (confirm('Remover equipamento?')) await deleteDoc(doc(db, "equipamentos", id));
 };
 
-// ==========================================
-// CRUD - AGENDA
-// ==========================================
 window.salvarAgenda = async function() {
   const id = document.getElementById('ag-id').value;
   const clienteId = document.getElementById('ag-cliente').value;
@@ -406,9 +401,6 @@ window.removerAgenda = async function(id) {
   if (confirm('Remover agendamento?')) await deleteDoc(doc(db, "agenda", id));
 };
 
-// ==========================================
-// CRUD - ORDENS DE SERVIÇO
-// ==========================================
 window.salvarOS = async function() {
   const id = document.getElementById('os-id').value;
   const numero = document.getElementById('os-numero').value;
@@ -447,9 +439,6 @@ window.removerOS = async function(id) {
   if (confirm('Remover OS?')) await deleteDoc(doc(db, "os", id));
 };
 
-// ==========================================
-// CRUD - FINANCEIRO
-// ==========================================
 window.salvarFin = async function() {
   const id = document.getElementById('fin-id').value;
   const desc = document.getElementById('fin-desc').value;
@@ -510,7 +499,6 @@ window.obterDadosOrcamento = function() {
 window.enviarWhatsApp = function() {
   const dados = obterDadosOrcamento();
   if (!dados) return;
-
   let texto = `*ORÇAMENTO - BIANCHIN ESCAVAÇÕES*\n\n`;
   texto += `*Cliente:* ${dados.cliente.nome}\n`;
   texto += `*Itens Solicitados:*\n- ${dados.equipsSelecionados.join('\n- ')}\n\n`;
@@ -519,7 +507,6 @@ window.enviarWhatsApp = function() {
   texto += `*Operador Incluso:* ${dados.op}\n`;
   if (dados.obs) texto += `\n*Observações:* ${dados.obs}\n`;
   texto += `\nFicamos à disposição!`;
-
   const whatsLimpo = (dados.cliente.whats || '').replace(/\D/g, '');
   window.open(`https://wa.me/55${whatsLimpo}?text=${encodeURIComponent(texto)}`, '_blank');
 };
@@ -527,22 +514,20 @@ window.enviarWhatsApp = function() {
 window.gerarPDF = function() {
   const dados = obterDadosOrcamento();
   if (!dados) return;
-
   const dataAtual = new Date().toLocaleDateString('pt-BR');
   const divPDF = document.createElement('div');
   divPDF.style.cssText = 'padding:40px;font-family:Arial,Helvetica,sans-serif;color:#334155;background:#ffffff;';
 
   divPDF.innerHTML = `
-    <div style="border-bottom:3px solid #2563eb;padding-bottom:20px;margin-bottom:30px;display:flex;justify-content:space-between;align-items:center;">
+    <div style="border-bottom:3px solid #F59E0B;padding-bottom:20px;margin-bottom:30px;display:flex;justify-content:space-between;align-items:center;">
       <div>
-        <h1 style="color:#2563eb;margin:0;font-size:28px;text-transform:uppercase;">Bianchin Escavações</h1>
+        <h1 style="color:#0f172a;margin:0;font-size:28px;text-transform:uppercase;">Bianchin Escavações</h1>
         <p style="margin:5px 0 0;color:#64748b;font-size:14px;">Orçamento de Locação</p>
       </div>
       <div style="text-align:right;color:#64748b;font-size:14px;">
         <p style="margin:0;">Data: <strong style="color:#334155;">${dataAtual}</strong></p>
       </div>
     </div>
-
     <div style="margin-bottom:30px;background:#f8fafc;padding:20px;border-radius:8px;border:1px solid #e2e8f0;">
       <h3 style="margin-top:0;color:#0f172a;border-bottom:1px solid #cbd5e1;padding-bottom:10px;font-size:18px;">Dados do Cliente</h3>
       <table style="width:100%;font-size:14px;">
@@ -555,7 +540,6 @@ window.gerarPDF = function() {
         </tr>
       </table>
     </div>
-
     <div style="margin-bottom:30px;">
       <h3 style="color:#0f172a;border-bottom:2px solid #e2e8f0;padding-bottom:10px;font-size:18px;">Itens do Orçamento</h3>
       <ul style="list-style-type:none;padding:0;margin:0;">
@@ -565,11 +549,10 @@ window.gerarPDF = function() {
           </li>`).join('')}
       </ul>
     </div>
-
     <div style="display:flex;gap:20px;margin-bottom:30px;">
       <div style="flex:1;background:#f8fafc;padding:20px;border-radius:8px;border:1px solid #e2e8f0;">
         <h4 style="margin:0 0 15px 0;color:#0f172a;font-size:16px;">Detalhes da Cobrança</h4>
-        <p style="margin:8px 0;font-size:14px;"><strong>Valor Estimado:</strong> <span style="font-size:16px;color:#2563eb;font-weight:bold;">${formatMoney(dados.valor || 0)}</span></p>
+        <p style="margin:8px 0;font-size:14px;"><strong>Valor Estimado:</strong> <span style="font-size:16px;color:#F59E0B;font-weight:bold;">${formatMoney(dados.valor || 0)}</span></p>
         <p style="margin:8px 0;font-size:14px;"><strong>Tipo de Cobrança:</strong> ${dados.cobranca}</p>
       </div>
       <div style="flex:1;background:#f8fafc;padding:20px;border-radius:8px;border:1px solid #e2e8f0;">
@@ -578,19 +561,16 @@ window.gerarPDF = function() {
         <p style="margin:8px 0;font-size:14px;"><strong>Operador:</strong> ${dados.op === 'Sim' ? '<span style="color:#10b981;">Incluso</span>' : '<span style="color:#ef4444;">Não Incluso</span>'}</p>
       </div>
     </div>
-
     ${dados.obs ? `
     <div style="margin-bottom:30px;">
       <h3 style="color:#0f172a;border-bottom:1px solid #e2e8f0;padding-bottom:10px;font-size:18px;">Observações</h3>
       <p style="background:#f1f5f9;padding:15px;border-radius:8px;font-style:italic;font-size:14px;border-left:4px solid #94a3b8;margin:0;">${dados.obs}</p>
     </div>` : ''}
-
     <div style="margin-top:50px;text-align:center;color:#64748b;font-size:12px;border-top:1px solid #e2e8f0;padding-top:20px;">
       <p style="margin:5px 0;">Este orçamento é válido por 7 dias. A locação está sujeita à disponibilidade do equipamento.</p>
       <p style="margin:5px 0;font-size:14px;"><strong style="color:#0f172a;">Bianchin Escavações</strong> - Agradecemos a preferência!</p>
     </div>
   `;
-
   html2pdf().set({
     margin: 0.5,
     filename: `Orcamento_${dados.cliente.nome.replace(/\s+/g, '_')}.pdf`,
@@ -604,7 +584,6 @@ window.gerarPDF = function() {
 // SINCRONIZAÇÃO TEMPO REAL COM FIRESTORE
 // ==========================================
 let seeded = false;
-
 function syncData() {
   onSnapshot(collection(db, "clientes"), (snapshot) => {
     clientes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -613,8 +592,6 @@ function syncData() {
 
   onSnapshot(collection(db, "equipamentos"), async (snapshot) => {
     equipamentos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-
-    // Popula os equipamentos padrão somente uma vez, se vazio
     if (equipamentos.length === 0 && !seeded) {
       seeded = true;
       const defaults = [
@@ -652,17 +629,27 @@ function syncData() {
 }
 
 // ==========================================
-// AUTENTICAÇÃO E INICIALIZAÇÃO
+// INICIALIZAÇÃO, NAVEGAÇÃO E AUTENTICAÇÃO
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
 
-  // --- Navegação ---
+  // --- Controle da Navegação e Menu Mobile ---
   const navItems = document.querySelectorAll('.nav-item');
   const viewSections = document.querySelectorAll('.view-section');
   const menuToggle = document.getElementById('menu-toggle');
-  const sidebar = document.querySelector('.sidebar');
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('mobile-overlay');
 
-  menuToggle.addEventListener('click', () => sidebar.classList.toggle('mobile-open'));
+  if (menuToggle && sidebar && overlay) {
+    menuToggle.addEventListener('click', () => {
+      sidebar.classList.add('mobile-open');
+      overlay.classList.add('active');
+    });
+    overlay.addEventListener('click', () => {
+      sidebar.classList.remove('mobile-open');
+      overlay.classList.remove('active');
+    });
+  }
 
   navItems.forEach(item => {
     item.addEventListener('click', (e) => {
@@ -675,141 +662,109 @@ document.addEventListener('DOMContentLoaded', () => {
         s.classList.remove('active');
         if (s.id === targetView) s.classList.add('active');
       });
-      if (window.innerWidth <= 768) sidebar.classList.remove('mobile-open');
+      // Fecha o menu mobile ao clicar em um link
+      if (window.innerWidth <= 768 && sidebar && overlay) {
+        sidebar.classList.remove('mobile-open');
+        overlay.classList.remove('active');
+      }
     });
   });
 
-  // --- Autenticação ---
+  // --- Lógica de Autenticação Atualizada ---
   let isRegistering = false;
-  const authToggle = document.getElementById('auth-toggle');
+  const authRegisterToggle = document.getElementById('auth-register-toggle');
+  const authForgotPass = document.getElementById('auth-forgot-pass');
   const authTitle = document.getElementById('auth-title');
   const authBtn = document.getElementById('auth-btn');
   const authForm = document.getElementById('auth-form');
   const authError = document.getElementById('auth-error');
 
-  authToggle.addEventListener('click', () => {
-    isRegistering = !isRegistering;
-    authTitle.textContent = isRegistering ? "Criar Conta" : "Acesso ao Sistema";
-    authBtn.textContent = isRegistering ? "Cadastrar" : "Entrar";
-    authToggle.textContent = isRegistering ? "Já tenho uma conta. Fazer login" : "Criar uma nova conta";
-    authError.style.display = 'none';
-  });
+  // Alternar entre Logar e Criar Conta
+  if (authRegisterToggle) {
+    authRegisterToggle.addEventListener('click', (e) => {
+      e.preventDefault();
+      isRegistering = !isRegistering;
+      authTitle.textContent = isRegistering ? "Criar Conta" : "Acesso ao Sistema";
+      authBtn.textContent = isRegistering ? "Cadastrar" : "Entrar no Sistema";
+      authRegisterToggle.textContent = isRegistering ? "Voltar para Login" : "Criar conta";
+      authError.style.display = 'none';
+    });
+  }
 
-  authForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('auth-email').value;
-    const pass = document.getElementById('auth-pass').value;
-    authError.style.display = 'none';
-    authBtn.textContent = isRegistering ? 'Cadastrando...' : 'Entrando...';
-    authBtn.disabled = true;
-    try {
-      if (isRegistering) {
-        await createUserWithEmailAndPassword(auth, email, pass);
-      } else {
-        await signInWithEmailAndPassword(auth, email, pass);
+  // Redefinir Senha
+  if (authForgotPass) {
+    authForgotPass.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('auth-email').value;
+      if (!email) {
+        authError.style.color = "var(--warning-color)";
+        authError.textContent = "Digite seu e-mail no campo acima e clique em 'Esqueci a senha' novamente.";
+        authError.style.display = 'block';
+        return;
       }
-    } catch (err) {
-      const msgs = {
-        'auth/invalid-credential': 'E-mail ou senha incorretos.',
-        'auth/email-already-in-use': 'Este e-mail já está cadastrado.',
-        'auth/weak-password': 'A senha deve ter pelo menos 6 caracteres.',
-        'auth/invalid-email': 'E-mail inválido.',
-        'auth/user-not-found': 'Usuário não encontrado.',
-        'auth/wrong-password': 'Senha incorreta.',
-        'auth/too-many-requests': 'Muitas tentativas. Aguarde alguns minutos.',
-      };
-      authError.textContent = msgs[err.code] || err.message;
-      authError.style.display = 'block';
-    } finally {
-      authBtn.textContent = isRegistering ? 'Cadastrar' : 'Entrar';
-      authBtn.disabled = false;
-    }
-  });
+      try {
+        await sendPasswordResetEmail(auth, email);
+        authError.style.color = "var(--accent-color)";
+        authError.textContent = "E-mail de redefinição enviado! Verifique sua caixa de entrada.";
+        authError.style.display = 'block';
+      } catch (err) {
+        authError.style.color = "var(--danger-color)";
+        authError.textContent = "Erro. Verifique se o e-mail está correto e cadastrado.";
+        authError.style.display = 'block';
+      }
+    });
+  }
 
-  document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
+  // Envio do formulário (Login ou Cadastro)
+  if (authForm) {
+    authForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('auth-email').value;
+      const pass = document.getElementById('auth-pass').value;
+      authError.style.display = 'none';
+      authBtn.textContent = isRegistering ? 'Cadastrando...' : 'Entrando...';
+      authBtn.disabled = true;
+      try {
+        if (isRegistering) {
+          await createUserWithEmailAndPassword(auth, email, pass);
+        } else {
+          await signInWithEmailAndPassword(auth, email, pass);
+        }
+      } catch (err) {
+        const msgs = {
+          'auth/invalid-credential': 'E-mail ou senha incorretos.',
+          'auth/email-already-in-use': 'Este e-mail já está cadastrado.',
+          'auth/weak-password': 'A senha deve ter pelo menos 6 caracteres.',
+          'auth/invalid-email': 'E-mail inválido.',
+          'auth/user-not-found': 'Usuário não encontrado.',
+          'auth/wrong-password': 'Senha incorreta.',
+          'auth/too-many-requests': 'Muitas tentativas. Aguarde alguns minutos.',
+        };
+        authError.style.color = "var(--danger-color)";
+        authError.textContent = msgs[err.code] || err.message;
+        authError.style.display = 'block';
+      } finally {
+        authBtn.textContent = isRegistering ? 'Cadastrar' : 'Entrar no Sistema';
+        authBtn.disabled = false;
+      }
+    });
+  }
 
-  // --- Observar estado de login ---
+  // Logout
+  const btnLogout = document.getElementById('btn-logout');
+  if (btnLogout) {
+    btnLogout.addEventListener('click', () => signOut(auth));
+  }
+
+  // Observar estado de login (Se atualizou a página com F5, o Firebase já sabe que está logado)
   onAuthStateChanged(auth, (user) => {
     if (user) {
       document.getElementById('auth-wrapper').style.display = 'none';
       document.getElementById('app-container').style.display = 'flex';
-      syncData();
+      syncData(); // Somente DEPOIS de logado e validado, o sistema puxa os dados reais!
     } else {
       document.getElementById('auth-wrapper').style.display = 'flex';
       document.getElementById('app-container').style.display = 'none';
     }
   });
 });
-// ==========================================
-// CONTROLE DO MENU MOBILE
-// ==========================================
-document.addEventListener('DOMContentLoaded', () => {
-  const menuToggle = document.getElementById('menu-toggle');
-  const sidebar = document.getElementById('sidebar');
-  const overlay = document.getElementById('mobile-overlay');
-
-  if (menuToggle && sidebar && overlay) {
-    // 1. Abre o menu ao clicar no botão Hamburguer
-    menuToggle.addEventListener('click', () => {
-      sidebar.classList.add('mobile-open');
-      overlay.classList.add('active');
-    });
-
-    // 2. Fecha o menu ao clicar na parte escura da tela
-    overlay.addEventListener('click', () => {
-      sidebar.classList.remove('mobile-open');
-      overlay.classList.remove('active');
-    });
-
-    // 3. Fecha o menu automaticamente quando clica em algum link
-    const navItems = document.querySelectorAll('.nav-item');
-    navItems.forEach(item => {
-      item.addEventListener('click', () => {
-        if (window.innerWidth <= 768) {
-          sidebar.classList.remove('mobile-open');
-          overlay.classList.remove('active');
-        }
-      });
-    });
-  } else {
-    console.warn("Elementos do menu mobile não foram encontrados no HTML.");
-  }
-});
-// ==========================================
-// CONTROLE DE SESSÃO E LOGIN
-// ==========================================
-document.addEventListener('DOMContentLoaded', () => {
-  const authWrapper = document.getElementById('auth-wrapper');
-  const appContainer = document.getElementById('app-container');
-
-  // 1. Verifica se o usuário já está logado ao carregar a página
-  if (localStorage.getItem('sessaoAtiva') === 'true') {
-    authWrapper.style.display = 'none';
-    appContainer.style.display = 'flex'; // Exibe o sistema
-  }
-
-  // 2. Lógica do botão de "Entrar"
-  const authForm = document.getElementById('auth-form');
-  if (authForm) {
-    authForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      
-      // Aqui você faz a validação real (ex: checar email e senha no banco)
-      // Simulando um login de sucesso:
-      
-      localStorage.setItem('sessaoAtiva', 'true'); // Salva no navegador
-      authWrapper.style.display = 'none';
-      appContainer.style.display = 'flex';
-    });
-  }
-
-  // 3. Lógica do botão de "Sair" (Logout)
-  const btnLogout = document.getElementById('btn-logout');
-  if (btnLogout) {
-    btnLogout.addEventListener('click', () => {
-      localStorage.removeItem('sessaoAtiva'); // Apaga a sessão
-      window.location.reload(); // Recarrega a página para voltar à tela de login
-    });
-  }
-});
-
