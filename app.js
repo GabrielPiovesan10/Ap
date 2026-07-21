@@ -740,3 +740,39 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+// ==========================================
+// CONTROLE DO MENU MOBILE
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+  const menuToggle = document.getElementById('menu-toggle');
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('mobile-overlay');
+
+  if (menuToggle && sidebar && overlay) {
+    // 1. Abre o menu ao clicar no botão Hamburguer
+    menuToggle.addEventListener('click', () => {
+      sidebar.classList.add('mobile-open');
+      overlay.classList.add('active');
+    });
+
+    // 2. Fecha o menu ao clicar na parte escura da tela
+    overlay.addEventListener('click', () => {
+      sidebar.classList.remove('mobile-open');
+      overlay.classList.remove('active');
+    });
+
+    // 3. Fecha o menu automaticamente quando clica em algum link
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(item => {
+      item.addEventListener('click', () => {
+        if (window.innerWidth <= 768) {
+          sidebar.classList.remove('mobile-open');
+          overlay.classList.remove('active');
+        }
+      });
+    });
+  } else {
+    console.warn("Elementos do menu mobile não foram encontrados no HTML.");
+  }
+});
+
