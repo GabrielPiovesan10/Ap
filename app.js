@@ -374,16 +374,26 @@ function renderDashboard() {
   const currentYear = hj.getFullYear();
   let fatMes = 0;
   const monthLabels = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-  const monthlyData = new Array(12).fill(0);
+  
+  // Criamos duas listas separadas agora
+  const faturamentoData = new Array(12).fill(0);
+  const lucroData = new Array(12).fill(0);
 
   financas.forEach(f => {
-    if (f.tipo === 'Receita' && f.data) {
+    // Só contabiliza no gráfico se a conta já estiver paga/recebida
+    if (f.data && f.statusPagamento === 'Pago') {
       const [y, m] = f.data.split('-');
       const fMonth = parseInt(m) - 1;
       const fYear = parseInt(y);
+      
       if (fYear === currentYear) {
-        monthlyData[fMonth] += Number(f.valor);
-        if (fMonth === currentMonth) fatMes += Number(f.valor);
+        if (f.tipo === 'Receita') {
+          faturamentoData[fMonth] += Number(f.valor);
+          lucroData[fMonth] += Number(f.valor); // Soma no lucro
+          if (fMonth === currentMonth) fatMes += Number(f.valor);
+        } else if (f.tipo === 'Despesa') {
+          lucroData[fMonth] -= Number(f.valor); // Subtrai do lucro
+        }
       }
     }
   });
@@ -404,14 +414,25 @@ function renderDashboard() {
       type: 'line',
       data: {
         labels: monthLabels,
-        datasets: [{
-          label: `Receitas em ${currentYear}`,
-          data: monthlyData,
-          borderColor: '#F59E0B',
-          backgroundColor: 'rgba(245, 158, 11, 0.1)',
-          tension: 0.4,
-          fill: true
-        }]
+        datasets: [
+          {
+            label: `Faturamento Bruto`,
+            data: faturamentoData,
+            borderColor: '#F59E0B', // Cor Laranja/Amarela
+            backgroundColor: 'transparent',
+            tension: 0.4,
+            borderWidth: 2
+          },
+          {
+            label: `Lucro Líquido (Sobrou)`,
+            data: lucroData,
+            borderColor: '#10B981', // Cor Verde
+            backgroundColor: 'rgba(16, 185, 129, 0.1)', // Fundo verdinho transparente
+            tension: 0.4,
+            fill: true,
+            borderWidth: 2
+          }
+        ]
       },
       options: {
         responsive: true,
