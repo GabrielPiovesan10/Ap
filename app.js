@@ -39,6 +39,27 @@ const formatDate = (dateString) => {
   return `${d}/${m}/${y}`;
 };
 
+// Comprime imagem para evitar estourar limite do Firebase
+function compressImage(file, callback) {
+  if (!file) return callback(null);
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onload = event => {
+    const img = new Image();
+    img.src = event.target.result;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const MAX_WIDTH = 800; // Limita a largura máxima
+      const scaleSize = MAX_WIDTH / img.width;
+      canvas.width = MAX_WIDTH;
+      canvas.height = img.height * scaleSize;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      callback(canvas.toDataURL('image/jpeg', 0.7)); // Compressão 70%
+    }
+  }
+}
+
 // ==========================================
 // MODAIS
 // ==========================================
@@ -49,24 +70,28 @@ window.openModal = function(modalId) {
     document.getElementById('title-modal-cliente').textContent = "Novo Cliente";
   } else if (modalId === 'modal-equip') {
     document.getElementById('eq-id').value = '';
-    document.getElementById('eq-nome').value = '';
-    document.getElementById('eq-hori').value = '';
+    ['eq-nome', 'eq-hori', 'eq-oleo', 'eq-manut', 'eq-doc', 'eq-seguro', 'eq-custos'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('eq-status').value = 'Operacional';
     document.getElementById('title-modal-equip').textContent = "Novo Equipamento";
   } else if (modalId === 'modal-agenda') {
     document.getElementById('ag-id').value = '';
-    document.getElementById('ag-data').value = '';
+    ['ag-data', 'ag-hora'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('ag-status').value = 'Pendente';
     document.getElementById('title-modal-agenda').textContent = "Novo Agendamento";
   } else if (modalId === 'modal-os') {
     document.getElementById('os-id').value = '';
-    document.getElementById('os-numero').value = '';
-    document.getElementById('os-hini').value = '';
-    document.getElementById('os-hfim').value = '';
+    ['os-numero', 'os-hini', 'os-hfim', 'os-foto', 'os-assinatura'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('os-status').value = 'Em Andamento';
     document.getElementById('title-modal-os').textContent = "Nova Ordem de Serviço";
+    // Limpa a foto global de edição
+    window.currentOSFoto = null; 
+    window.currentOSAssinatura = null;
   } else if (modalId === 'modal-fin') {
     document.getElementById('fin-id').value = '';
-    document.getElementById('fin-desc').value = '';
-    document.getElementById('fin-valor').value = '';
-    document.getElementById('fin-data').value = '';
+    ['fin-desc', 'fin-valor', 'fin-data'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('fin-tipo').value = 'Receita';
+    document.getElementById('fin-cat').value = 'Serviço';
+    document.getElementById('fin-status').value = 'Pago';
     document.getElementById('title-modal-fin').textContent = "Novo Lançamento";
   }
   document.getElementById(modalId).classList.add('active');
@@ -85,6 +110,7 @@ function renderAll() {
   renderAgenda();
   renderOS();
   renderFinanceiro();
+  renderRelatorios();
   renderDashboard();
 }
 
@@ -127,7 +153,8 @@ function renderEquipamentos() {
       tbody.innerHTML += `
         <tr>
           <td>${e.nome}</td>
-          <td>${e.horimetro}</td>
+          <td>${e.horimetro || '0'}</td>
+          <td>${formatDate(e.manutencao) || '-'}</td>
           <td><span class="badge ${badge}">${e.status}</span></td>
           <td>
             <div class="td-actions">
@@ -161,6 +188,7 @@ function renderAgenda() {
           <td>${cliName}</td>
           <td>${eqName}</td>
           <td>${formatDate(a.data)}</td>
+          <td>${a.hora || '-'}</td>
           <td>${a.status}</td>
           <td>
             <div class="td-actions">
@@ -198,25 +226,36 @@ function renderOS() {
   }
 }
 
-let chartInstance = null;
-
+let chartInstanceSecundario = null;
 function renderFinanceiro() {
   const tbody = document.getElementById('tbody-fin');
-  let totalReceitas = 0;
-  let totalDespesas = 0;
+  
+  let entradas = 0, saidas = 0, aReceber = 0, aPagar = 0, pendentes = 0;
 
-  if (tbody) {
-    tbody.innerHTML = '';
-    const sorted = [...financas].sort((a, b) => new Date(a.data) - new Date(b.data));
-    sorted.forEach((f) => {
-      const val = Number(f.valor);
-      if (f.tipo === 'Receita') totalReceitas += val; else totalDespesas += val;
+  if (tbody) tbody.innerHTML = '';
+
+  const sorted = [...financas].sort((a, b) => new Date(a.data) - new Date(b.data));
+  sorted.forEach((f) => {
+    const val = Number(f.valor);
+    const isReceita = f.tipo === 'Receita';
+    const isPago = f.statusPagamento === 'Pago';
+
+    // Lógica para os Cards Financeiros
+    if (isReceita && isPago) entradas += val;
+    if (!isReceita && isPago) saidas += val;
+    if (isReceita && !isPago) { aReceber += val; pendentes++; }
+    if (!isReceita && !isPago) aPagar += val;
+
+    // Preenche a tabela
+    if (tbody) {
+      const badgeCor = isPago ? 'badge-success' : (f.statusPagamento === 'Atrasado' ? 'badge-danger' : 'badge-warning');
       tbody.innerHTML += `
         <tr>
           <td>${formatDate(f.data)}</td>
           <td>${f.desc}</td>
-          <td style="color:${f.tipo === 'Receita' ? 'var(--accent-color)' : 'var(--danger-color)'}">${f.tipo}</td>
-          <td>${formatMoney(f.valor)}</td>
+          <td>${f.categoria || 'Outros'}</td>
+          <td><span class="badge ${badgeCor}">${f.statusPagamento || 'Pago'}</span></td>
+          <td style="color:${isReceita ? 'var(--accent-color)' : 'var(--danger-color)'}">${formatMoney(f.valor)}</td>
           <td>
             <div class="td-actions">
               <button class="btn btn-primary" style="padding:4px 8px;font-size:0.8rem;" onclick="editarFin('${f.id}')">Editar</button>
@@ -224,17 +263,111 @@ function renderFinanceiro() {
             </div>
           </td>
         </tr>`;
-    });
+    }
+  });
+
+  // Atualiza Dados na Tela
+  const elEntradas = document.getElementById('fin-entradas');
+  if (elEntradas) {
+    elEntradas.textContent = formatMoney(entradas);
+    document.getElementById('fin-saidas').textContent = formatMoney(saidas);
+    document.getElementById('fin-fluxo').textContent = formatMoney(entradas - saidas);
+    document.getElementById('fin-receber').textContent = formatMoney(aReceber);
+    document.getElementById('fin-pagar').textContent = formatMoney(aPagar);
+    document.getElementById('fin-pendentes').textContent = pendentes;
   }
 
-  const relReceitas = document.getElementById('rel-receitas');
-  if (relReceitas) {
-    relReceitas.textContent = formatMoney(totalReceitas);
-    document.getElementById('rel-despesas').textContent = formatMoney(totalDespesas);
-    document.getElementById('rel-saldo').textContent = formatMoney(totalReceitas - totalDespesas);
+  // Gráfico Financeiro Secundário (Pizza ou Barra)
+  const ctx = document.getElementById('chartFinanceiroSecundario');
+  if (ctx && window.Chart) {
+    if (chartInstanceSecundario) chartInstanceSecundario.destroy();
+    chartInstanceSecundario = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Entradas (Recebido)', 'Saídas (Pago)'],
+        datasets: [{
+          data: [entradas, saidas],
+          backgroundColor: ['#10b981', '#ef4444'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: {color: '#f8fafc'} } }
+      }
+    });
   }
 }
 
+function renderRelatorios() {
+  let fatMes = 0;
+  let recTotal = 0;
+  let despTotal = 0;
+  let custoDiesel = 0;
+  let custoManut = 0;
+
+  const hj = new Date();
+  const currentMonth = hj.getMonth();
+  const currentYear = hj.getFullYear();
+
+  // Calcula Finanças
+  financas.forEach(f => {
+    const val = Number(f.valor);
+    if (f.tipo === 'Receita') {
+      if(f.statusPagamento === 'Pago') recTotal += val;
+      if (f.data) {
+        const [y, m] = f.data.split('-');
+        if (parseInt(y) === currentYear && parseInt(m) - 1 === currentMonth) {
+          fatMes += val;
+        }
+      }
+    } else {
+      if(f.statusPagamento === 'Pago') despTotal += val;
+      if (f.categoria === 'Diesel') custoDiesel += val;
+      if (f.categoria === 'Manutenção') custoManut += val;
+    }
+  });
+
+  const elFatMes = document.getElementById('rel-faturamento-mes');
+  if(elFatMes) {
+    elFatMes.textContent = formatMoney(fatMes);
+    document.getElementById('rel-lucro').textContent = formatMoney(recTotal - despTotal);
+    document.getElementById('rel-diesel').textContent = formatMoney(custoDiesel);
+    document.getElementById('rel-manutencao').textContent = formatMoney(custoManut);
+  }
+
+  // Calcula Rankings (Top Clientes e Top Equipamentos)
+  const osPorCliente = {};
+  const osPorEquip = {};
+
+  os.forEach(o => {
+    osPorCliente[o.clienteId] = (osPorCliente[o.clienteId] || 0) + 1;
+    osPorEquip[o.equipId] = (osPorEquip[o.equipId] || 0) + 1;
+  });
+
+  const topClientesList = Object.entries(osPorCliente)
+    .sort((a, b) => b[1] - a[1]).slice(0, 5)
+    .map(entry => {
+      const c = clientes.find(x => x.id === entry[0]);
+      return c ? `<li><strong>${c.nome}</strong>: ${entry[1]} obras/locações</li>` : '';
+    }).join('');
+    
+  const elTopCli = document.getElementById('rel-top-clientes');
+  if(elTopCli) elTopCli.innerHTML = topClientesList || '<li>Nenhum dado suficiente</li>';
+
+  const topEquipsList = Object.entries(osPorEquip)
+    .sort((a, b) => b[1] - a[1]).slice(0, 5)
+    .map(entry => {
+      const e = equipamentos.find(x => x.id === entry[0]);
+      return e ? `<li><strong>${e.nome}</strong>: Locado em ${entry[1]} OS</li>` : '';
+    }).join('');
+
+  const elTopEq = document.getElementById('rel-top-equips');
+  if(elTopEq) elTopEq.innerHTML = topEquipsList || '<li>Nenhum dado suficiente</li>';
+}
+
+let chartInstanceDashboard = null;
 function renderDashboard() {
   const hj = new Date();
   const currentMonth = hj.getMonth();
@@ -266,8 +399,8 @@ function renderDashboard() {
 
   const ctx = document.getElementById('chartFaturamento');
   if (ctx && window.Chart) {
-    if (chartInstance) chartInstance.destroy();
-    chartInstance = new Chart(ctx, {
+    if (chartInstanceDashboard) chartInstanceDashboard.destroy();
+    chartInstanceDashboard = new Chart(ctx, {
       type: 'line',
       data: {
         labels: monthLabels,
@@ -294,9 +427,8 @@ function renderDashboard() {
 }
 
 // ==========================================
-// CRUD (CLIENTES, EQUIP, AGENDA, OS, FIN)
+// CRUD - CLIENTES
 // ==========================================
-// ... (Todo o CRUD é mantido idêntico)
 window.salvarCliente = async function() {
   const id = document.getElementById('cli-id').value;
   const nome = document.getElementById('cli-nome').value;
@@ -335,14 +467,31 @@ window.removerCliente = async function(id) {
   if (confirm('Remover este cliente?')) await deleteDoc(doc(db, "clientes", id));
 };
 
+// ==========================================
+// CRUD - EQUIPAMENTOS
+// ==========================================
 window.salvarEquip = async function() {
   const id = document.getElementById('eq-id').value;
   const nome = document.getElementById('eq-nome').value;
   const horimetro = document.getElementById('eq-hori').value;
   const status = document.getElementById('eq-status').value;
+  const oleo = document.getElementById('eq-oleo').value;
+  const manutencao = document.getElementById('eq-manut').value;
+  const docum = document.getElementById('eq-doc').value;
+  const seguro = document.getElementById('eq-seguro').value;
+  const custos = document.getElementById('eq-custos').value;
 
   if (!nome) return alert("Nome do equipamento é obrigatório!");
-  const data = { nome, horimetro: horimetro || '0', status };
+  const data = { 
+    nome, 
+    horimetro: horimetro || '0', 
+    status,
+    oleo,
+    manutencao,
+    documentacao: docum,
+    seguro,
+    custosAcumulados: Number(custos || 0)
+  };
 
   if (id) {
     await updateDoc(doc(db, "equipamentos", id), data);
@@ -359,6 +508,12 @@ window.editarEquip = function(id) {
   document.getElementById('eq-nome').value = e.nome || '';
   document.getElementById('eq-hori').value = e.horimetro || '';
   document.getElementById('eq-status').value = e.status || 'Operacional';
+  document.getElementById('eq-oleo').value = e.oleo || '';
+  document.getElementById('eq-manut').value = e.manutencao || '';
+  document.getElementById('eq-doc').value = e.documentacao || '';
+  document.getElementById('eq-seguro').value = e.seguro || '';
+  document.getElementById('eq-custos').value = e.custosAcumulados || '';
+  
   document.getElementById('title-modal-equip').textContent = "Editar Equipamento";
   document.getElementById('modal-equip').classList.add('active');
 };
@@ -367,15 +522,19 @@ window.removerEquip = async function(id) {
   if (confirm('Remover equipamento?')) await deleteDoc(doc(db, "equipamentos", id));
 };
 
+// ==========================================
+// CRUD - AGENDA
+// ==========================================
 window.salvarAgenda = async function() {
   const id = document.getElementById('ag-id').value;
   const clienteId = document.getElementById('ag-cliente').value;
   const equipId = document.getElementById('ag-equip').value;
   const dataPrev = document.getElementById('ag-data').value;
+  const horaPrev = document.getElementById('ag-hora').value;
   const status = document.getElementById('ag-status').value;
 
   if (!clienteId || !equipId || !dataPrev) return alert("Preencha os campos obrigatórios!");
-  const data = { clienteId, equipId, data: dataPrev, status };
+  const data = { clienteId, equipId, data: dataPrev, hora: horaPrev, status };
 
   if (id) {
     await updateDoc(doc(db, "agenda", id), data);
@@ -392,6 +551,7 @@ window.editarAgenda = function(id) {
   document.getElementById('ag-cliente').value = a.clienteId || '';
   document.getElementById('ag-equip').value = a.equipId || '';
   document.getElementById('ag-data').value = a.data || '';
+  document.getElementById('ag-hora').value = a.hora || '';
   document.getElementById('ag-status').value = a.status || 'Pendente';
   document.getElementById('title-modal-agenda').textContent = "Editar Agendamento";
   document.getElementById('modal-agenda').classList.add('active');
@@ -401,6 +561,9 @@ window.removerAgenda = async function(id) {
   if (confirm('Remover agendamento?')) await deleteDoc(doc(db, "agenda", id));
 };
 
+// ==========================================
+// CRUD - ORDENS DE SERVIÇO (COM FOTOS)
+// ==========================================
 window.salvarOS = async function() {
   const id = document.getElementById('os-id').value;
   const numero = document.getElementById('os-numero').value;
@@ -411,14 +574,29 @@ window.salvarOS = async function() {
   const status = document.getElementById('os-status').value;
 
   if (!numero || !clienteId || !equipId) return alert("Preencha Nº OS, Cliente e Equipamento!");
-  const data = { numero, clienteId, equipId, hini, hfim, status };
 
-  if (id) {
-    await updateDoc(doc(db, "os", id), data);
-  } else {
-    await addDoc(collection(db, "os"), data);
-  }
-  closeModal('modal-os');
+  // Arquivos
+  const fotoFile = document.getElementById('os-foto').files[0];
+  const assFile = document.getElementById('os-assinatura').files[0];
+
+  // Processa Imagens Base64 se existirem
+  compressImage(fotoFile, async (fotoB64) => {
+    compressImage(assFile, async (assB64) => {
+      
+      const data = { 
+        numero, clienteId, equipId, hini, hfim, status,
+        fotoBase64: fotoB64 || window.currentOSFoto || null,
+        assinaturaBase64: assB64 || window.currentOSAssinatura || null
+      };
+
+      if (id) {
+        await updateDoc(doc(db, "os", id), data);
+      } else {
+        await addDoc(collection(db, "os"), data);
+      }
+      closeModal('modal-os');
+    });
+  });
 };
 
 window.editarOS = function(id) {
@@ -431,6 +609,11 @@ window.editarOS = function(id) {
   document.getElementById('os-hini').value = o.hini || '';
   document.getElementById('os-hfim').value = o.hfim || '';
   document.getElementById('os-status').value = o.status || 'Em Andamento';
+  
+  // Salva as fotos atuais em memória caso ele só edite o texto
+  window.currentOSFoto = o.fotoBase64 || null;
+  window.currentOSAssinatura = o.assinaturaBase64 || null;
+
   document.getElementById('title-modal-os').textContent = "Editar OS";
   document.getElementById('modal-os').classList.add('active');
 };
@@ -439,15 +622,27 @@ window.removerOS = async function(id) {
   if (confirm('Remover OS?')) await deleteDoc(doc(db, "os", id));
 };
 
+// ==========================================
+// CRUD - FINANCEIRO
+// ==========================================
 window.salvarFin = async function() {
   const id = document.getElementById('fin-id').value;
   const desc = document.getElementById('fin-desc').value;
   const tipo = document.getElementById('fin-tipo').value;
   const valor = document.getElementById('fin-valor').value;
+  const cat = document.getElementById('fin-cat').value;
+  const statusPayment = document.getElementById('fin-status').value;
   const dataLanc = document.getElementById('fin-data').value;
 
   if (!desc || !valor || !dataLanc) return alert("Preencha todos os campos!");
-  const data = { desc, tipo, valor: Number(valor), data: dataLanc };
+  const data = { 
+    desc, 
+    tipo, 
+    categoria: cat,
+    statusPagamento: statusPayment,
+    valor: Number(valor), 
+    data: dataLanc 
+  };
 
   if (id) {
     await updateDoc(doc(db, "financas", id), data);
@@ -464,6 +659,8 @@ window.editarFin = function(id) {
   document.getElementById('fin-desc').value = f.desc || '';
   document.getElementById('fin-tipo').value = f.tipo || 'Receita';
   document.getElementById('fin-valor').value = f.valor || '';
+  document.getElementById('fin-cat').value = f.categoria || 'Serviço';
+  document.getElementById('fin-status').value = f.statusPagamento || 'Pago';
   document.getElementById('fin-data').value = f.data || '';
   document.getElementById('title-modal-fin').textContent = "Editar Lançamento";
   document.getElementById('modal-fin').classList.add('active');
@@ -633,7 +830,6 @@ function syncData() {
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
 
-  // --- Controle da Navegação e Menu Mobile ---
   const navItems = document.querySelectorAll('.nav-item');
   const viewSections = document.querySelectorAll('.view-section');
   const menuToggle = document.getElementById('menu-toggle');
@@ -662,7 +858,6 @@ document.addEventListener('DOMContentLoaded', () => {
         s.classList.remove('active');
         if (s.id === targetView) s.classList.add('active');
       });
-      // Fecha o menu mobile ao clicar em um link
       if (window.innerWidth <= 768 && sidebar && overlay) {
         sidebar.classList.remove('mobile-open');
         overlay.classList.remove('active');
@@ -670,7 +865,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // --- Lógica de Autenticação Atualizada ---
   let isRegistering = false;
   const authRegisterToggle = document.getElementById('auth-register-toggle');
   const authForgotPass = document.getElementById('auth-forgot-pass');
@@ -679,7 +873,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const authForm = document.getElementById('auth-form');
   const authError = document.getElementById('auth-error');
 
-  // Alternar entre Logar e Criar Conta
   if (authRegisterToggle) {
     authRegisterToggle.addEventListener('click', (e) => {
       e.preventDefault();
@@ -691,7 +884,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Redefinir Senha
   if (authForgotPass) {
     authForgotPass.addEventListener('click', async (e) => {
       e.preventDefault();
@@ -715,7 +907,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Envio do formulário (Login ou Cadastro)
   if (authForm) {
     authForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -750,18 +941,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Logout
   const btnLogout = document.getElementById('btn-logout');
   if (btnLogout) {
     btnLogout.addEventListener('click', () => signOut(auth));
   }
 
-  // Observar estado de login (Se atualizou a página com F5, o Firebase já sabe que está logado)
   onAuthStateChanged(auth, (user) => {
     if (user) {
       document.getElementById('auth-wrapper').style.display = 'none';
       document.getElementById('app-container').style.display = 'flex';
-      syncData(); // Somente DEPOIS de logado e validado, o sistema puxa os dados reais!
+      syncData(); 
     } else {
       document.getElementById('auth-wrapper').style.display = 'flex';
       document.getElementById('app-container').style.display = 'none';
