@@ -375,7 +375,7 @@ function renderDashboard() {
   let fatMes = 0;
   const monthLabels = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
   
-  // Criamos duas listas separadas agora
+  // Duas linhas no gráfico
   const faturamentoData = new Array(12).fill(0);
   const lucroData = new Array(12).fill(0);
 
@@ -418,7 +418,7 @@ function renderDashboard() {
           {
             label: `Faturamento Bruto`,
             data: faturamentoData,
-            borderColor: '#F59E0B', // Cor Laranja/Amarela
+            borderColor: '#F59E0B', 
             backgroundColor: 'transparent',
             tension: 0.4,
             borderWidth: 2
@@ -426,8 +426,8 @@ function renderDashboard() {
           {
             label: `Lucro Líquido (Sobrou)`,
             data: lucroData,
-            borderColor: '#10B981', // Cor Verde
-            backgroundColor: 'rgba(16, 185, 129, 0.1)', // Fundo verdinho transparente
+            borderColor: '#10B981', 
+            backgroundColor: 'rgba(16, 185, 129, 0.1)', 
             tension: 0.4,
             fill: true,
             borderWidth: 2
@@ -583,7 +583,7 @@ window.removerAgenda = async function(id) {
 };
 
 // ==========================================
-// CRUD - ORDENS DE SERVIÇO (COM FOTOS)
+// CRUD - ORDENS DE SERVIÇO (COM FOTOS E AUTOMAÇÃO)
 // ==========================================
 window.salvarOS = async function() {
   const id = document.getElementById('os-id').value;
@@ -615,6 +615,18 @@ window.salvarOS = async function() {
       } else {
         await addDoc(collection(db, "os"), data);
       }
+
+      // ---------------------------------------------------------
+      // NOVA AUTOMAÇÃO: ATUALIZA O STATUS DO EQUIPAMENTO SOZINHO
+      // ---------------------------------------------------------
+      try {
+        const novoStatusEquip = (status === 'Finalizada') ? 'Operacional' : 'Alugado';
+        await updateDoc(doc(db, "equipamentos", equipId), { status: novoStatusEquip });
+      } catch (err) {
+        console.error("Erro ao atualizar o equipamento:", err);
+      }
+      // ---------------------------------------------------------
+
       closeModal('modal-os');
     });
   });
@@ -640,7 +652,20 @@ window.editarOS = function(id) {
 };
 
 window.removerOS = async function(id) {
-  if (confirm('Remover OS?')) await deleteDoc(doc(db, "os", id));
+  if (confirm('Remover OS?')) {
+    const o = os.find(x => x.id === id);
+    
+    // Automação: Se você deletar uma OS que estava em andamento, devolve a máquina pro pátio
+    if (o && o.equipId && o.status !== 'Finalizada') {
+      try {
+        await updateDoc(doc(db, "equipamentos", o.equipId), { status: 'Operacional' });
+      } catch(e) {
+        console.error("Erro ao liberar equipamento:", e);
+      }
+    }
+    
+    await deleteDoc(doc(db, "os", id));
+  }
 };
 
 // ==========================================
