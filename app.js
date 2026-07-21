@@ -775,4 +775,41 @@ document.addEventListener('DOMContentLoaded', () => {
     console.warn("Elementos do menu mobile não foram encontrados no HTML.");
   }
 });
+// ==========================================
+// CONTROLE DE SESSÃO E LOGIN
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+  const authWrapper = document.getElementById('auth-wrapper');
+  const appContainer = document.getElementById('app-container');
+
+  // 1. Verifica se o usuário já está logado ao carregar a página
+  if (localStorage.getItem('sessaoAtiva') === 'true') {
+    authWrapper.style.display = 'none';
+    appContainer.style.display = 'flex'; // Exibe o sistema
+  }
+
+  // 2. Lógica do botão de "Entrar"
+  const authForm = document.getElementById('auth-form');
+  if (authForm) {
+    authForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      // Aqui você faz a validação real (ex: checar email e senha no banco)
+      // Simulando um login de sucesso:
+      
+      localStorage.setItem('sessaoAtiva', 'true'); // Salva no navegador
+      authWrapper.style.display = 'none';
+      appContainer.style.display = 'flex';
+    });
+  }
+
+  // 3. Lógica do botão de "Sair" (Logout)
+  const btnLogout = document.getElementById('btn-logout');
+  if (btnLogout) {
+    btnLogout.addEventListener('click', () => {
+      localStorage.removeItem('sessaoAtiva'); // Apaga a sessão
+      window.location.reload(); // Recarrega a página para voltar à tela de login
+    });
+  }
+});
 
