@@ -102,10 +102,8 @@
           <h1 class="page-title" id="header-title">Dashboard</h1>
         </div>
         
+        <!-- Perfil (Avatar Removido) -->
         <div class="user-profile" style="display: flex; gap: 16px; align-items: center;">
-          <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary-color); display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 0.9rem;">
-            ADM
-          </div>
           <button id="btn-logout" class="btn" style="background: transparent; color: var(--danger-color); border: 1px solid var(--border-color); padding: 6px 12px; font-size: 0.85rem;">
             <i class="ph ph-sign-out"></i> Sair
           </button>
@@ -113,7 +111,7 @@
       </header>
 
       <!-- Área de Conteúdo Rolável -->
-      <div class="content-area">
+      <div class="content-area" style="display: flex; flex-direction: column; min-height: calc(100vh - 80px);">
         
         <!-- ================= Dashboard ================= -->
         <section id="view-dashboard" class="view-section active">
@@ -178,7 +176,7 @@
           </div>
         </section>
 
-        <!-- ================= Equipamentos ================= -->
+        <!-- ================= Equipamentos (Layout em Cards) ================= -->
         <section id="view-equipamentos" class="view-section">
           <div class="top-bar-actions">
             <h2>Equipamentos e Frota</h2>
@@ -187,22 +185,41 @@
             </button>
           </div>
           
-          <div class="glass-card" style="padding: 0;">
-            <div class="table-responsive">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Equipamento</th>
-                    <th>Horímetro</th>
-                    <th>Próx. Manutenção</th>
-                    <th>Status</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody id="tbody-equipamentos">
-                </tbody>
-              </table>
+          <!-- Grid onde o JS vai injetar os cards -->
+          <div id="grid-equipamentos" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 16px;">
+            
+            <!-- MODELO DE CARD (Seu JS deve criar estruturas parecidas com esta ao invés de linhas <tr>) -->
+            <div class="glass-card equip-card" style="padding: 16px; display: flex; flex-direction: column; gap: 12px; border-radius: 12px;">
+              <!-- Área da Imagem -->
+              <div style="width: 100%; height: 180px; background-color: #f3f4f6; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                <img src="sua-foto-exemplo.jpg" alt="Foto do Equipamento" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <i class="ph ph-image" style="font-size: 3rem; color: #9ca3af; display: none;"></i>
+              </div>
+              
+              <!-- Informações -->
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                  <h3 style="margin: 0 0 8px 0; font-size: 1.1rem; color: var(--text-primary);">Escavadeira Suny</h3>
+                  <span style="padding: 4px 8px; background: rgba(16,185,129,0.1); color: var(--accent-color); border-radius: 6px; font-size: 0.75rem; font-weight: 600;">Operacional</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; color: var(--text-secondary);">
+                  <span style="display: flex; align-items: center; gap: 6px;"><i class="ph ph-clock" style="font-size: 1rem;"></i> Horímetro: <strong>1200h</strong></span>
+                  <span style="display: flex; align-items: center; gap: 6px;"><i class="ph ph-wrench" style="font-size: 1rem;"></i> Próx. Manut.: <strong>15/10/2026</strong></span>
+                </div>
+              </div>
+              
+              <!-- Botões de Ação -->
+              <div style="display: flex; gap: 8px; margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border-color);">
+                <button class="btn" style="flex: 1; padding: 8px; font-size: 0.85rem; background: transparent; border: 1px solid var(--primary-color); color: var(--primary-color);">
+                  <i class="ph ph-pencil"></i> Editar
+                </button>
+                <button class="btn" style="padding: 8px; font-size: 0.85rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--danger-color);">
+                  <i class="ph ph-trash"></i>
+                </button>
+              </div>
             </div>
+            <!-- Fim do Modelo de Card -->
+
           </div>
         </section>
 
@@ -234,69 +251,82 @@
           </div>
         </section>
 
-        <!-- ================= Orçamentos ================= -->
+        <!-- ================= Orçamentos (Preparado para PDF com Logo) ================= -->
         <section id="view-orcamentos" class="view-section">
           <div class="top-bar-actions">
             <h2>Orçamentos</h2>
           </div>
           <div class="glass-card" style="max-width: 800px; margin: 0 auto;">
-            <form id="form-orcamento">
-              <div class="form-group">
-                <label>Cliente</label>
-                <select class="form-control" id="orc-cliente">
-                  <option value="">Selecione o Cliente</option>
-                </select>
-              </div>
+            
+            <!-- Esta div será o alvo da geração do PDF -->
+            <div id="area-pdf-orcamento" style="padding: 10px;">
               
-              <div class="form-group">
-                <label>Equipamentos e Ferramentas Desejadas</label>
-                <div class="grid-checkbox" id="orc-equipamentos">
-                  <label class="checkbox-label"><input type="checkbox" value="Escavadeira Suny"> Escavadeira Suny</label>
-                  <label class="checkbox-label"><input type="checkbox" value="Escavadeira Yanmar"> Escavadeira Yanmar</label>
-                  <label class="checkbox-label"><input type="checkbox" value="Carregadeira XCMG"> Carregadeira XCMG</label>
-                  <label class="checkbox-label"><input type="checkbox" value="MUNK 45 toneladas ARGOS"> MUNK 45t ARGOS</label>
-                  <label class="checkbox-label"><input type="checkbox" value="Perfuratriz (cobrado por metro)"> Perfuratriz (/metro)</label>
-                  <label class="checkbox-label"><input type="checkbox" value="Rompedor (cobrado por hora)"> Rompedor (/hora)</label>
-                  <label class="checkbox-label"><input type="checkbox" value="Conchas (15cm a 70cm)"> Conchas (15 a 70cm)</label>
-                  <label class="checkbox-label"><input type="checkbox" value="Equipamento Parceiros"> Equip. Parceiros</label>
-                </div>
+              <!-- Cabeçalho do PDF (Deixe oculto no CSS/style e mostre apenas via JS na hora de gerar o PDF) -->
+              <div id="cabecalho-pdf" style="display: none; text-align: center; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 20px;">
+                <img src="sua-logo.PNG" alt="Logo da Empresa" style="max-height: 80px; object-fit: contain;">
+                <h2 style="margin-top: 15px; color: #333;">Proposta Comercial de Locação</h2>
               </div>
 
-              <div class="grid-2">
+              <form id="form-orcamento">
                 <div class="form-group">
-                  <label>Valor Estimado (R$)</label>
-                  <input type="number" class="form-control" id="orc-valor" placeholder="0.00" step="0.01">
-                </div>
-                <div class="form-group">
-                  <label>Tipo de Cobrança</label>
-                  <select class="form-control" id="orc-cobranca">
-                    <option value="Por Hora">Por Hora</option>
-                    <option value="Por Metro">Por Metro</option>
-                    <option value="Diária">Diária</option>
-                    <option value="Empreitada / Fechado">Empreitada / Fechado</option>
+                  <label>Cliente</label>
+                  <select class="form-control" id="orc-cliente">
+                    <option value="">Selecione o Cliente</option>
                   </select>
                 </div>
-              </div>
+                
+                <div class="form-group">
+                  <label>Equipamentos e Ferramentas Desejadas</label>
+                  <div class="grid-checkbox" id="orc-equipamentos">
+                    <label class="checkbox-label"><input type="checkbox" value="Escavadeira Suny"> Escavadeira Suny</label>
+                    <label class="checkbox-label"><input type="checkbox" value="Escavadeira Yanmar"> Escavadeira Yanmar</label>
+                    <label class="checkbox-label"><input type="checkbox" value="Carregadeira XCMG"> Carregadeira XCMG</label>
+                    <label class="checkbox-label"><input type="checkbox" value="MUNK 45 toneladas ARGOS"> MUNK 45t ARGOS</label>
+                    <label class="checkbox-label"><input type="checkbox" value="Perfuratriz (cobrado por metro)"> Perfuratriz (/metro)</label>
+                    <label class="checkbox-label"><input type="checkbox" value="Rompedor (cobrado por hora)"> Rompedor (/hora)</label>
+                    <label class="checkbox-label"><input type="checkbox" value="Conchas (15cm a 70cm)"> Conchas (15 a 70cm)</label>
+                    <label class="checkbox-label"><input type="checkbox" value="Equipamento Parceiros"> Equip. Parceiros</label>
+                  </div>
+                </div>
 
-              <div class="grid-2" style="margin-bottom: 24px;">
-                <label class="checkbox-label"><input type="checkbox" id="orc-combustivel"> Combustível Incluso?</label>
-                <label class="checkbox-label"><input type="checkbox" id="orc-operador"> Operador Incluso?</label>
-              </div>
+                <div class="grid-2">
+                  <div class="form-group">
+                    <label>Valor Estimado (R$)</label>
+                    <input type="number" class="form-control" id="orc-valor" placeholder="0.00" step="0.01">
+                  </div>
+                  <div class="form-group">
+                    <label>Tipo de Cobrança</label>
+                    <select class="form-control" id="orc-cobranca">
+                      <option value="Por Hora">Por Hora</option>
+                      <option value="Por Metro">Por Metro</option>
+                      <option value="Diária">Diária</option>
+                      <option value="Empreitada / Fechado">Empreitada / Fechado</option>
+                    </select>
+                  </div>
+                </div>
 
-              <div class="form-group">
-                <label>Observações</label>
-                <textarea class="form-control" rows="3" id="orc-obs" placeholder="Detalhes adicionais..."></textarea>
-              </div>
+                <div class="grid-2" style="margin-bottom: 24px;">
+                  <label class="checkbox-label"><input type="checkbox" id="orc-combustivel"> Combustível Incluso?</label>
+                  <label class="checkbox-label"><input type="checkbox" id="orc-operador"> Operador Incluso?</label>
+                </div>
 
-              <div class="grid-2" style="margin-top: 32px;">
-                <button type="button" class="btn btn-success" onclick="enviarWhatsApp()">
-                  <i class="ph ph-whatsapp-logo"></i> Enviar WhatsApp
-                </button>
-                <button type="button" class="btn" style="background: var(--sidebar-bg); color: #fff;" onclick="gerarPDF()">
-                  <i class="ph ph-file-pdf"></i> Gerar PDF
-                </button>
-              </div>
-            </form>
+                <div class="form-group">
+                  <label>Observações</label>
+                  <textarea class="form-control" rows="3" id="orc-obs" placeholder="Detalhes adicionais..."></textarea>
+                </div>
+              </form>
+            </div>
+
+            <!-- Botões Fora da área do PDF para não saírem na impressão -->
+            <div class="grid-2" style="margin-top: 32px;">
+              <button type="button" class="btn btn-success" onclick="enviarWhatsApp()">
+                <i class="ph ph-whatsapp-logo"></i> Enviar WhatsApp
+              </button>
+              <button type="button" class="btn" style="background: var(--sidebar-bg); color: #fff;" onclick="gerarPDF()">
+                <i class="ph ph-file-pdf"></i> Gerar PDF
+              </button>
+            </div>
+            
           </div>
         </section>
 
@@ -436,19 +466,14 @@
             </div>
           </div>
         </section>
-
-       </div>
-           </main>
-
-   
-
-    <!-- ================= MODAIS ================= -->
-
-
         
+        <!-- ================= Rodapé Discreto GP Tech Digital ================= -->
+        <footer style="text-align: center; padding: 20px 10px; margin-top: auto; font-size: 0.75rem; color: var(--text-secondary); opacity: 0.7;">
+            Desenvolvido por <strong>GP Tech Digital</strong>
+        </footer>
 
-
-
+      </div> <!-- Fim Content Area -->
+    </main>
 
     <!-- ================= MODAIS ================= -->
     
@@ -495,7 +520,7 @@
       </div>
     </div>
 
-    <!-- Modal Equipamento (ATUALIZADO) -->
+    <!-- Modal Equipamento (ATUALIZADO PARA SUPORTAR IMAGEM) -->
     <div class="modal-overlay" id="modal-equip">
       <div class="modal-content" style="max-width: 600px;">
         <div class="modal-header">
@@ -504,9 +529,16 @@
         </div>
         <div class="modal-body">
           <input type="hidden" id="eq-id" value="">
+          
           <div class="form-group">
             <label>Nome do Equipamento/Ferramenta</label>
             <input type="text" class="form-control" id="eq-nome" placeholder="Ex: Escavadeira Suny">
+          </div>
+
+          <!-- Novo Campo de Imagem -->
+          <div class="form-group">
+            <label>Foto do Equipamento</label>
+            <input type="file" class="form-control" id="eq-imagem" accept="image/*" style="padding-top: 10px;">
           </div>
           
           <div class="grid-2">
@@ -558,7 +590,7 @@
       </div>
     </div>
 
-    <!-- Modal Agenda (ATUALIZADO) -->
+    <!-- Modal Agenda -->
     <div class="modal-overlay" id="modal-agenda">
       <div class="modal-content">
         <div class="modal-header">
@@ -605,7 +637,7 @@
       </div>
     </div>
 
-    <!-- Modal OS (ATUALIZADO) -->
+    <!-- Modal OS -->
     <div class="modal-overlay" id="modal-os">
       <div class="modal-content" style="max-width: 600px;">
         <div class="modal-header">
@@ -671,7 +703,7 @@
       </div>
     </div>
 
-    <!-- Modal Finanças (ATUALIZADO) -->
+    <!-- Modal Finanças -->
     <div class="modal-overlay" id="modal-fin">
       <div class="modal-content">
         <div class="modal-header">
