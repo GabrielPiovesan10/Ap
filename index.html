@@ -3,44 +3,208 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Bianchin Escavações</title>
+  <title>Bianchin Escavações | Gestão</title>
   <meta name="description" content="Sistema completo para gestão de locação de máquinas, orçamentos e ordens de serviço.">
   
-  <!-- Estilos -->
-  <link rel="stylesheet" href="app.css">
+  <!-- Fontes do Google (Inter para visual moderno) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   
-  <!-- Ícones Phosphor (Modernos e bonitos) -->
+  <!-- Ícones Phosphor -->
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   
-  <!-- Chart.js para gráficos -->
+  <!-- Bibliotecas Auxiliares -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  
-  <!-- html2pdf.js para gerar PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <style>
-    /* Estilos da Tela de Autenticação */
+    /* ================= DESIGN SYSTEM & VARIÁVEIS ================= */
+    :root {
+      /* Cores Tema Máquinas Pesadas (Slate + Amber) */
+      --primary-color: #F59E0B; /* Amarelo/Âmbar Máquina */
+      --primary-hover: #D97706;
+      --bg-color: #F1F5F9;      /* Fundo cinza bem claro */
+      --surface-color: #FFFFFF; /* Fundo dos cards */
+      --sidebar-bg: #0F172A;    /* Slate escuro */
+      --sidebar-hover: #1E293B;
+      --text-main: #0F172A;
+      --text-muted: #64748B;
+      --border-color: #E2E8F0;
+      
+      /* Status */
+      --success-color: #10B981;
+      --danger-color: #EF4444;
+      --warning-color: #F59E0B;
+      --info-color: #3B82F6;
+      
+      /* Sombras & Bordas */
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --radius: 8px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    
+    body { background-color: var(--bg-color); color: var(--text-main); -webkit-font-smoothing: antialiased; }
+
+    /* ================= COMPONENTES GERAIS ================= */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 10px 16px; border-radius: var(--radius); border: none;
+      font-weight: 500; font-size: 0.9rem; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-primary { background-color: var(--primary-color); color: #fff; }
+    .btn-primary:hover { background-color: var(--primary-hover); }
+    .btn-success { background-color: var(--success-color); color: #fff; }
+    
+    .form-control {
+      width: 100%; padding: 10px 14px; border: 1px solid var(--border-color);
+      border-radius: var(--radius); font-size: 0.95rem; background: #fff;
+      transition: border-color 0.2s;
+    }
+    .form-control:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1); }
+    
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; margin-bottom: 6px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
+
+    .glass-card {
+      background: var(--surface-color); border-radius: var(--radius); padding: 24px;
+      box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); margin-bottom: 24px;
+    }
+
+    .top-bar-actions {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+    }
+    .top-bar-actions h2, .top-bar-actions h3 { font-size: 1.25rem; font-weight: 600; }
+
+    /* ================= TELA DE LOGIN ================= */
     .auth-wrapper {
-      position: fixed;
-      top: 0; left: 0; width: 100vw; height: 100vh;
-      background: linear-gradient(135deg, #1e293b, #0f172a);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 9999;
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: var(--sidebar-bg);
+      background-image: radial-gradient(circle at top right, #1E293B, #0F172A);
+      display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 20px;
     }
     .auth-card {
-      background: var(--surface-color);
-      padding: 40px; border-radius: 16px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-      width: 100%; max-width: 400px;
+      background: var(--surface-color); padding: 40px; border-radius: 12px;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); width: 100%; max-width: 420px;
       text-align: center;
     }
-    .auth-card h2 { margin-bottom: 24px; color: var(--text-primary); }
+    .auth-card h2 { margin-bottom: 24px; color: var(--text-main); font-weight: 700; }
     .auth-form { display: flex; flex-direction: column; gap: 16px; }
-    .auth-toggle { margin-top: 16px; font-size: 14px; color: var(--primary-color); cursor: pointer; text-decoration: underline; }
-    .app-container { display: none; } /* Oculto até login - JS mostra quando logado */
+    .auth-toggle { margin-top: 24px; font-size: 0.9rem; color: var(--text-muted); cursor: pointer; }
+    .auth-toggle:hover { color: var(--primary-color); }
+
+    /* ================= LAYOUT PRINCIPAL ================= */
+    .app-container { display: flex; min-height: 100vh; }
     
-    /* Botões de tabela com flex */
-    .td-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    /* Sidebar */
+    .sidebar {
+      width: 260px; background: var(--sidebar-bg); color: #fff;
+      display: flex; flex-direction: column; position: fixed;
+      height: 100vh; top: 0; left: 0; z-index: 100; transition: transform 0.3s ease;
+    }
+    .sidebar .brand {
+      padding: 24px; font-size: 1.2rem; font-weight: 700;
+      display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--sidebar-hover);
+    }
+    .sidebar .brand i { font-size: 1.8rem; color: var(--primary-color); }
+    .nav-menu { padding: 16px 0; display: flex; flex-direction: column; gap: 4px; }
+    .nav-item {
+      padding: 12px 24px; display: flex; align-items: center; gap: 12px;
+      color: #94A3B8; text-decoration: none; font-size: 0.95rem; font-weight: 500;
+      transition: all 0.2s; border-left: 3px solid transparent;
+    }
+    .nav-item i { font-size: 1.25rem; }
+    .nav-item:hover, .nav-item.active {
+      background: var(--sidebar-hover); color: #fff; border-left-color: var(--primary-color);
+    }
+
+    /* Conteúdo Principal */
+    .main-content { margin-left: 260px; flex: 1; display: flex; flex-direction: column; width: calc(100% - 260px); }
+    
+    .header {
+      background: var(--surface-color); padding: 16px 32px;
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 90;
+    }
+    .menu-toggle { display: none; background: none; border: none; font-size: 1.5rem; color: var(--text-main); cursor: pointer; }
+    
+    .content-area { padding: 32px; overflow-y: auto; }
+    .view-section { display: none; animation: fadeIn 0.3s ease; }
+    .view-section.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ================= DASHBOARD & GRIDS ================= */
+    .grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 24px; }
+    .stat-card { display: flex; align-items: center; gap: 20px; padding: 24px; margin-bottom: 0;}
+    .stat-icon {
+      width: 56px; height: 56px; border-radius: 12px; display: flex;
+      align-items: center; justify-content: center; font-size: 1.8rem;
+      background: rgba(15, 23, 42, 0.05); color: var(--sidebar-bg);
+    }
+    .stat-info h3 { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-info p { font-size: 1.8rem; font-weight: 700; color: var(--text-main); margin-top: 4px; }
+
+    /* ================= TABELAS ================= */
+    .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+    th, td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border-color); }
+    th { background: #F8FAFC; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
+    tr:hover { background-color: #F8FAFC; }
+    .td-actions { display: flex; gap: 8px; }
+    .td-actions .btn { padding: 6px 10px; font-size: 1rem; } /* Botões menores na tabela */
+
+    /* ================= MODAIS ================= */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
+      display: none; align-items: center; justify-content: center; z-index: 1000;
+      padding: 20px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-content {
+      background: var(--surface-color); width: 100%; max-width: 600px;
+      border-radius: 12px; box-shadow: var(--shadow-md); max-height: 90vh; overflow-y: auto;
+    }
+    .modal-header {
+      padding: 20px 24px; border-bottom: 1px solid var(--border-color);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .modal-title { font-size: 1.1rem; font-weight: 600; }
+    .btn-close { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted); }
+    .modal-body { padding: 24px; }
+    .modal-footer {
+      padding: 16px 24px; border-top: 1px solid var(--border-color);
+      display: flex; justify-content: flex-end; gap: 12px; background: #F8FAFC; border-radius: 0 0 12px 12px;
+    }
+    
+    /* Layouts Auxiliares */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-checkbox { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+    .checkbox-label { display: flex; align-items: center; gap: 8px; color: var(--text-main); font-size: 0.9rem; cursor: pointer; }
+    .checkbox-label input { width: 16px; height: 16px; accent-color: var(--primary-color); }
+
+    /* ================= RESPONSIVIDADE (MOBILE) ================= */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.mobile-open { transform: translateX(0); }
+      .main-content { margin-left: 0; width: 100%; }
+      .menu-toggle { display: block; }
+      .header { padding: 16px; }
+      .content-area { padding: 16px; }
+      .grid-2, .grid-checkbox { grid-template-columns: 1fr; } /* Empilha formulários no celular */
+      .top-bar-actions { flex-direction: column; align-items: stretch; }
+      .top-bar-actions .btn { width: 100%; }
+    }
+    
+    /* Overlay escuro para quando o menu mobile estiver aberto */
+    .mobile-menu-overlay {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.5); z-index: 90; display: none;
+    }
+    .mobile-menu-overlay.active { display: block; }
   </style>
 </head>
 <body>
@@ -48,28 +212,34 @@
   <!-- ================= TELA DE LOGIN ================= -->
   <div class="auth-wrapper" id="auth-wrapper">
     <div class="auth-card">
-      <div style="font-size: 48px; color: var(--primary-color); margin-bottom: 16px;">
+      <div style="font-size: 56px; color: var(--primary-color); margin-bottom: 16px;">
         <i class="ph-fill ph-excavator"></i>
       </div>
-      <h2 id="auth-title">Acesso ao Sistema</h2>
+      <h2 id="auth-title">Bianchin Escavações</h2>
+      <p style="color: var(--text-muted); margin-bottom: 24px; font-size: 0.9rem;">Acesse o painel de gestão</p>
+      
       <form class="auth-form" id="auth-form">
-        <input type="email" id="auth-email" class="form-control" placeholder="E-mail" required>
-        <input type="password" id="auth-pass" class="form-control" placeholder="Senha" required>
-        <button type="submit" class="btn btn-primary" id="auth-btn">Entrar</button>
+        <input type="email" id="auth-email" class="form-control" placeholder="Seu e-mail corporativo" required>
+        <input type="password" id="auth-pass" class="form-control" placeholder="Sua senha" required>
+        <button type="submit" class="btn btn-primary" id="auth-btn" style="padding: 12px; font-size: 1rem;">Entrar no Sistema</button>
       </form>
-      <div class="auth-toggle" id="auth-toggle">Criar uma nova conta</div>
-      <p id="auth-error" style="color: var(--danger-color); margin-top: 10px; display: none; font-size: 14px;"></p>
+      
+      <div class="auth-toggle" id="auth-toggle">Esqueci minha senha</div>
+      <p id="auth-error" style="color: var(--danger-color); margin-top: 12px; display: none; font-size: 0.85rem; font-weight: 500;"></p>
     </div>
   </div>
 
   <!-- ================= SISTEMA PRINCIPAL ================= -->
   <div class="app-container" id="app-container" style="display:none;">
 
+    <!-- Overlay Mobile -->
+    <div class="mobile-menu-overlay" id="mobile-overlay"></div>
+
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
       <div class="brand">
         <i class="ph-fill ph-excavator"></i>
-        <span>Bianchin <span style="color: var(--primary-color)">Escavações</span></span>
+        <span>Bianchin <span style="color: var(--primary-color)">Gestão</span></span>
       </div>
       
       <nav class="nav-menu">
@@ -105,17 +275,19 @@
       
       <!-- Cabeçalho Topo -->
       <header class="header">
-        <button class="menu-toggle" id="menu-toggle">
-          <i class="ph ph-list"></i>
-        </button>
-        <h1 class="page-title" id="header-title">Dashboard</h1>
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <button class="menu-toggle" id="menu-toggle">
+            <i class="ph ph-list"></i>
+          </button>
+          <h1 class="page-title" id="header-title" style="font-size: 1.25rem; font-weight: 600;">Dashboard</h1>
+        </div>
         
         <div class="user-profile" style="display: flex; gap: 16px; align-items: center;">
-          <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary-color); display: flex; align-items: center; justify-content: center; font-weight: bold; color: white;">
+          <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary-color); display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 0.9rem;">
             BE
           </div>
-          <button id="btn-logout" class="btn" style="background: transparent; color: var(--danger-color); border: 1px solid var(--danger-color); padding: 6px 12px; font-size: 0.8rem; cursor: pointer;">
-            Sair
+          <button id="btn-logout" class="btn" style="background: transparent; color: var(--danger-color); border: 1px solid var(--border-color); padding: 6px 12px; font-size: 0.85rem;">
+            <i class="ph ph-sign-out"></i> Sair
           </button>
         </div>
       </header>
@@ -127,7 +299,7 @@
         <section id="view-dashboard" class="view-section active">
           <div class="grid-cards">
             <div class="glass-card stat-card">
-              <div class="stat-icon"><i class="ph ph-currency-dollar"></i></div>
+              <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--success-color)"><i class="ph ph-currency-dollar"></i></div>
               <div class="stat-info">
                 <h3>Faturamento (Mês)</h3>
                 <p id="dash-fat">R$ 0,00</p>
@@ -141,7 +313,7 @@
               </div>
             </div>
             <div class="glass-card stat-card">
-              <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--accent-color)"><i class="ph ph-check-circle"></i></div>
+              <div class="stat-icon" style="background: rgba(59, 130, 246, 0.1); color: var(--info-color)"><i class="ph ph-truck"></i></div>
               <div class="stat-info">
                 <h3>Máquinas Disponíveis</h3>
                 <p id="dash-maq">0</p>
@@ -153,7 +325,9 @@
             <div class="top-bar-actions">
               <h3>Visão Financeira Anual</h3>
             </div>
-            <canvas id="chartFaturamento" style="max-height: 300px;"></canvas>
+            <div style="position: relative; height: 300px; width: 100%;">
+              <canvas id="chartFaturamento"></canvas>
+            </div>
           </div>
         </section>
 
@@ -166,7 +340,7 @@
             </button>
           </div>
           
-          <div class="glass-card">
+          <div class="glass-card" style="padding: 0;">
             <div class="table-responsive">
               <table>
                 <thead>
@@ -194,7 +368,7 @@
             </button>
           </div>
           
-          <div class="glass-card">
+          <div class="glass-card" style="padding: 0;">
             <div class="table-responsive">
               <table>
                 <thead>
@@ -221,7 +395,7 @@
               <i class="ph ph-plus"></i> Novo Agendamento
             </button>
           </div>
-          <div class="glass-card">
+          <div class="glass-card" style="padding: 0;">
             <div class="table-responsive">
               <table>
                 <thead>
@@ -256,19 +430,19 @@
               
               <div class="form-group">
                 <label>Equipamentos e Ferramentas Desejadas</label>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px;" id="orc-equipamentos">
-                  <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox" value="Escavadeira Suny"> Escavadeira Suny</label>
-                  <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox" value="Escavadeira Yanmar"> Escavadeira Yanmar</label>
-                  <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox" value="Carregadeira XCMG"> Carregadeira XCMG</label>
-                  <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox" value="MUNK 45 toneladas ARGOS"> MUNK 45 toneladas ARGOS</label>
-                  <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox" value="Perfuratriz (cobrado por metro)"> Perfuratriz (cobrado por metro)</label>
-                  <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox" value="Rompedor (cobrado por hora)"> Rompedor (cobrado por hora)</label>
-                  <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox" value="Conchas (15cm, 20cm, 25cm, 30cm, 35cm, 45cm e 70cm)"> Conchas (15cm a 70cm)</label>
-                  <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox" value="Equipamento Parceiros"> Equipamento Parceiros</label>
+                <div class="grid-checkbox" id="orc-equipamentos">
+                  <label class="checkbox-label"><input type="checkbox" value="Escavadeira Suny"> Escavadeira Suny</label>
+                  <label class="checkbox-label"><input type="checkbox" value="Escavadeira Yanmar"> Escavadeira Yanmar</label>
+                  <label class="checkbox-label"><input type="checkbox" value="Carregadeira XCMG"> Carregadeira XCMG</label>
+                  <label class="checkbox-label"><input type="checkbox" value="MUNK 45 toneladas ARGOS"> MUNK 45t ARGOS</label>
+                  <label class="checkbox-label"><input type="checkbox" value="Perfuratriz (cobrado por metro)"> Perfuratriz (/metro)</label>
+                  <label class="checkbox-label"><input type="checkbox" value="Rompedor (cobrado por hora)"> Rompedor (/hora)</label>
+                  <label class="checkbox-label"><input type="checkbox" value="Conchas (15cm a 70cm)"> Conchas (15 a 70cm)</label>
+                  <label class="checkbox-label"><input type="checkbox" value="Equipamento Parceiros"> Equip. Parceiros</label>
                 </div>
               </div>
 
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              <div class="grid-2">
                 <div class="form-group">
                   <label>Valor Estimado (R$)</label>
                   <input type="number" class="form-control" id="orc-valor" placeholder="0.00" step="0.01">
@@ -284,9 +458,9 @@
                 </div>
               </div>
 
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
-                <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox" id="orc-combustivel"> Combustível Incluso?</label>
-                <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary)"><input type="checkbox" id="orc-operador"> Operador Incluso?</label>
+              <div class="grid-2" style="margin-bottom: 24px;">
+                <label class="checkbox-label"><input type="checkbox" id="orc-combustivel"> Combustível Incluso?</label>
+                <label class="checkbox-label"><input type="checkbox" id="orc-operador"> Operador Incluso?</label>
               </div>
 
               <div class="form-group">
@@ -294,11 +468,11 @@
                 <textarea class="form-control" rows="3" id="orc-obs" placeholder="Detalhes adicionais..."></textarea>
               </div>
 
-              <div style="display: flex; gap: 16px; margin-top: 32px;">
-                <button type="button" class="btn btn-success" style="flex: 1;" onclick="enviarWhatsApp()">
-                  <i class="ph ph-whatsapp-logo"></i> Enviar pelo WhatsApp
+              <div class="grid-2" style="margin-top: 32px;">
+                <button type="button" class="btn btn-success" onclick="enviarWhatsApp()">
+                  <i class="ph ph-whatsapp-logo"></i> Enviar WhatsApp
                 </button>
-                <button type="button" class="btn btn-primary" style="flex: 1; background: #64748b;" onclick="gerarPDF()">
+                <button type="button" class="btn" style="background: var(--sidebar-bg); color: #fff;" onclick="gerarPDF()">
                   <i class="ph ph-file-pdf"></i> Gerar PDF
                 </button>
               </div>
@@ -314,7 +488,7 @@
               <i class="ph ph-plus"></i> Nova OS
             </button>
           </div>
-          <div class="glass-card">
+          <div class="glass-card" style="padding: 0;">
             <div class="table-responsive">
               <table>
                 <thead>
@@ -337,12 +511,12 @@
         <!-- ================= Financeiro ================= -->
         <section id="view-financeiro" class="view-section">
           <div class="top-bar-actions">
-            <h2>Contas a Pagar e Receber</h2>
+            <h2>Financeiro</h2>
             <button class="btn btn-primary" onclick="openModal('modal-fin')">
               <i class="ph ph-plus"></i> Novo Lançamento
             </button>
           </div>
-          <div class="glass-card">
+          <div class="glass-card" style="padding: 0;">
             <div class="table-responsive">
               <table>
                 <thead>
@@ -367,19 +541,19 @@
             <h2>Relatórios de Desempenho</h2>
           </div>
           <div class="glass-card">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-               <div style="padding: 20px; background: rgba(16, 185, 129, 0.1); border-radius: 8px;">
-                 <h3>Total de Receitas</h3>
-                 <p id="rel-receitas" style="font-size: 24px; font-weight: bold; color: var(--accent-color);">R$ 0,00</p>
+            <div class="grid-2">
+               <div style="padding: 24px; background: rgba(16, 185, 129, 0.1); border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2);">
+                 <h3 style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase;">Total de Receitas</h3>
+                 <p id="rel-receitas" style="font-size: 2rem; font-weight: 700; color: var(--success-color); margin-top: 8px;">R$ 0,00</p>
                </div>
-               <div style="padding: 20px; background: rgba(239, 68, 68, 0.1); border-radius: 8px;">
-                 <h3>Total de Despesas</h3>
-                 <p id="rel-despesas" style="font-size: 24px; font-weight: bold; color: var(--danger-color);">R$ 0,00</p>
+               <div style="padding: 24px; background: rgba(239, 68, 68, 0.1); border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.2);">
+                 <h3 style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase;">Total de Despesas</h3>
+                 <p id="rel-despesas" style="font-size: 2rem; font-weight: 700; color: var(--danger-color); margin-top: 8px;">R$ 0,00</p>
                </div>
             </div>
-            <div style="padding: 20px; background: rgba(59, 130, 246, 0.1); border-radius: 8px; margin-top: 16px;">
-               <h3>Saldo Líquido</h3>
-               <p id="rel-saldo" style="font-size: 24px; font-weight: bold; color: var(--primary-color);">R$ 0,00</p>
+            <div style="padding: 24px; background: rgba(59, 130, 246, 0.1); border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.2); margin-top: 24px;">
+               <h3 style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase;">Saldo Líquido</h3>
+               <p id="rel-saldo" style="font-size: 2rem; font-weight: 700; color: var(--info-color); margin-top: 8px;">R$ 0,00</p>
             </div>
           </div>
         </section>
@@ -387,7 +561,7 @@
       </div>
     </main>
 
-    <!-- Modais -->
+    <!-- ================= MODAIS ================= -->
     
     <!-- Modal Cliente -->
     <div class="modal-overlay" id="modal-cliente">
@@ -406,7 +580,7 @@
             <label>CPF/CNPJ</label>
             <input type="text" class="form-control" id="cli-cpf" placeholder="000.000.000-00">
           </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="grid-2">
             <div class="form-group">
               <label>WhatsApp</label>
               <input type="text" class="form-control" id="cli-whats" placeholder="(00) 00000-0000">
@@ -426,7 +600,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn" style="background: transparent; color: var(--text-primary); border: 1px solid var(--border-color);" onclick="closeModal('modal-cliente')">Cancelar</button>
+          <button class="btn" style="background: transparent; color: var(--text-main); border: 1px solid var(--border-color);" onclick="closeModal('modal-cliente')">Cancelar</button>
           <button class="btn btn-primary" onclick="salvarCliente()">Salvar</button>
         </div>
       </div>
@@ -445,7 +619,7 @@
             <label>Nome do Equipamento/Ferramenta</label>
             <input type="text" class="form-control" id="eq-nome" placeholder="Ex: Escavadeira Suny">
           </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="grid-2">
             <div class="form-group">
               <label>Horímetro Atual</label>
               <input type="text" class="form-control" id="eq-hori" placeholder="Ex: 1200h">
@@ -488,7 +662,7 @@
               <option value="">Selecione</option>
             </select>
           </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="grid-2">
             <div class="form-group">
               <label>Data Prevista</label>
               <input type="date" class="form-control" id="ag-data">
@@ -519,7 +693,7 @@
         </div>
         <div class="modal-body">
           <input type="hidden" id="os-id" value="">
-          <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 16px;">
+          <div class="grid-2">
             <div class="form-group">
               <label>Nº OS</label>
               <input type="text" class="form-control" id="os-numero" placeholder="Ex: 001">
@@ -537,7 +711,7 @@
               <option value="">Selecione</option>
             </select>
           </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="grid-2">
             <div class="form-group">
               <label>Horímetro Inicial</label>
               <input type="number" class="form-control" id="os-hini" placeholder="0">
@@ -575,7 +749,7 @@
             <label>Descrição</label>
             <input type="text" class="form-control" id="fin-desc" placeholder="Ex: Locação OS 001">
           </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="grid-2">
             <div class="form-group">
               <label>Tipo</label>
               <select class="form-control" id="fin-tipo">
@@ -603,5 +777,37 @@
   </div> <!-- Fim app-container -->
 
   <script type="module" src="app.js"></script>
+  
+  <!-- Script extra apenas para controlar o Menu Mobile visualmente -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const menuToggle = document.getElementById('menu-toggle');
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('mobile-overlay');
+
+      if(menuToggle && sidebar && overlay) {
+        menuToggle.addEventListener('click', () => {
+          sidebar.classList.add('mobile-open');
+          overlay.classList.add('active');
+        });
+
+        overlay.addEventListener('click', () => {
+          sidebar.classList.remove('mobile-open');
+          overlay.classList.remove('active');
+        });
+        
+        // Fecha o menu ao clicar em um link (no celular)
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(item => {
+          item.addEventListener('click', () => {
+            if (window.innerWidth <= 768) {
+              sidebar.classList.remove('mobile-open');
+              overlay.classList.remove('active');
+            }
+          });
+        });
+      }
+    });
+  </script>
 </body>
 </html>
