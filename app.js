@@ -858,6 +858,7 @@ window.gerarPDF = function () {
         <div>
           <h1 style="color:#0f172a;margin:0;font-size:24px;text-transform:uppercase;">Bianchin Escavações</h1>
           <p style="margin:5px 0 0;color:#64748b;font-size:14px;">Proposta Comercial de Locação</p>
+          <p style="margin:2px 0 0;color:#64748b;font-size:12px;">CNPJ: 31.745.962/0001-01 | Tel: 19 97169-9536</p>
         </div>
       </div>
       <div style="text-align:right;color:#64748b;font-size:14px;">
