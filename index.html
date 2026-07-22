@@ -57,7 +57,7 @@
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
       
-      <!-- Espaço para a Logo no Menu Lateral (versão deitada/branca se possível) -->
+      <!-- Espaço para a Logo no Menu Lateral -->
       <div class="brand" style="justify-content: center; padding: 24px 16px;">
          <img src="sua-logo-branca.PNG" alt="Logo da Empresa" style="max-width: 180px; height: auto; object-fit: contain;">
       </div>
@@ -102,7 +102,6 @@
           <h1 class="page-title" id="header-title">Dashboard</h1>
         </div>
         
-        <!-- Perfil (Avatar Removido) -->
         <div class="user-profile" style="display: flex; gap: 16px; align-items: center;">
           <button id="btn-logout" class="btn" style="background: transparent; color: var(--danger-color); border: 1px solid var(--border-color); padding: 6px 12px; font-size: 0.85rem;">
             <i class="ph ph-sign-out"></i> Sair
@@ -176,7 +175,7 @@
           </div>
         </section>
 
-        <!-- ================= Equipamentos (Layout em Cards) ================= -->
+        <!-- ================= Equipamentos e Frota (SEPARADO) ================= -->
         <section id="view-equipamentos" class="view-section">
           <div class="top-bar-actions">
             <h2>Equipamentos e Frota</h2>
@@ -185,41 +184,103 @@
             </button>
           </div>
           
-          <!-- Grid onde o JS vai injetar os cards -->
-          <div id="grid-equipamentos" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 16px;">
+          <div class="equipamentos-categorias" style="margin-top: 24px;">
             
-            <!-- MODELO DE CARD (Seu JS deve criar estruturas parecidas com esta ao invés de linhas <tr>) -->
-            <div class="glass-card equip-card" style="padding: 16px; display: flex; flex-direction: column; gap: 12px; border-radius: 12px;">
-              <!-- Área da Imagem -->
-              <div style="width: 100%; height: 180px; background-color: #f3f4f6; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-                <img src="sua-foto-exemplo.jpg" alt="Foto do Equipamento" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                <i class="ph ph-image" style="font-size: 3rem; color: #9ca3af; display: none;"></i>
-              </div>
+            <!-- CATEGORIA 1: FROTA PRÓPRIA -->
+            <h3 style="font-size: 1.1rem; color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 16px;">Equipamentos (Frota Própria)</h3>
+            <div id="grid-equipamentos-proprios" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-bottom: 32px;">
               
-              <!-- Informações -->
-              <div>
+              <div class="glass-card equip-card" style="padding: 16px; display: flex; flex-direction: column; gap: 12px; border-radius: 12px;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                  <h3 style="margin: 0 0 8px 0; font-size: 1.1rem; color: var(--text-primary);">Escavadeira Suny</h3>
+                  <h3 style="margin: 0 0 8px 0; font-size: 1.1rem; color: var(--text-primary);">Escavadeira Sany</h3>
                   <span style="padding: 4px 8px; background: rgba(16,185,129,0.1); color: var(--accent-color); border-radius: 6px; font-size: 0.75rem; font-weight: 600;">Operacional</span>
                 </div>
-                <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; color: var(--text-secondary);">
-                  <span style="display: flex; align-items: center; gap: 6px;"><i class="ph ph-clock" style="font-size: 1rem;"></i> Horímetro: <strong>1200h</strong></span>
-                  <span style="display: flex; align-items: center; gap: 6px;"><i class="ph ph-wrench" style="font-size: 1rem;"></i> Próx. Manut.: <strong>15/10/2026</strong></span>
+                <div style="display: flex; gap: 8px; margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border-color);">
+                  <button class="btn" style="flex: 1; padding: 8px; font-size: 0.85rem; background: transparent; border: 1px solid var(--primary-color); color: var(--primary-color);"><i class="ph ph-pencil"></i> Editar</button>
+                  <button class="btn" style="padding: 8px; font-size: 0.85rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--danger-color);"><i class="ph ph-trash"></i></button>
                 </div>
               </div>
-              
-              <!-- Botões de Ação -->
-              <div style="display: flex; gap: 8px; margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border-color);">
-                <button class="btn" style="flex: 1; padding: 8px; font-size: 0.85rem; background: transparent; border: 1px solid var(--primary-color); color: var(--primary-color);">
-                  <i class="ph ph-pencil"></i> Editar
-                </button>
-                <button class="btn" style="padding: 8px; font-size: 0.85rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--danger-color);">
-                  <i class="ph ph-trash"></i>
-                </button>
-              </div>
-            </div>
-            <!-- Fim do Modelo de Card -->
 
+              <div class="glass-card equip-card" style="padding: 16px; display: flex; flex-direction: column; gap: 12px; border-radius: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                  <h3 style="margin: 0 0 8px 0; font-size: 1.1rem; color: var(--text-primary);">Carregadeira XCMG</h3>
+                  <span style="padding: 4px 8px; background: rgba(16,185,129,0.1); color: var(--accent-color); border-radius: 6px; font-size: 0.75rem; font-weight: 600;">Operacional</span>
+                </div>
+                <div style="display: flex; gap: 8px; margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border-color);">
+                  <button class="btn" style="flex: 1; padding: 8px; font-size: 0.85rem; background: transparent; border: 1px solid var(--primary-color); color: var(--primary-color);"><i class="ph ph-pencil"></i> Editar</button>
+                  <button class="btn" style="padding: 8px; font-size: 0.85rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--danger-color);"><i class="ph ph-trash"></i></button>
+                </div>
+              </div>
+
+              <div class="glass-card equip-card" style="padding: 16px; display: flex; flex-direction: column; gap: 12px; border-radius: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                  <h3 style="margin: 0 0 8px 0; font-size: 1.1rem; color: var(--text-primary);">Escavadeira Yanmar</h3>
+                  <span style="padding: 4px 8px; background: rgba(16,185,129,0.1); color: var(--accent-color); border-radius: 6px; font-size: 0.75rem; font-weight: 600;">Operacional</span>
+                </div>
+                <div style="display: flex; gap: 8px; margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border-color);">
+                  <button class="btn" style="flex: 1; padding: 8px; font-size: 0.85rem; background: transparent; border: 1px solid var(--primary-color); color: var(--primary-color);"><i class="ph ph-pencil"></i> Editar</button>
+                  <button class="btn" style="padding: 8px; font-size: 0.85rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--danger-color);"><i class="ph ph-trash"></i></button>
+                </div>
+              </div>
+
+              <div class="glass-card equip-card" style="padding: 16px; display: flex; flex-direction: column; gap: 12px; border-radius: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                  <h3 style="margin: 0 0 8px 0; font-size: 1.1rem; color: var(--text-primary);">Munk 45</h3>
+                  <span style="padding: 4px 8px; background: rgba(16,185,129,0.1); color: var(--accent-color); border-radius: 6px; font-size: 0.75rem; font-weight: 600;">Operacional</span>
+                </div>
+                <div style="display: flex; gap: 8px; margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border-color);">
+                  <button class="btn" style="flex: 1; padding: 8px; font-size: 0.85rem; background: transparent; border: 1px solid var(--primary-color); color: var(--primary-color);"><i class="ph ph-pencil"></i> Editar</button>
+                  <button class="btn" style="padding: 8px; font-size: 0.85rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--danger-color);"><i class="ph ph-trash"></i></button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- CATEGORIA 2: FERRAMENTAS -->
+            <h3 style="font-size: 1.1rem; color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 16px;">Ferramentas Adicionais</h3>
+            <div id="grid-ferramentas" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-bottom: 32px;">
+              
+              <div class="glass-card equip-card" style="padding: 16px; display: flex; flex-direction: column; gap: 12px; border-radius: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                  <h3 style="margin: 0 0 8px 0; font-size: 1.1rem; color: var(--text-primary);">Rompedor</h3>
+                  <span style="padding: 4px 8px; background: rgba(59,130,246,0.1); color: var(--info-color); border-radius: 6px; font-size: 0.75rem; font-weight: 600;">Disponível</span>
+                </div>
+                <div style="display: flex; gap: 8px; margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border-color);">
+                  <button class="btn" style="flex: 1; padding: 8px; font-size: 0.85rem; background: transparent; border: 1px solid var(--primary-color); color: var(--primary-color);"><i class="ph ph-pencil"></i> Editar</button>
+                  <button class="btn" style="padding: 8px; font-size: 0.85rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--danger-color);"><i class="ph ph-trash"></i></button>
+                </div>
+              </div>
+
+              <div class="glass-card equip-card" style="padding: 16px; display: flex; flex-direction: column; gap: 12px; border-radius: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                  <h3 style="margin: 0 0 8px 0; font-size: 1.1rem; color: var(--text-primary);">Perfuratriz</h3>
+                  <span style="padding: 4px 8px; background: rgba(59,130,246,0.1); color: var(--info-color); border-radius: 6px; font-size: 0.75rem; font-weight: 600;">Disponível</span>
+                </div>
+                <div style="display: flex; gap: 8px; margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border-color);">
+                  <button class="btn" style="flex: 1; padding: 8px; font-size: 0.85rem; background: transparent; border: 1px solid var(--primary-color); color: var(--primary-color);"><i class="ph ph-pencil"></i> Editar</button>
+                  <button class="btn" style="padding: 8px; font-size: 0.85rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--danger-color);"><i class="ph ph-trash"></i></button>
+                </div>
+              </div>
+
+              <div class="glass-card equip-card" style="padding: 16px; display: flex; flex-direction: column; gap: 12px; border-radius: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                  <h3 style="margin: 0 0 8px 0; font-size: 1.1rem; color: var(--text-primary);">Conchas</h3>
+                  <span style="padding: 4px 8px; background: rgba(59,130,246,0.1); color: var(--info-color); border-radius: 6px; font-size: 0.75rem; font-weight: 600;">Disponível</span>
+                </div>
+                <div style="display: flex; gap: 8px; margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border-color);">
+                  <button class="btn" style="flex: 1; padding: 8px; font-size: 0.85rem; background: transparent; border: 1px solid var(--primary-color); color: var(--primary-color);"><i class="ph ph-pencil"></i> Editar</button>
+                  <button class="btn" style="padding: 8px; font-size: 0.85rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--danger-color);"><i class="ph ph-trash"></i></button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- CATEGORIA 3: PARCEIROS -->
+            <h3 style="font-size: 1.1rem; color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 16px;">Equipamentos Parceiros</h3>
+            <div id="grid-equipamentos-parceiros" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+               <p style="color: var(--text-secondary); font-size: 0.85rem; padding-left: 8px;">Nenhum equipamento parceiro cadastrado ainda.</p>
+            </div>
+            
           </div>
         </section>
 
@@ -251,17 +312,15 @@
           </div>
         </section>
 
-        <!-- ================= Orçamentos (Preparado para PDF com Logo) ================= -->
+        <!-- ================= Orçamentos (SEPARADO) ================= -->
         <section id="view-orcamentos" class="view-section">
           <div class="top-bar-actions">
             <h2>Orçamentos</h2>
           </div>
           <div class="glass-card" style="max-width: 800px; margin: 0 auto;">
             
-            <!-- Esta div será o alvo da geração do PDF -->
             <div id="area-pdf-orcamento" style="padding: 10px;">
               
-              <!-- Cabeçalho do PDF (Deixe oculto no CSS/style e mostre apenas via JS na hora de gerar o PDF) -->
               <div id="cabecalho-pdf" style="display: none; text-align: center; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 20px;">
                 <img src="sua-logo.PNG" alt="Logo da Empresa" style="max-height: 80px; object-fit: contain;">
                 <h2 style="margin-top: 15px; color: #333;">Proposta Comercial de Locação</h2>
@@ -275,17 +334,32 @@
                   </select>
                 </div>
                 
-                <div class="form-group">
-                  <label>Equipamentos e Ferramentas Desejadas</label>
-                  <div class="grid-checkbox" id="orc-equipamentos">
-                    <label class="checkbox-label"><input type="checkbox" value="Escavadeira Suny"> Escavadeira Suny</label>
-                    <label class="checkbox-label"><input type="checkbox" value="Escavadeira Yanmar"> Escavadeira Yanmar</label>
+                <!-- Categoria 1: Equipamentos Próprios -->
+                <div class="form-group" style="margin-bottom: 24px;">
+                  <h3 style="font-size: 1rem; margin-bottom: 12px; color: var(--text-primary); border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">Equipamentos (Frota Própria)</h3>
+                  <div class="grid-checkbox" id="orc-equipamentos-proprios">
+                    <label class="checkbox-label"><input type="checkbox" value="Escavadeira Sany"> Escavadeira Sany</label>
                     <label class="checkbox-label"><input type="checkbox" value="Carregadeira XCMG"> Carregadeira XCMG</label>
-                    <label class="checkbox-label"><input type="checkbox" value="MUNK 45 toneladas ARGOS"> MUNK 45t ARGOS</label>
-                    <label class="checkbox-label"><input type="checkbox" value="Perfuratriz (cobrado por metro)"> Perfuratriz (/metro)</label>
-                    <label class="checkbox-label"><input type="checkbox" value="Rompedor (cobrado por hora)"> Rompedor (/hora)</label>
-                    <label class="checkbox-label"><input type="checkbox" value="Conchas (15cm a 70cm)"> Conchas (15 a 70cm)</label>
-                    <label class="checkbox-label"><input type="checkbox" value="Equipamento Parceiros"> Equip. Parceiros</label>
+                    <label class="checkbox-label"><input type="checkbox" value="Escavadeira Yanmar"> Escavadeira Yanmar</label>
+                    <label class="checkbox-label"><input type="checkbox" value="Munk 45"> Munk 45</label>
+                  </div>
+                </div>
+
+                <!-- Categoria 2: Ferramentas Adicionais -->
+                <div class="form-group" style="margin-bottom: 24px;">
+                  <h3 style="font-size: 1rem; margin-bottom: 12px; color: var(--text-primary); border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">Ferramentas Adicionais</h3>
+                  <div class="grid-checkbox" id="orc-ferramentas">
+                    <label class="checkbox-label"><input type="checkbox" value="Rompedor"> Rompedor</label>
+                    <label class="checkbox-label"><input type="checkbox" value="Perfuratriz"> Perfuratriz</label>
+                    <label class="checkbox-label"><input type="checkbox" value="Conchas"> Conchas</label>
+                  </div>
+                </div>
+
+                <!-- Categoria 3: Equipamentos Parceiros -->
+                <div class="form-group" style="margin-bottom: 24px;">
+                  <h3 style="font-size: 1rem; margin-bottom: 12px; color: var(--text-primary); border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">Equipamentos Parceiros</h3>
+                  <div class="grid-checkbox" id="orc-equipamentos-parceiros">
+                    <label class="checkbox-label"><input type="checkbox" value="Equipamento Parceiro"> Adicionar Equipamento Parceiro (Detalhar na Obs)</label>
                   </div>
                 </div>
 
@@ -317,7 +391,6 @@
               </form>
             </div>
 
-            <!-- Botões Fora da área do PDF para não saírem na impressão -->
             <div class="grid-2" style="margin-top: 32px;">
               <button type="button" class="btn btn-success" onclick="enviarWhatsApp()">
                 <i class="ph ph-whatsapp-logo"></i> Enviar WhatsApp
@@ -367,7 +440,6 @@
             </button>
           </div>
 
-          <!-- Novos Cards do Financeiro -->
           <div class="grid-cards" style="margin-bottom: 24px;">
             <div class="glass-card stat-card" style="border-left: 4px solid var(--accent-color);">
               <div class="stat-info"><h3>Entradas</h3><p id="fin-entradas">R$ 0,00</p></div>
@@ -399,7 +471,6 @@
             </div>
           </div>
 
-          <!-- Tabela Financeira Existente -->
           <div class="glass-card" style="padding: 0;">
             <div class="table-responsive">
               <table>
@@ -467,7 +538,7 @@
           </div>
         </section>
         
-        <!-- ================= Rodapé Discreto GP Tech Digital ================= -->
+        <!-- ================= Rodapé GP Tech Digital ================= -->
         <footer style="text-align: center; padding: 20px 10px; margin-top: auto; font-size: 0.75rem; color: var(--text-secondary); opacity: 0.7;">
             Desenvolvido por <strong>GP Tech Digital</strong>
         </footer>
@@ -532,10 +603,9 @@
           
           <div class="form-group">
             <label>Nome do Equipamento/Ferramenta</label>
-            <input type="text" class="form-control" id="eq-nome" placeholder="Ex: Escavadeira Suny">
+            <input type="text" class="form-control" id="eq-nome" placeholder="Ex: Escavadeira Sany">
           </div>
 
-          <!-- Novo Campo de Imagem -->
           <div class="form-group">
             <label>Foto do Equipamento</label>
             <input type="file" class="form-control" id="eq-imagem" accept="image/*" style="padding-top: 10px;">
@@ -682,7 +752,6 @@
             </div>
             <div class="form-group">
               <label>Assinatura do Cliente</label>
-              <!-- Espaço para o cliente assinar ou enviar foto da assinatura -->
               <input type="file" class="form-control" id="os-assinatura" accept="image/*" style="padding-top: 10px;">
               <small style="color: var(--text-secondary); font-size: 0.75rem;">(Anexe a foto da assinatura ou recibo)</small>
             </div>
