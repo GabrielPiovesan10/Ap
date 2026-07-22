@@ -3,7 +3,7 @@
 // ==========================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDY_WTOjZG_xOnmzebcnL83MBGJZPhShIE",
@@ -581,9 +581,7 @@ window.salvarCliente = async function () {
   const obs = document.getElementById('cli-obs').value;
 
   if (!nome || !whats) { customAlert("Nome e WhatsApp são obrigatórios!"); return; }
-  
-  const userId = auth.currentUser.uid;
-  const data = { nome, cpf, whats, email, endereco, obs, userId };
+  const data = { nome, cpf, whats, email, endereco, obs };
 
   if (id) {
     await updateDoc(doc(db, "clientes", id), data);
@@ -638,10 +636,9 @@ window.salvarEquip = async function () {
   const fotoFile = inputImagem ? inputImagem.files[0] : null;
 
   compressImage(fotoFile, async (fotoB64) => {
-    const userId = auth.currentUser.uid;
     const data = {
       nome,
-      categoria, 
+      categoria, // Categoria salva no banco!
       horimetro: horimetro || '0',
       status,
       oleo,
@@ -649,8 +646,7 @@ window.salvarEquip = async function () {
       documentacao: docum,
       seguro,
       custosAcumulados: Number(custos || 0),
-      fotoBase64: fotoB64 || window.currentEquipFoto || null,
-      userId
+      fotoBase64: fotoB64 || window.currentEquipFoto || null
     };
 
     if (id) {
@@ -703,9 +699,7 @@ window.salvarAgenda = async function () {
   const status = document.getElementById('ag-status').value;
 
   if (!clienteId || !equipId || !dataPrev) { customAlert("Preencha os campos obrigatórios!"); return; }
-  
-  const userId = auth.currentUser.uid;
-  const data = { clienteId, equipId, data: dataPrev, hora: horaPrev, status, userId };
+  const data = { clienteId, equipId, data: dataPrev, hora: horaPrev, status };
 
   if (id) {
     await updateDoc(doc(db, "agenda", id), data);
@@ -755,14 +749,12 @@ window.salvarOS = async function () {
 
   compressImage(fotoFile, async (fotoB64) => {
     compressImage(assFile, async (assB64) => {
-      
-      const userId = auth.currentUser.uid;
+
       const data = {
         numero, clienteId, equipId, hini, hfim, status,
         data: dataLanc, operador,
         fotoBase64: fotoB64 || window.currentOSFoto || null,
-        assinaturaBase64: assB64 || window.currentOSAssinatura || null,
-        userId
+        assinaturaBase64: assB64 || window.currentOSAssinatura || null
       };
 
       if (id) {
@@ -832,16 +824,13 @@ window.salvarFin = async function () {
   const dataLanc = document.getElementById('fin-data').value;
 
   if (!desc || !valor || !dataLanc) { customAlert("Preencha todos os campos!"); return; }
-  
-  const userId = auth.currentUser.uid;
   const data = {
     desc,
     tipo,
     categoria: cat,
     statusPagamento: statusPayment,
     valor: Number(valor),
-    data: dataLanc,
-    userId
+    data: dataLanc
   };
 
   if (id) {
@@ -993,33 +982,27 @@ window.gerarPDF = function () {
 // ==========================================
 let seeded = false;
 function syncData() {
-  const user = auth.currentUser;
-  if (!user) return;
-  const userId = user.uid;
-
-  const qClientes = query(collection(db, "clientes"), where("userId", "==", userId));
-  onSnapshot(qClientes, (snapshot) => {
+  onSnapshot(collection(db, "clientes"), (snapshot) => {
     clientes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
 
-  const qEquip = query(collection(db, "equipamentos"), where("userId", "==", userId));
-  onSnapshot(qEquip, async (snapshot) => {
+  onSnapshot(collection(db, "equipamentos"), async (snapshot) => {
     equipamentos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     if (equipamentos.length === 0 && !seeded) {
       seeded = true;
       // BANCO DE DADOS INICIAL AGRUPADO (exatamente como você pediu!)
       const defaults = [
-        { nome: 'Escavadeira Suny', horimetro: '0', status: 'Operacional', categoria: 'Equipamentos', userId },
-        { nome: 'Escavadeira Yanmar', horimetro: '0', status: 'Operacional', categoria: 'Equipamentos', userId },
-        { nome: 'Carregadeira XCMG', horimetro: '0', status: 'Operacional', categoria: 'Equipamentos', userId },
-        { nome: 'MUNK 45 toneladas ARGOS', horimetro: '0', status: 'Operacional', categoria: 'Equipamentos', userId },
+        { nome: 'Escavadeira Suny', horimetro: '0', status: 'Operacional', categoria: 'Equipamentos' },
+        { nome: 'Escavadeira Yanmar', horimetro: '0', status: 'Operacional', categoria: 'Equipamentos' },
+        { nome: 'Carregadeira XCMG', horimetro: '0', status: 'Operacional', categoria: 'Equipamentos' },
+        { nome: 'MUNK 45 toneladas ARGOS', horimetro: '0', status: 'Operacional', categoria: 'Equipamentos' },
 
-        { nome: 'Perfuratriz (cobrado por metro)', horimetro: '0', status: 'Operacional', categoria: 'Ferramentas adicionais', userId },
-        { nome: 'Rompedor (cobrado por hora)', horimetro: '0', status: 'Operacional', categoria: 'Ferramentas adicionais', userId },
-        { nome: 'Conchas (medidas 15cm, 20cm, 25cm, 30cm, 35cm 45cm e 70cm)', horimetro: '0', status: 'Operacional', categoria: 'Ferramentas adicionais', userId },
+        { nome: 'Perfuratriz (cobrado por metro)', horimetro: '0', status: 'Operacional', categoria: 'Ferramentas adicionais' },
+        { nome: 'Rompedor (cobrado por hora)', horimetro: '0', status: 'Operacional', categoria: 'Ferramentas adicionais' },
+        { nome: 'Conchas (medidas 15cm, 20cm, 25cm, 30cm, 35cm 45cm e 70cm)', horimetro: '0', status: 'Operacional', categoria: 'Ferramentas adicionais' },
 
-        { nome: 'Equipamento Parceiros', horimetro: '0', status: 'Operacional', categoria: 'Equipamento Parceiros', userId }
+        { nome: 'Equipamento Parceiros', horimetro: '0', status: 'Operacional', categoria: 'Equipamento Parceiros' }
       ];
       for (const e of defaults) {
         await addDoc(collection(db, "equipamentos"), e);
@@ -1029,20 +1012,17 @@ function syncData() {
     }
   });
 
-  const qAgenda = query(collection(db, "agenda"), where("userId", "==", userId));
-  onSnapshot(qAgenda, (snapshot) => {
+  onSnapshot(collection(db, "agenda"), (snapshot) => {
     agenda = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
 
-  const qOS = query(collection(db, "os"), where("userId", "==", userId));
-  onSnapshot(qOS, (snapshot) => {
+  onSnapshot(collection(db, "os"), (snapshot) => {
     os = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
 
-  const qFin = query(collection(db, "financas"), where("userId", "==", userId));
-  onSnapshot(qFin, (snapshot) => {
+  onSnapshot(collection(db, "financas"), (snapshot) => {
     financas = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
