@@ -974,13 +974,16 @@ function syncData() {
   const user = auth.currentUser;
   if (!user) return;
 
+  // Clientes filtrados por usuário
   const qClientes = query(collection(db, "clientes"), where("userId", "==", user.uid));
   onSnapshot(qClientes, (snapshot) => {
     clientes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
 
-  onSnapshot(collection(db, "equipamentos"), async (snapshot) => {
+  // Equipamentos: compartilhado para visualização, mas com escopo de criação individual
+  const qEquip = query(collection(db, "equipamentos"));
+  onSnapshot(qEquip, async (snapshot) => {
     equipamentos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     if (equipamentos.length === 0 && !seeded) {
       seeded = true;
@@ -1002,6 +1005,27 @@ function syncData() {
     }
   });
 
+  // Agenda filtrada por usuário
+  const qAgenda = query(collection(db, "agenda"), where("userId", "==", user.uid));
+  onSnapshot(qAgenda, (snapshot) => {
+    agenda = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderAll();
+  });
+
+  // Ordens de Serviço filtradas por usuário
+  const qOS = query(collection(db, "os"), where("userId", "==", user.uid));
+  onSnapshot(qOS, (snapshot) => {
+    os = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderAll();
+  });
+
+  // Finanças filtradas por usuário
+  const qFin = query(collection(db, "financas"), where("userId", "==", user.uid));
+  onSnapshot(qFin, (snapshot) => {
+    financas = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderAll();
+  });
+}
   const qAgenda = query(collection(db, "agenda"), where("userId", "==", user.uid));
   onSnapshot(qAgenda, (snapshot) => {
     agenda = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
