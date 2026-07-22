@@ -610,12 +610,9 @@
           
           <div class="form-group">
             <label>Categoria</label>
-            <select class="form-control" id="eq-categoria">
-              <option value="Máquinas Pesadas">Máquinas Pesadas</option>
-              <option value="Ferramentas">Ferramentas</option>
-              <option value="Veículos">Veículos</option>
-              <option value="Outros">Outros</option>
-            </select>
+            <input type="text" class="form-control" id="eq-categoria" list="cat-list" placeholder="Selecione ou digite a categoria">
+            <datalist id="cat-list">
+            </datalist>
           </div>
 
           <!-- Novo Campo de Imagem -->
