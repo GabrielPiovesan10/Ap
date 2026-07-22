@@ -892,7 +892,7 @@ window.enviarWhatsApp = function () {
   texto += `*Cliente:* ${dados.cliente.nome}\n`;
   texto += `*Itens Solicitados:*\n- ${dados.equipsSelecionados.join('\n- ')}\n\n`;
   texto += `*Valor Estimado:* ${formatMoney(dados.valor || 0)} (${dados.cobranca})\n`;
-  if (dados.qtd) texto += `*Quantidade:* ${dados.qtd}\n`;
+  if (dados.qtd) texto += `*Quantidade Horas/Dias:* ${dados.qtd}\n`;
   texto += `*Combustível Incluso:* ${dados.comb}\n`;
   texto += `*Operador Incluso:* ${dados.op}\n`;
   if (dados.obs) texto += `\n*Observações:* ${dados.obs}\n`;
@@ -950,7 +950,7 @@ window.gerarPDF = function () {
         <h4 style="margin:0 0 15px 0;color:#0f172a;font-size:16px;">Detalhes da Cobrança</h4>
         <p style="margin:8px 0;font-size:14px;"><strong>Valor Estimado:</strong> <span style="font-size:16px;color:#F59E0B;font-weight:bold;">${formatMoney(dados.valor || 0)}</span></p>
         <p style="margin:8px 0;font-size:14px;"><strong>Tipo de Cobrança:</strong> ${dados.cobranca}</p>
-        <p style="margin:8px 0;font-size:14px;"><strong>Quantidade:</strong> ${dados.qtd || '-'}</p>
+        <p style="margin:8px 0;font-size:14px;"><strong>Quantidade Horas/Dias:</strong> ${dados.qtd || '-'}</p>
       </div>
       <div style="flex:1;background:#f8fafc;padding:20px;border-radius:8px;border:1px solid #e2e8f0;">
         <h4 style="margin:0 0 15px 0;color:#0f172a;font-size:16px;">Adicionais</h4>
