@@ -63,7 +63,7 @@ function compressImage(file, callback) {
 // ==========================================
 // MODAIS
 // ==========================================
-window.openModal = function(modalId) {
+window.openModal = function (modalId) {
   if (modalId === 'modal-cliente') {
     document.getElementById('cli-id').value = '';
     ['cli-nome', 'cli-cpf', 'cli-whats', 'cli-email', 'cli-endereco', 'cli-obs'].forEach(id => document.getElementById(id).value = '');
@@ -71,14 +71,14 @@ window.openModal = function(modalId) {
   } else if (modalId === 'modal-equip') {
     document.getElementById('eq-id').value = '';
     ['eq-nome', 'eq-hori', 'eq-oleo', 'eq-manut', 'eq-doc', 'eq-seguro', 'eq-custos'].forEach(id => document.getElementById(id).value = '');
-    
+
     // Limpa a foto e categoria
     const eqImagem = document.getElementById('eq-imagem');
-    if(eqImagem) eqImagem.value = '';
+    if (eqImagem) eqImagem.value = '';
     window.currentEquipFoto = null;
-    
+
     const eqCat = document.getElementById('eq-categoria');
-    if(eqCat) eqCat.value = 'Equipamentos';
+    if (eqCat) eqCat.value = 'Equipamentos';
 
     document.getElementById('eq-status').value = 'Operacional';
     document.getElementById('title-modal-equip').textContent = "Novo Equipamento";
@@ -93,7 +93,7 @@ window.openModal = function(modalId) {
     document.getElementById('os-status').value = 'Em Andamento';
     document.getElementById('title-modal-os').textContent = "Nova Ordem de Serviço";
     // Limpa a foto global de edição
-    window.currentOSFoto = null; 
+    window.currentOSFoto = null;
     window.currentOSAssinatura = null;
   } else if (modalId === 'modal-fin') {
     document.getElementById('fin-id').value = '';
@@ -106,7 +106,7 @@ window.openModal = function(modalId) {
   document.getElementById(modalId).classList.add('active');
 };
 
-window.closeModal = function(modalId) {
+window.closeModal = function (modalId) {
   document.getElementById(modalId).classList.remove('active');
 };
 
@@ -156,7 +156,7 @@ function renderClientes() {
 // ATUALIZADO: Renderização de Equipamentos separados por CATEGORIA
 function renderEquipamentos() {
   const grid = document.getElementById('grid-equipamentos');
-  
+
   // Primeiro, vamos organizar os equipamentos por categoria
   const grupos = {
     'Equipamentos': [],
@@ -165,18 +165,18 @@ function renderEquipamentos() {
   };
 
   equipamentos.forEach((e) => {
-    const cat = e.categoria || 'Equipamentos'; 
-    if(!grupos[cat]) grupos[cat] = []; // Caso surja uma categoria nova
+    const cat = e.categoria || 'Equipamentos';
+    if (!grupos[cat]) grupos[cat] = []; // Caso surja uma categoria nova
     grupos[cat].push(e);
   });
 
   if (grid) {
     grid.innerHTML = ''; // Limpa a grade
-    
+
     // Agora renderizamos grupo por grupo criando blocos visuais
     for (let categoria in grupos) {
       if (grupos[categoria].length > 0) {
-        
+
         // Título da Categoria bonitão
         grid.innerHTML += `
           <div style="grid-column: 1 / -1; margin-top: 16px; margin-bottom: 8px;">
@@ -190,11 +190,11 @@ function renderEquipamentos() {
         grupos[categoria].forEach((e) => {
           let colorClass = 'var(--info-color)';
           let bgClass = 'rgba(59, 130, 246, 0.1)';
-          if(e.status === 'Operacional') { colorClass = 'var(--accent-color)'; bgClass = 'rgba(16,185,129,0.1)'; }
-          else if(e.status === 'Alugado') { colorClass = 'var(--warning-color)'; bgClass = 'rgba(245, 158, 11, 0.1)'; }
-          else if(e.status === 'Em Manutenção') { colorClass = 'var(--danger-color)'; bgClass = 'rgba(239, 68, 68, 0.1)'; }
+          if (e.status === 'Operacional') { colorClass = 'var(--accent-color)'; bgClass = 'rgba(16,185,129,0.1)'; }
+          else if (e.status === 'Alugado') { colorClass = 'var(--warning-color)'; bgClass = 'rgba(245, 158, 11, 0.1)'; }
+          else if (e.status === 'Em Manutenção') { colorClass = 'var(--danger-color)'; bgClass = 'rgba(239, 68, 68, 0.1)'; }
 
-          const imgHtml = e.fotoBase64 
+          const imgHtml = e.fotoBase64
             ? `<img src="${e.fotoBase64}" alt="${e.nome}" style="width: 100%; height: 100%; object-fit: cover;">`
             : `<i class="ph ph-image" style="font-size: 3rem; color: #9ca3af;"></i>`;
 
@@ -248,13 +248,13 @@ function renderEquipamentos() {
 function renderCheckboxesOrcamento(grupos) {
   const container = document.getElementById('orc-equipamentos');
   if (!container) return;
-  
+
   let html = '';
   for (let categoria in grupos) {
     if (grupos[categoria].length > 0) {
       // Título da Categoria no Checkbox
       html += `<div style="grid-column: 1 / -1; margin-top: 10px; color: var(--primary-color); font-weight: 600; font-size: 0.9rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">${categoria.toUpperCase()}</div>`;
-      
+
       // As caixinhas
       grupos[categoria].forEach(e => {
         html += `<label class="checkbox-label" style="display:flex; align-items:center;"><input type="checkbox" value="${e.nome}"> ${e.nome}</label>`;
@@ -317,7 +317,7 @@ function renderOS() {
 let chartInstanceSecundario = null;
 function renderFinanceiro() {
   const tbody = document.getElementById('tbody-fin');
-  
+
   let entradas = 0, saidas = 0, aReceber = 0, aPagar = 0, pendentes = 0;
 
   if (tbody) tbody.innerHTML = '';
@@ -378,7 +378,7 @@ function renderFinanceiro() {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom', labels: {color: '#f8fafc'} } }
+        plugins: { legend: { position: 'bottom', labels: { color: '#f8fafc' } } }
       }
     });
   }
@@ -398,7 +398,7 @@ function renderRelatorios() {
   financas.forEach(f => {
     const val = Number(f.valor);
     if (f.tipo === 'Receita') {
-      if(f.statusPagamento === 'Pago') recTotal += val;
+      if (f.statusPagamento === 'Pago') recTotal += val;
       if (f.data) {
         const [y, m] = f.data.split('-');
         if (parseInt(y) === currentYear && parseInt(m) - 1 === currentMonth) {
@@ -406,14 +406,14 @@ function renderRelatorios() {
         }
       }
     } else {
-      if(f.statusPagamento === 'Pago') despTotal += val;
+      if (f.statusPagamento === 'Pago') despTotal += val;
       if (f.categoria === 'Diesel') custoDiesel += val;
       if (f.categoria === 'Manutenção') custoManut += val;
     }
   });
 
   const elFatMes = document.getElementById('rel-faturamento-mes');
-  if(elFatMes) {
+  if (elFatMes) {
     elFatMes.textContent = formatMoney(fatMes);
     document.getElementById('rel-lucro').textContent = formatMoney(recTotal - despTotal);
     document.getElementById('rel-diesel').textContent = formatMoney(custoDiesel);
@@ -434,9 +434,9 @@ function renderRelatorios() {
       const c = clientes.find(x => x.id === entry[0]);
       return c ? `<li><strong>${c.nome}</strong>: ${entry[1]} obras/locações</li>` : '';
     }).join('');
-    
+
   const elTopCli = document.getElementById('rel-top-clientes');
-  if(elTopCli) elTopCli.innerHTML = topClientesList || '<li>Nenhum dado suficiente</li>';
+  if (elTopCli) elTopCli.innerHTML = topClientesList || '<li>Nenhum dado suficiente</li>';
 
   const topEquipsList = Object.entries(osPorEquip)
     .sort((a, b) => b[1] - a[1]).slice(0, 5)
@@ -446,7 +446,7 @@ function renderRelatorios() {
     }).join('');
 
   const elTopEq = document.getElementById('rel-top-equips');
-  if(elTopEq) elTopEq.innerHTML = topEquipsList || '<li>Nenhum dado suficiente</li>';
+  if (elTopEq) elTopEq.innerHTML = topEquipsList || '<li>Nenhum dado suficiente</li>';
 }
 
 let chartInstanceDashboard = null;
@@ -456,7 +456,7 @@ function renderDashboard() {
   const currentYear = hj.getFullYear();
   let fatMes = 0;
   const monthLabels = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-  
+
   const faturamentoData = new Array(12).fill(0);
   const lucroData = new Array(12).fill(0);
 
@@ -465,14 +465,14 @@ function renderDashboard() {
       const [y, m] = f.data.split('-');
       const fMonth = parseInt(m) - 1;
       const fYear = parseInt(y);
-      
+
       if (fYear === currentYear) {
         if (f.tipo === 'Receita') {
           faturamentoData[fMonth] += Number(f.valor);
-          lucroData[fMonth] += Number(f.valor); 
+          lucroData[fMonth] += Number(f.valor);
           if (fMonth === currentMonth) fatMes += Number(f.valor);
         } else if (f.tipo === 'Despesa') {
-          lucroData[fMonth] -= Number(f.valor); 
+          lucroData[fMonth] -= Number(f.valor);
         }
       }
     }
@@ -498,7 +498,7 @@ function renderDashboard() {
           {
             label: `Faturamento Bruto`,
             data: faturamentoData,
-            borderColor: '#F59E0B', 
+            borderColor: '#F59E0B',
             backgroundColor: 'transparent',
             tension: 0.4,
             borderWidth: 2
@@ -506,8 +506,8 @@ function renderDashboard() {
           {
             label: `Lucro Líquido (Sobrou)`,
             data: lucroData,
-            borderColor: '#10B981', 
-            backgroundColor: 'rgba(16, 185, 129, 0.1)', 
+            borderColor: '#10B981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
             tension: 0.4,
             fill: true,
             borderWidth: 2
@@ -517,7 +517,7 @@ function renderDashboard() {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: true, labels: {color: '#f8fafc'} } },
+        plugins: { legend: { display: true, labels: { color: '#f8fafc' } } },
         scales: {
           y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
           x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }
@@ -530,7 +530,7 @@ function renderDashboard() {
 // ==========================================
 // CRUD - CLIENTES
 // ==========================================
-window.salvarCliente = async function() {
+window.salvarCliente = async function () {
   const id = document.getElementById('cli-id').value;
   const nome = document.getElementById('cli-nome').value;
   const cpf = document.getElementById('cli-cpf').value;
@@ -550,7 +550,7 @@ window.salvarCliente = async function() {
   closeModal('modal-cliente');
 };
 
-window.editarCliente = function(id) {
+window.editarCliente = function (id) {
   const c = clientes.find(x => x.id === id);
   if (!c) return;
   document.getElementById('cli-id').value = c.id;
@@ -564,17 +564,17 @@ window.editarCliente = function(id) {
   document.getElementById('modal-cliente').classList.add('active');
 };
 
-window.removerCliente = async function(id) {
+window.removerCliente = async function (id) {
   if (confirm('Remover este cliente?')) await deleteDoc(doc(db, "clientes", id));
 };
 
 // ==========================================
 // CRUD - EQUIPAMENTOS (COM CATEGORIA)
 // ==========================================
-window.salvarEquip = async function() {
+window.salvarEquip = async function () {
   const id = document.getElementById('eq-id').value;
   const nome = document.getElementById('eq-nome').value;
-  
+
   // Pegando o campo Categoria (se existir no HTML)
   const selectCat = document.getElementById('eq-categoria');
   const categoria = selectCat ? selectCat.value : 'Equipamentos';
@@ -593,10 +593,10 @@ window.salvarEquip = async function() {
   const fotoFile = inputImagem ? inputImagem.files[0] : null;
 
   compressImage(fotoFile, async (fotoB64) => {
-    const data = { 
-      nome, 
+    const data = {
+      nome,
       categoria, // Categoria salva no banco!
-      horimetro: horimetro || '0', 
+      horimetro: horimetro || '0',
       status,
       oleo,
       manutencao,
@@ -615,15 +615,15 @@ window.salvarEquip = async function() {
   });
 };
 
-window.editarEquip = function(id) {
+window.editarEquip = function (id) {
   const e = equipamentos.find(x => x.id === id);
   if (!e) return;
   document.getElementById('eq-id').value = e.id;
   document.getElementById('eq-nome').value = e.nome || '';
-  
+
   const selectCat = document.getElementById('eq-categoria');
-  if(selectCat) selectCat.value = e.categoria || 'Equipamentos';
-  
+  if (selectCat) selectCat.value = e.categoria || 'Equipamentos';
+
   document.getElementById('eq-hori').value = e.horimetro || '';
   document.getElementById('eq-status').value = e.status || 'Operacional';
   document.getElementById('eq-oleo').value = e.oleo || '';
@@ -631,21 +631,21 @@ window.editarEquip = function(id) {
   document.getElementById('eq-doc').value = e.documentacao || '';
   document.getElementById('eq-seguro').value = e.seguro || '';
   document.getElementById('eq-custos').value = e.custosAcumulados || '';
-  
+
   window.currentEquipFoto = e.fotoBase64 || null;
-  
+
   document.getElementById('title-modal-equip').textContent = "Editar Equipamento";
   document.getElementById('modal-equip').classList.add('active');
 };
 
-window.removerEquip = async function(id) {
+window.removerEquip = async function (id) {
   if (confirm('Remover equipamento?')) await deleteDoc(doc(db, "equipamentos", id));
 };
 
 // ==========================================
 // CRUD - AGENDA
 // ==========================================
-window.salvarAgenda = async function() {
+window.salvarAgenda = async function () {
   const id = document.getElementById('ag-id').value;
   const clienteId = document.getElementById('ag-cliente').value;
   const equipId = document.getElementById('ag-equip').value;
@@ -664,7 +664,7 @@ window.salvarAgenda = async function() {
   closeModal('modal-agenda');
 };
 
-window.editarAgenda = function(id) {
+window.editarAgenda = function (id) {
   const a = agenda.find(x => x.id === id);
   if (!a) return;
   document.getElementById('ag-id').value = a.id;
@@ -677,14 +677,14 @@ window.editarAgenda = function(id) {
   document.getElementById('modal-agenda').classList.add('active');
 };
 
-window.removerAgenda = async function(id) {
+window.removerAgenda = async function (id) {
   if (confirm('Remover agendamento?')) await deleteDoc(doc(db, "agenda", id));
 };
 
 // ==========================================
 // CRUD - ORDENS DE SERVIÇO 
 // ==========================================
-window.salvarOS = async function() {
+window.salvarOS = async function () {
   const id = document.getElementById('os-id').value;
   const numero = document.getElementById('os-numero').value;
   const clienteId = document.getElementById('os-cliente').value;
@@ -700,8 +700,8 @@ window.salvarOS = async function() {
 
   compressImage(fotoFile, async (fotoB64) => {
     compressImage(assFile, async (assB64) => {
-      
-      const data = { 
+
+      const data = {
         numero, clienteId, equipId, hini, hfim, status,
         fotoBase64: fotoB64 || window.currentOSFoto || null,
         assinaturaBase64: assB64 || window.currentOSAssinatura || null
@@ -725,7 +725,7 @@ window.salvarOS = async function() {
   });
 };
 
-window.editarOS = function(id) {
+window.editarOS = function (id) {
   const o = os.find(x => x.id === id);
   if (!o) return;
   document.getElementById('os-id').value = o.id;
@@ -735,7 +735,7 @@ window.editarOS = function(id) {
   document.getElementById('os-hini').value = o.hini || '';
   document.getElementById('os-hfim').value = o.hfim || '';
   document.getElementById('os-status').value = o.status || 'Em Andamento';
-  
+
   window.currentOSFoto = o.fotoBase64 || null;
   window.currentOSAssinatura = o.assinaturaBase64 || null;
 
@@ -743,13 +743,13 @@ window.editarOS = function(id) {
   document.getElementById('modal-os').classList.add('active');
 };
 
-window.removerOS = async function(id) {
+window.removerOS = async function (id) {
   if (confirm('Remover OS?')) {
     const o = os.find(x => x.id === id);
     if (o && o.equipId && o.status !== 'Finalizada') {
       try {
         await updateDoc(doc(db, "equipamentos", o.equipId), { status: 'Operacional' });
-      } catch(e) {
+      } catch (e) {
         console.error("Erro ao liberar equipamento:", e);
       }
     }
@@ -760,7 +760,7 @@ window.removerOS = async function(id) {
 // ==========================================
 // CRUD - FINANCEIRO
 // ==========================================
-window.salvarFin = async function() {
+window.salvarFin = async function () {
   const id = document.getElementById('fin-id').value;
   const desc = document.getElementById('fin-desc').value;
   const tipo = document.getElementById('fin-tipo').value;
@@ -770,13 +770,13 @@ window.salvarFin = async function() {
   const dataLanc = document.getElementById('fin-data').value;
 
   if (!desc || !valor || !dataLanc) return alert("Preencha todos os campos!");
-  const data = { 
-    desc, 
-    tipo, 
+  const data = {
+    desc,
+    tipo,
     categoria: cat,
     statusPagamento: statusPayment,
-    valor: Number(valor), 
-    data: dataLanc 
+    valor: Number(valor),
+    data: dataLanc
   };
 
   if (id) {
@@ -787,7 +787,7 @@ window.salvarFin = async function() {
   closeModal('modal-fin');
 };
 
-window.editarFin = function(id) {
+window.editarFin = function (id) {
   const f = financas.find(x => x.id === id);
   if (!f) return;
   document.getElementById('fin-id').value = f.id;
@@ -801,14 +801,14 @@ window.editarFin = function(id) {
   document.getElementById('modal-fin').classList.add('active');
 };
 
-window.removerFin = async function(id) {
+window.removerFin = async function (id) {
   if (confirm('Remover lançamento?')) await deleteDoc(doc(db, "financas", id));
 };
 
 // ==========================================
 // ORÇAMENTOS - WHATSAPP E PDF
 // ==========================================
-window.obterDadosOrcamento = function() {
+window.obterDadosOrcamento = function () {
   const clienteId = document.getElementById('orc-cliente').value;
   if (!clienteId) { alert("Selecione um cliente no Orçamento."); return null; }
   const cliente = clientes.find(c => c.id === clienteId);
@@ -828,7 +828,7 @@ window.obterDadosOrcamento = function() {
   };
 };
 
-window.enviarWhatsApp = function() {
+window.enviarWhatsApp = function () {
   const dados = obterDadosOrcamento();
   if (!dados) return;
   let texto = `*ORÇAMENTO - BIANCHIN ESCAVAÇÕES*\n\n`;
@@ -843,10 +843,10 @@ window.enviarWhatsApp = function() {
   window.open(`https://wa.me/55${whatsLimpo}?text=${encodeURIComponent(texto)}`, '_blank');
 };
 
-window.gerarPDF = function() {
+window.gerarPDF = function () {
   const dados = obterDadosOrcamento();
   if (!dados) return;
-  
+
   const dataAtual = new Date().toLocaleDateString('pt-BR');
   const divPDF = document.createElement('div');
   divPDF.style.cssText = 'padding:40px;font-family:Arial,Helvetica,sans-serif;color:#334155;background:#ffffff;';
@@ -937,11 +937,11 @@ function syncData() {
         { nome: 'Escavadeira Yanmar', horimetro: '0', status: 'Operacional', categoria: 'Equipamentos' },
         { nome: 'Carregadeira XCMG', horimetro: '0', status: 'Operacional', categoria: 'Equipamentos' },
         { nome: 'MUNK 45 toneladas ARGOS', horimetro: '0', status: 'Operacional', categoria: 'Equipamentos' },
-        
+
         { nome: 'Perfuratriz (cobrado por metro)', horimetro: '0', status: 'Operacional', categoria: 'Ferramentas adicionais' },
         { nome: 'Rompedor (cobrado por hora)', horimetro: '0', status: 'Operacional', categoria: 'Ferramentas adicionais' },
         { nome: 'Conchas (medidas 15cm, 20cm, 25cm, 30cm, 35cm 45cm e 70cm)', horimetro: '0', status: 'Operacional', categoria: 'Ferramentas adicionais' },
-        
+
         { nome: 'Equipamento Parceiros', horimetro: '0', status: 'Operacional', categoria: 'Equipamento Parceiros' }
       ];
       for (const e of defaults) {
@@ -1093,7 +1093,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (user) {
       document.getElementById('auth-wrapper').style.display = 'none';
       document.getElementById('app-container').style.display = 'flex';
-      syncData(); 
+      syncData();
     } else {
       document.getElementById('auth-wrapper').style.display = 'flex';
       document.getElementById('app-container').style.display = 'none';
