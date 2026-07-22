@@ -3,7 +3,7 @@
 // ==========================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDY_WTOjZG_xOnmzebcnL83MBGJZPhShIE",
@@ -95,7 +95,6 @@ window.openModal = function (modalId) {
     document.getElementById('eq-id').value = '';
     ['eq-nome', 'eq-hori', 'eq-oleo', 'eq-manut', 'eq-doc', 'eq-seguro', 'eq-custos'].forEach(id => document.getElementById(id).value = '');
 
-    // Limpa a foto e categoria
     const eqImagem = document.getElementById('eq-imagem');
     if (eqImagem) eqImagem.value = '';
     window.currentEquipFoto = null;
@@ -115,7 +114,6 @@ window.openModal = function (modalId) {
     ['os-numero', 'os-hini', 'os-hfim', 'os-foto', 'os-assinatura', 'os-data', 'os-operador'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('os-status').value = 'Em Andamento';
     document.getElementById('title-modal-os').textContent = "Nova Ordem de Serviço";
-    // Limpa a foto global de edição
     window.currentOSFoto = null;
     window.currentOSAssinatura = null;
   } else if (modalId === 'modal-fin') {
@@ -176,11 +174,9 @@ function renderClientes() {
   });
 }
 
-// ATUALIZADO: Renderização de Equipamentos separados por CATEGORIA
 function renderEquipamentos() {
   const grid = document.getElementById('grid-equipamentos');
 
-  // Primeiro, vamos organizar os equipamentos por categoria
   const grupos = {
     'Equipamentos': [],
     'Ferramentas adicionais': [],
@@ -189,18 +185,15 @@ function renderEquipamentos() {
 
   equipamentos.forEach((e) => {
     const cat = e.categoria || 'Equipamentos';
-    if (!grupos[cat]) grupos[cat] = []; // Caso surja uma categoria nova
+    if (!grupos[cat]) grupos[cat] = [];
     grupos[cat].push(e);
   });
 
   if (grid) {
-    grid.innerHTML = ''; // Limpa a grade
+    grid.innerHTML = '';
 
-    // Agora renderizamos grupo por grupo criando blocos visuais
     for (let categoria in grupos) {
       if (grupos[categoria].length > 0) {
-
-        // Título da Categoria bonitão
         grid.innerHTML += `
           <div style="grid-column: 1 / -1; margin-top: 16px; margin-bottom: 8px;">
             <h3 style="color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 8px;">
@@ -209,7 +202,6 @@ function renderEquipamentos() {
           </div>
         `;
 
-        // Cards dos equipamentos daquela categoria
         grupos[categoria].forEach((e) => {
           let colorClass = 'var(--info-color)';
           let bgClass = 'rgba(59, 130, 246, 0.1)';
@@ -252,7 +244,6 @@ function renderEquipamentos() {
     }
   }
 
-  // Preenche os selects da agenda e OS com Categorias também (opcional)
   ['ag-equip', 'os-equip'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
@@ -263,7 +254,6 @@ function renderEquipamentos() {
     }
   });
 
-  // Preenche as opções de categorias no modal de novo equipamento
   const datalistCat = document.getElementById('cat-list');
   if (datalistCat) {
     datalistCat.innerHTML = '';
@@ -272,11 +262,9 @@ function renderEquipamentos() {
     });
   }
 
-  // Renderiza Dinamicamente os Checkboxes do Orçamento!
   renderCheckboxesOrcamento(grupos);
 }
 
-// NOVA FUNÇÃO: Gera os checkboxes da aba Orçamento via JavaScript, agrupados bonitinhos!
 function renderCheckboxesOrcamento(grupos) {
   const container = document.getElementById('orc-equipamentos');
   if (!container) return;
@@ -284,10 +272,7 @@ function renderCheckboxesOrcamento(grupos) {
   let html = '';
   for (let categoria in grupos) {
     if (grupos[categoria].length > 0) {
-      // Título da Categoria no Checkbox
       html += `<div style="grid-column: 1 / -1; margin-top: 10px; color: var(--primary-color); font-weight: 600; font-size: 0.9rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">${categoria.toUpperCase()}</div>`;
-
-      // As caixinhas
       grupos[categoria].forEach(e => {
         if (e.nome.toLowerCase().includes('conchas')) {
           const tamanhos = ['15cm', '20cm', '25cm', '30cm', '35cm', '45cm', '70cm'];
@@ -581,7 +566,8 @@ window.salvarCliente = async function () {
   const obs = document.getElementById('cli-obs').value;
 
   if (!nome || !whats) { customAlert("Nome e WhatsApp são obrigatórios!"); return; }
-  const data = { nome, cpf, whats, email, endereco, obs };
+  
+  const data = { nome, cpf, whats, email, endereco, obs, userId: auth.currentUser.uid };
 
   if (id) {
     await updateDoc(doc(db, "clientes", id), data);
@@ -618,7 +604,6 @@ window.salvarEquip = async function () {
   const id = document.getElementById('eq-id').value;
   const nome = document.getElementById('eq-nome').value;
 
-  // Pegando o campo Categoria (se existir no HTML)
   const selectCat = document.getElementById('eq-categoria');
   const categoria = selectCat ? selectCat.value : 'Equipamentos';
 
@@ -638,7 +623,7 @@ window.salvarEquip = async function () {
   compressImage(fotoFile, async (fotoB64) => {
     const data = {
       nome,
-      categoria, // Categoria salva no banco!
+      categoria,
       horimetro: horimetro || '0',
       status,
       oleo,
@@ -646,7 +631,8 @@ window.salvarEquip = async function () {
       documentacao: docum,
       seguro,
       custosAcumulados: Number(custos || 0),
-      fotoBase64: fotoB64 || window.currentEquipFoto || null
+      fotoBase64: fotoB64 || window.currentEquipFoto || null,
+      userId: auth.currentUser.uid
     };
 
     if (id) {
@@ -699,7 +685,8 @@ window.salvarAgenda = async function () {
   const status = document.getElementById('ag-status').value;
 
   if (!clienteId || !equipId || !dataPrev) { customAlert("Preencha os campos obrigatórios!"); return; }
-  const data = { clienteId, equipId, data: dataPrev, hora: horaPrev, status };
+  
+  const data = { clienteId, equipId, data: dataPrev, hora: horaPrev, status, userId: auth.currentUser.uid };
 
   if (id) {
     await updateDoc(doc(db, "agenda", id), data);
@@ -754,7 +741,8 @@ window.salvarOS = async function () {
         numero, clienteId, equipId, hini, hfim, status,
         data: dataLanc, operador,
         fotoBase64: fotoB64 || window.currentOSFoto || null,
-        assinaturaBase64: assB64 || window.currentOSAssinatura || null
+        assinaturaBase64: assB64 || window.currentOSAssinatura || null,
+        userId: auth.currentUser.uid
       };
 
       if (id) {
@@ -830,7 +818,8 @@ window.salvarFin = async function () {
     categoria: cat,
     statusPagamento: statusPayment,
     valor: Number(valor),
-    data: dataLanc
+    data: dataLanc,
+    userId: auth.currentUser.uid
   };
 
   if (id) {
@@ -982,7 +971,11 @@ window.gerarPDF = function () {
 // ==========================================
 let seeded = false;
 function syncData() {
-  onSnapshot(collection(db, "clientes"), (snapshot) => {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const qClientes = query(collection(db, "clientes"), where("userId", "==", user.uid));
+  onSnapshot(qClientes, (snapshot) => {
     clientes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
@@ -991,18 +984,15 @@ function syncData() {
     equipamentos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     if (equipamentos.length === 0 && !seeded) {
       seeded = true;
-      // BANCO DE DADOS INICIAL AGRUPADO (exatamente como você pediu!)
       const defaults = [
-        { nome: 'Escavadeira Suny', horimetro: '0', status: 'Operacional', categoria: 'Equipamentos' },
-        { nome: 'Escavadeira Yanmar', horimetro: '0', status: 'Operacional', categoria: 'Equipamentos' },
-        { nome: 'Carregadeira XCMG', horimetro: '0', status: 'Operacional', categoria: 'Equipamentos' },
-        { nome: 'MUNK 45 toneladas ARGOS', horimetro: '0', status: 'Operacional', categoria: 'Equipamentos' },
-
-        { nome: 'Perfuratriz (cobrado por metro)', horimetro: '0', status: 'Operacional', categoria: 'Ferramentas adicionais' },
-        { nome: 'Rompedor (cobrado por hora)', horimetro: '0', status: 'Operacional', categoria: 'Ferramentas adicionais' },
-        { nome: 'Conchas (medidas 15cm, 20cm, 25cm, 30cm, 35cm 45cm e 70cm)', horimetro: '0', status: 'Operacional', categoria: 'Ferramentas adicionais' },
-
-        { nome: 'Equipamento Parceiros', horimetro: '0', status: 'Operacional', categoria: 'Equipamento Parceiros' }
+        { nome: 'Escavadeira Suny', horimetro: '0', status: 'Operacional', categoria: 'Equipamentos', userId: user.uid },
+        { nome: 'Escavadeira Yanmar', horimetro: '0', status: 'Operacional', categoria: 'Equipamentos', userId: user.uid },
+        { nome: 'Carregadeira XCMG', horimetro: '0', status: 'Operacional', categoria: 'Equipamentos', userId: user.uid },
+        { nome: 'MUNK 45 toneladas ARGOS', horimetro: '0', status: 'Operacional', categoria: 'Equipamentos', userId: user.uid },
+        { nome: 'Perfuratriz (cobrado por metro)', horimetro: '0', status: 'Operacional', categoria: 'Ferramentas adicionais', userId: user.uid },
+        { nome: 'Rompedor (cobrado por hora)', horimetro: '0', status: 'Operacional', categoria: 'Ferramentas adicionais', userId: user.uid },
+        { nome: 'Conchas (medidas 15cm, 20cm, 25cm, 30cm, 35cm 45cm e 70cm)', horimetro: '0', status: 'Operacional', categoria: 'Ferramentas adicionais', userId: user.uid },
+        { nome: 'Equipamento Parceiros', horimetro: '0', status: 'Operacional', categoria: 'Equipamento Parceiros', userId: user.uid }
       ];
       for (const e of defaults) {
         await addDoc(collection(db, "equipamentos"), e);
@@ -1012,17 +1002,20 @@ function syncData() {
     }
   });
 
-  onSnapshot(collection(db, "agenda"), (snapshot) => {
+  const qAgenda = query(collection(db, "agenda"), where("userId", "==", user.uid));
+  onSnapshot(qAgenda, (snapshot) => {
     agenda = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
 
-  onSnapshot(collection(db, "os"), (snapshot) => {
+  const qOS = query(collection(db, "os"), where("userId", "==", user.uid));
+  onSnapshot(qOS, (snapshot) => {
     os = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
 
-  onSnapshot(collection(db, "financas"), (snapshot) => {
+  const qFin = query(collection(db, "financas"), where("userId", "==", user.uid));
+  onSnapshot(qFin, (snapshot) => {
     financas = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
