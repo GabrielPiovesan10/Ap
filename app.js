@@ -240,6 +240,15 @@ function renderEquipamentos() {
     }
   });
 
+  // Preenche as opções de categorias no modal de novo equipamento
+  const datalistCat = document.getElementById('cat-list');
+  if (datalistCat) {
+    datalistCat.innerHTML = '';
+    Object.keys(grupos).forEach(cat => {
+      datalistCat.innerHTML += `<option value="${cat}">`;
+    });
+  }
+
   // Renderiza Dinamicamente os Checkboxes do Orçamento!
   renderCheckboxesOrcamento(grupos);
 }
@@ -257,7 +266,14 @@ function renderCheckboxesOrcamento(grupos) {
 
       // As caixinhas
       grupos[categoria].forEach(e => {
-        html += `<label class="checkbox-label" style="display:flex; align-items:center;"><input type="checkbox" value="${e.nome}"> ${e.nome}</label>`;
+        if (e.nome.toLowerCase().includes('conchas')) {
+          const tamanhos = ['15cm', '20cm', '25cm', '30cm', '35cm', '45cm', '70cm'];
+          tamanhos.forEach(t => {
+            html += `<label class="checkbox-label" style="display:flex; align-items:center;"><input type="checkbox" value="Concha ${t}"> Concha ${t}</label>`;
+          });
+        } else {
+          html += `<label class="checkbox-label" style="display:flex; align-items:center;"><input type="checkbox" value="${e.nome}"> ${e.nome}</label>`;
+        }
       });
     }
   }
