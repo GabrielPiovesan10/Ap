@@ -21,13 +21,36 @@ const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
 
 // ==========================================
-// ESTADO GLOBAL
+// ESTADO GLOBAL E CONTROLE DE SESSÃO
 // ==========================================
 let clientes = [];
 let equipamentos = [];
 let agenda = [];
 let os = [];
 let financas = [];
+
+// Variáveis para guardar e cancelar as conexões (ouvintes) ao trocar de conta
+let unsubClientes = null;
+let unsubEquipamentos = null;
+let unsubAgenda = null;
+let unsubOS = null;
+let unsubFinancas = null;
+
+// Função para limpar os dados da memória quando o usuário deslogar
+function limparSessao() {
+  if (unsubClientes) unsubClientes();
+  if (unsubEquipamentos) unsubEquipamentos();
+  if (unsubAgenda) unsubAgenda();
+  if (unsubOS) unsubOS();
+  if (unsubFinancas) unsubFinancas();
+  
+  clientes = [];
+  equipamentos = [];
+  agenda = [];
+  os = [];
+  financas = [];
+  renderAll();
+}
 
 // ==========================================
 // UTILITÁRIOS E MODAIS CUSTOMIZADOS
@@ -974,13 +997,18 @@ function syncData() {
   const user = auth.currentUser;
   if (!user) return;
 
+  // Garante que qualquer ouvinte antigo seja desligado antes de começar o novo
+  limparSessao();
+
+  // OUVINTE: Clientes (apenas os do usuário)
   const qClientes = query(collection(db, "clientes"), where("userId", "==", user.uid));
-  onSnapshot(qClientes, (snapshot) => {
+  unsubClientes = onSnapshot(qClientes, (snapshot) => {
     clientes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
 
-  onSnapshot(collection(db, "equipamentos"), async (snapshot) => {
+  // OUVINTE: Equipamentos (compartilhados entre todos - sem filtro de 'where')
+  unsubEquipamentos = onSnapshot(collection(db, "equipamentos"), async (snapshot) => {
     equipamentos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     if (equipamentos.length === 0 && !seeded) {
       seeded = true;
@@ -1002,20 +1030,23 @@ function syncData() {
     }
   });
 
+  // OUVINTE: Agenda (apenas as do usuário)
   const qAgenda = query(collection(db, "agenda"), where("userId", "==", user.uid));
-  onSnapshot(qAgenda, (snapshot) => {
+  unsubAgenda = onSnapshot(qAgenda, (snapshot) => {
     agenda = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
 
+  // OUVINTE: OS (apenas as do usuário)
   const qOS = query(collection(db, "os"), where("userId", "==", user.uid));
-  onSnapshot(qOS, (snapshot) => {
+  unsubOS = onSnapshot(qOS, (snapshot) => {
     os = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
 
+  // OUVINTE: Finanças (apenas as do usuário)
   const qFin = query(collection(db, "financas"), where("userId", "==", user.uid));
-  onSnapshot(qFin, (snapshot) => {
+  unsubFinancas = onSnapshot(qFin, (snapshot) => {
     financas = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
@@ -1139,7 +1170,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const btnLogout = document.getElementById('btn-logout');
   if (btnLogout) {
-    btnLogout.addEventListener('click', () => signOut(auth));
+    btnLogout.addEventListener('click', async () => {
+      await signOut(auth);
+      // Limpa os dados na hora do logout
+      limparSessao();
+    });
   }
 
   onAuthStateChanged(auth, (user) => {
@@ -1150,6 +1185,8 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       document.getElementById('auth-wrapper').style.display = 'flex';
       document.getElementById('app-container').style.display = 'none';
+      // Limpa a tela caso inicie o aplicativo sem login
+      limparSessao(); 
     }
   });
 });
