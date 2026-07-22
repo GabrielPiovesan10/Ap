@@ -30,8 +30,31 @@ let os = [];
 let financas = [];
 
 // ==========================================
-// UTILITÁRIOS
+// UTILITÁRIOS E MODAIS CUSTOMIZADOS
 // ==========================================
+window.customAlert = function(msg, title = "Aviso") {
+  document.getElementById('alert-title').textContent = title;
+  document.getElementById('alert-message').textContent = msg;
+  document.getElementById('modal-alert').classList.add('active');
+};
+window.closeAlert = function() {
+  document.getElementById('modal-alert').classList.remove('active');
+};
+
+let confirmCallback = null;
+window.customConfirm = function(msg, callback, title = "Confirmação") {
+  confirmCallback = callback;
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-message').textContent = msg;
+  document.getElementById('modal-confirm').classList.add('active');
+};
+window.closeConfirm = function(result) {
+  document.getElementById('modal-confirm').classList.remove('active');
+  if (confirmCallback) {
+    confirmCallback(result);
+    confirmCallback = null;
+  }
+};
 const formatMoney = (val) => Number(val).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const formatDate = (dateString) => {
   if (!dateString) return '-';
@@ -89,7 +112,7 @@ window.openModal = function (modalId) {
     document.getElementById('title-modal-agenda').textContent = "Novo Agendamento";
   } else if (modalId === 'modal-os') {
     document.getElementById('os-id').value = '';
-    ['os-numero', 'os-hini', 'os-hfim', 'os-foto', 'os-assinatura'].forEach(id => document.getElementById(id).value = '');
+    ['os-numero', 'os-hini', 'os-hfim', 'os-foto', 'os-assinatura', 'os-data', 'os-operador'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('os-status').value = 'Em Andamento';
     document.getElementById('title-modal-os').textContent = "Nova Ordem de Serviço";
     // Limpa a foto global de edição
@@ -315,6 +338,8 @@ function renderOS() {
       tbody.innerHTML += `
         <tr>
           <td>${o.numero}</td>
+          <td>${formatDate(o.data) || '-'}</td>
+          <td>${o.operador || '-'}</td>
           <td>${cliName}</td>
           <td>${eqName}</td>
           <td>${o.hini || '-'} / ${o.hfim || '-'}</td>
@@ -555,7 +580,7 @@ window.salvarCliente = async function () {
   const endereco = document.getElementById('cli-endereco').value;
   const obs = document.getElementById('cli-obs').value;
 
-  if (!nome || !whats) return alert("Nome e WhatsApp são obrigatórios!");
+  if (!nome || !whats) { customAlert("Nome e WhatsApp são obrigatórios!"); return; }
   const data = { nome, cpf, whats, email, endereco, obs };
 
   if (id) {
@@ -581,7 +606,9 @@ window.editarCliente = function (id) {
 };
 
 window.removerCliente = async function (id) {
-  if (confirm('Remover este cliente?')) await deleteDoc(doc(db, "clientes", id));
+  customConfirm('Remover este cliente?', async (res) => {
+    if (res) await deleteDoc(doc(db, "clientes", id));
+  });
 };
 
 // ==========================================
@@ -603,7 +630,7 @@ window.salvarEquip = async function () {
   const seguro = document.getElementById('eq-seguro').value;
   const custos = document.getElementById('eq-custos').value;
 
-  if (!nome) return alert("Nome do equipamento é obrigatório!");
+  if (!nome) { customAlert("Nome do equipamento é obrigatório!"); return; }
 
   const inputImagem = document.getElementById('eq-imagem');
   const fotoFile = inputImagem ? inputImagem.files[0] : null;
@@ -655,7 +682,9 @@ window.editarEquip = function (id) {
 };
 
 window.removerEquip = async function (id) {
-  if (confirm('Remover equipamento?')) await deleteDoc(doc(db, "equipamentos", id));
+  customConfirm('Remover equipamento?', async (res) => {
+    if (res) await deleteDoc(doc(db, "equipamentos", id));
+  });
 };
 
 // ==========================================
@@ -669,7 +698,7 @@ window.salvarAgenda = async function () {
   const horaPrev = document.getElementById('ag-hora').value;
   const status = document.getElementById('ag-status').value;
 
-  if (!clienteId || !equipId || !dataPrev) return alert("Preencha os campos obrigatórios!");
+  if (!clienteId || !equipId || !dataPrev) { customAlert("Preencha os campos obrigatórios!"); return; }
   const data = { clienteId, equipId, data: dataPrev, hora: horaPrev, status };
 
   if (id) {
@@ -694,7 +723,9 @@ window.editarAgenda = function (id) {
 };
 
 window.removerAgenda = async function (id) {
-  if (confirm('Remover agendamento?')) await deleteDoc(doc(db, "agenda", id));
+  customConfirm('Remover agendamento?', async (res) => {
+    if (res) await deleteDoc(doc(db, "agenda", id));
+  });
 };
 
 // ==========================================
@@ -708,8 +739,10 @@ window.salvarOS = async function () {
   const hini = document.getElementById('os-hini').value;
   const hfim = document.getElementById('os-hfim').value;
   const status = document.getElementById('os-status').value;
+  const dataLanc = document.getElementById('os-data').value;
+  const operador = document.getElementById('os-operador').value;
 
-  if (!numero || !clienteId || !equipId) return alert("Preencha Nº OS, Cliente e Equipamento!");
+  if (!numero || !clienteId || !equipId) { customAlert("Preencha Nº OS, Cliente e Equipamento!"); return; }
 
   const fotoFile = document.getElementById('os-foto').files[0];
   const assFile = document.getElementById('os-assinatura').files[0];
@@ -719,6 +752,7 @@ window.salvarOS = async function () {
 
       const data = {
         numero, clienteId, equipId, hini, hfim, status,
+        data: dataLanc, operador,
         fotoBase64: fotoB64 || window.currentOSFoto || null,
         assinaturaBase64: assB64 || window.currentOSAssinatura || null
       };
@@ -748,6 +782,8 @@ window.editarOS = function (id) {
   document.getElementById('os-numero').value = o.numero || '';
   document.getElementById('os-cliente').value = o.clienteId || '';
   document.getElementById('os-equip').value = o.equipId || '';
+  document.getElementById('os-data').value = o.data || '';
+  document.getElementById('os-operador').value = o.operador || '';
   document.getElementById('os-hini').value = o.hini || '';
   document.getElementById('os-hfim').value = o.hfim || '';
   document.getElementById('os-status').value = o.status || 'Em Andamento';
@@ -760,17 +796,19 @@ window.editarOS = function (id) {
 };
 
 window.removerOS = async function (id) {
-  if (confirm('Remover OS?')) {
-    const o = os.find(x => x.id === id);
-    if (o && o.equipId && o.status !== 'Finalizada') {
-      try {
-        await updateDoc(doc(db, "equipamentos", o.equipId), { status: 'Operacional' });
-      } catch (e) {
-        console.error("Erro ao liberar equipamento:", e);
+  customConfirm('Remover OS?', async (res) => {
+    if (res) {
+      const o = os.find(x => x.id === id);
+      if (o && o.equipId && o.status !== 'Finalizada') {
+        try {
+          await updateDoc(doc(db, "equipamentos", o.equipId), { status: 'Operacional' });
+        } catch (e) {
+          console.error("Erro ao liberar equipamento:", e);
+        }
       }
+      await deleteDoc(doc(db, "os", id));
     }
-    await deleteDoc(doc(db, "os", id));
-  }
+  });
 };
 
 // ==========================================
@@ -785,7 +823,7 @@ window.salvarFin = async function () {
   const statusPayment = document.getElementById('fin-status').value;
   const dataLanc = document.getElementById('fin-data').value;
 
-  if (!desc || !valor || !dataLanc) return alert("Preencha todos os campos!");
+  if (!desc || !valor || !dataLanc) { customAlert("Preencha todos os campos!"); return; }
   const data = {
     desc,
     tipo,
@@ -818,7 +856,9 @@ window.editarFin = function (id) {
 };
 
 window.removerFin = async function (id) {
-  if (confirm('Remover lançamento?')) await deleteDoc(doc(db, "financas", id));
+  customConfirm('Remover lançamento?', async (res) => {
+    if (res) await deleteDoc(doc(db, "financas", id));
+  });
 };
 
 // ==========================================
@@ -826,18 +866,19 @@ window.removerFin = async function (id) {
 // ==========================================
 window.obterDadosOrcamento = function () {
   const clienteId = document.getElementById('orc-cliente').value;
-  if (!clienteId) { alert("Selecione um cliente no Orçamento."); return null; }
+  if (!clienteId) { customAlert("Selecione um cliente no Orçamento."); return null; }
   const cliente = clientes.find(c => c.id === clienteId);
 
   const checkboxes = document.querySelectorAll('#orc-equipamentos input[type="checkbox"]:checked');
   const equipsSelecionados = Array.from(checkboxes).map(cb => cb.value);
-  if (equipsSelecionados.length === 0) { alert("Selecione ao menos um equipamento ou ferramenta."); return null; }
+  if (equipsSelecionados.length === 0) { customAlert("Selecione ao menos um equipamento ou ferramenta."); return null; }
 
   return {
     cliente,
     equipsSelecionados,
     valor: document.getElementById('orc-valor').value,
     cobranca: document.getElementById('orc-cobranca').value,
+    qtd: document.getElementById('orc-qtd').value,
     comb: document.getElementById('orc-combustivel').checked ? "Sim" : "Não",
     op: document.getElementById('orc-operador').checked ? "Sim" : "Não",
     obs: document.getElementById('orc-obs').value
@@ -851,6 +892,7 @@ window.enviarWhatsApp = function () {
   texto += `*Cliente:* ${dados.cliente.nome}\n`;
   texto += `*Itens Solicitados:*\n- ${dados.equipsSelecionados.join('\n- ')}\n\n`;
   texto += `*Valor Estimado:* ${formatMoney(dados.valor || 0)} (${dados.cobranca})\n`;
+  if (dados.qtd) texto += `*Quantidade:* ${dados.qtd}\n`;
   texto += `*Combustível Incluso:* ${dados.comb}\n`;
   texto += `*Operador Incluso:* ${dados.op}\n`;
   if (dados.obs) texto += `\n*Observações:* ${dados.obs}\n`;
@@ -908,6 +950,7 @@ window.gerarPDF = function () {
         <h4 style="margin:0 0 15px 0;color:#0f172a;font-size:16px;">Detalhes da Cobrança</h4>
         <p style="margin:8px 0;font-size:14px;"><strong>Valor Estimado:</strong> <span style="font-size:16px;color:#F59E0B;font-weight:bold;">${formatMoney(dados.valor || 0)}</span></p>
         <p style="margin:8px 0;font-size:14px;"><strong>Tipo de Cobrança:</strong> ${dados.cobranca}</p>
+        <p style="margin:8px 0;font-size:14px;"><strong>Quantidade:</strong> ${dados.qtd || '-'}</p>
       </div>
       <div style="flex:1;background:#f8fafc;padding:20px;border-radius:8px;border:1px solid #e2e8f0;">
         <h4 style="margin:0 0 15px 0;color:#0f172a;font-size:16px;">Adicionais</h4>
