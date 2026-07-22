@@ -1100,3 +1100,52 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+window.salvarEquip = function() {
+    // 1. Pega os valores que você digitou no modal
+    const nome = document.getElementById('eq-nome').value;
+    const categoria = document.getElementById('eq-categoria').value; // Aqui ele descobre qual foi escolhida
+    const status = document.getElementById('eq-status').value;
+    const horimetro = document.getElementById('eq-hori').value;
+
+    // Se o nome estiver vazio, ele nem continua
+    if(!nome) {
+        alert("Preencha o nome do equipamento!");
+        return;
+    }
+
+    // 2. Monta o visual do Card que vai aparecer na tela
+    const cardHTML = `
+        <div class="glass-card equip-card" style="padding: 16px; display: flex; flex-direction: column; gap: 12px; border-radius: 12px;">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <h3 style="margin: 0 0 8px 0; font-size: 1.1rem; color: var(--text-primary);">${nome}</h3>
+              <span style="padding: 4px 8px; background: rgba(16,185,129,0.1); color: var(--accent-color); border-radius: 6px; font-size: 0.75rem; font-weight: 600;">${status}</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; color: var(--text-secondary);">
+              <span style="display: flex; align-items: center; gap: 6px;"><i class="ph ph-clock"></i> Horímetro: <strong>${horimetro || 'N/A'}</strong></span>
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px; margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border-color);">
+            <button class="btn" style="flex: 1; padding: 8px; font-size: 0.85rem; background: transparent; border: 1px solid var(--primary-color); color: var(--primary-color);"><i class="ph ph-pencil"></i> Editar</button>
+            <button class="btn" style="padding: 8px; font-size: 0.85rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--danger-color);"><i class="ph ph-trash"></i></button>
+          </div>
+        </div>
+    `;
+
+    // 3. Joga o Card na Categoria Certa!
+    if (categoria === 'proprio') {
+        document.getElementById('grid-equipamentos-proprios').insertAdjacentHTML('beforeend', cardHTML);
+    } else if (categoria === 'ferramenta') {
+        document.getElementById('grid-ferramentas').insertAdjacentHTML('beforeend', cardHTML);
+    } else if (categoria === 'parceiro') {
+        document.getElementById('grid-equipamentos-parceiros').insertAdjacentHTML('beforeend', cardHTML);
+        // Remove a mensagem de "nenhum equipamento parceiro" se ela existir
+        const msgVazia = document.querySelector('#grid-equipamentos-parceiros p');
+        if(msgVazia) msgVazia.remove();
+    }
+
+    // 4. Limpa os campos e fecha o modal
+    document.getElementById('eq-nome').value = '';
+    document.getElementById('eq-hori').value = '';
+    closeModal('modal-equip');
+};
