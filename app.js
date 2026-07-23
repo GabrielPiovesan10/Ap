@@ -26,7 +26,7 @@ const db = getFirestore(firebaseApp);
 // Coloque aqui os e-mails que terão acesso total (Administradores)
 // Quem não estiver nessa lista, será considerado "Funcionário" e não verá o financeiro.
 const ADMIN_EMAILS = [
-  'gabrielpiovesan3010@gmail.com,alianetp@icloud.com'
+  'gabrielpiovesan3010@gmail.com','alianetp@icloud.com'
 ];
 
 function aplicarPermissoes(userEmail) {
