@@ -992,7 +992,6 @@ window.gerarPDF = function () {
 // ==========================================
 // SINCRONIZAÇÃO TEMPO REAL COM FIRESTORE
 // ==========================================
-let seeded = false;
 function syncData() {
   const user = auth.currentUser;
   if (!user) return;
@@ -1008,26 +1007,9 @@ function syncData() {
   });
 
   // OUVINTE: Equipamentos (compartilhados entre todos - sem filtro de 'where')
-  unsubEquipamentos = onSnapshot(collection(db, "equipamentos"), async (snapshot) => {
+  unsubEquipamentos = onSnapshot(collection(db, "equipamentos"), (snapshot) => {
     equipamentos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-    if (equipamentos.length === 0 && !seeded) {
-      seeded = true;
-      const defaults = [
-        { nome: 'Escavadeira Suny', horimetro: '0', status: 'Operacional', categoria: 'Equipamentos', userId: user.uid },
-        { nome: 'Escavadeira Yanmar', horimetro: '0', status: 'Operacional', categoria: 'Equipamentos', userId: user.uid },
-        { nome: 'Carregadeira XCMG', horimetro: '0', status: 'Operacional', categoria: 'Equipamentos', userId: user.uid },
-        { nome: 'MUNK 45 toneladas ARGOS', horimetro: '0', status: 'Operacional', categoria: 'Equipamentos', userId: user.uid },
-        { nome: 'Perfuratriz (cobrado por metro)', horimetro: '0', status: 'Operacional', categoria: 'Ferramentas adicionais', userId: user.uid },
-        { nome: 'Rompedor (cobrado por hora)', horimetro: '0', status: 'Operacional', categoria: 'Ferramentas adicionais', userId: user.uid },
-        { nome: 'Conchas (medidas 15cm, 20cm, 25cm, 30cm, 35cm 45cm e 70cm)', horimetro: '0', status: 'Operacional', categoria: 'Ferramentas adicionais', userId: user.uid },
-        { nome: 'Equipamento Parceiros', horimetro: '0', status: 'Operacional', categoria: 'Equipamento Parceiros', userId: user.uid }
-      ];
-      for (const e of defaults) {
-        await addDoc(collection(db, "equipamentos"), e);
-      }
-    } else {
-      renderAll();
-    }
+    renderAll();
   });
 
   // OUVINTE: Agenda (apenas as do usuário)
@@ -1104,9 +1086,22 @@ document.addEventListener('DOMContentLoaded', () => {
     authRegisterToggle.addEventListener('click', (e) => {
       e.preventDefault();
       isRegistering = !isRegistering;
+      
       authTitle.textContent = isRegistering ? "Criar Conta" : "Acesso ao Sistema";
       authBtn.textContent = isRegistering ? "Cadastrar" : "Entrar no Sistema";
       authRegisterToggle.textContent = isRegistering ? "Voltar para Login" : "Criar conta";
+      
+      // Limpa os campos para dar a sensação clara de mudança de tela
+      document.getElementById('auth-email').value = '';
+      document.getElementById('auth-pass').value = '';
+      
+      // Muda a cor do botão para a pessoa notar que a ação principal mudou
+      if (isRegistering) {
+        authBtn.style.backgroundColor = "var(--accent-color, #10b981)"; // Fica verde
+      } else {
+        authBtn.style.backgroundColor = "var(--primary-color, #3b82f6)"; // Volta pro azul original
+      }
+
       authError.style.display = 'none';
     });
   }
@@ -1150,7 +1145,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } catch (err) {
         const msgs = {
-          'auth/invalid-credential': 'E-mail ou senha incorretos.',
+          'auth/invalid-credential': 'Dados incorretos ou conta não existe. Se for seu primeiro acesso, clique em "Criar conta" abaixo.',
           'auth/email-already-in-use': 'Este e-mail já está cadastrado.',
           'auth/weak-password': 'A senha deve ter pelo menos 6 caracteres.',
           'auth/invalid-email': 'E-mail inválido.',
