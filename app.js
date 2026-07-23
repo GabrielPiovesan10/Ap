@@ -21,6 +21,28 @@ const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
 
 // ==========================================
+// CONTROLE DE ACESSO (PERFIS)
+// ==========================================
+// Coloque aqui os e-mails que terão acesso total (Administradores)
+// Quem não estiver nessa lista, será considerado "Funcionário" e não verá o financeiro.
+const ADMIN_EMAILS = [
+  'gabrielpiovesan3010@gmail.com,alianetp@icloud.com'
+];
+
+function aplicarPermissoes(userEmail) {
+  const isAdmin = ADMIN_EMAILS.includes(userEmail);
+  const itensRestritos = document.querySelectorAll('.somente-admin');
+  
+  itensRestritos.forEach(item => {
+    if (!isAdmin) {
+      item.style.display = 'none'; // Esconde para funcionários
+    } else {
+      item.style.display = ''; // Mostra normalmente para administradores
+    }
+  });
+}
+
+// ==========================================
 // ESTADO GLOBAL E CONTROLE DE SESSÃO
 // ==========================================
 let clientes = [];
@@ -1176,6 +1198,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (user) {
       document.getElementById('auth-wrapper').style.display = 'none';
       document.getElementById('app-container').style.display = 'flex';
+      
+      // *** MÁGICA DOS PERFIS ACONTECE AQUI ***
+      // Verifica o e-mail e esconde os campos restritos se não for admin
+      aplicarPermissoes(user.email);
+      
       syncData();
     } else {
       document.getElementById('auth-wrapper').style.display = 'flex';
