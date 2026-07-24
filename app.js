@@ -24,7 +24,7 @@ const db = getFirestore(firebaseApp);
 // CONTROLE DE ACESSO (PERFIS)
 // ==========================================
 const ADMIN_EMAILS = [
-  'gabrielpiovesan3010@gmail.com','alianetp@icloud.com','weliaoliveira3010@gmail.com'
+  'gabrielpiovesan3010@gmail.com','alianetp@icloud.com','weliaoliveira3010@gmail.com','felipebianchin25@hotmail.com'
 ];
 
 function aplicarPermissoes(userEmail) {
