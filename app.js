@@ -50,6 +50,7 @@ let equipamentos = [];
 let agenda = [];
 let os = [];
 let financas = [];
+let historico = []; // Nova variável para o Histórico
 
 // Variáveis para guardar e cancelar as conexões (ouvintes) ao trocar de conta
 let unsubClientes = null;
@@ -57,6 +58,7 @@ let unsubEquipamentos = null;
 let unsubAgenda = null;
 let unsubOS = null;
 let unsubFinancas = null;
+let unsubHistorico = null; // Novo ouvinte
 
 // Função para limpar os dados da memória quando o usuário deslogar
 function limparSessao() {
@@ -65,13 +67,37 @@ function limparSessao() {
   if (unsubAgenda) unsubAgenda();
   if (unsubOS) unsubOS();
   if (unsubFinancas) unsubFinancas();
+  if (unsubHistorico) unsubHistorico();
   
   clientes = [];
   equipamentos = [];
   agenda = [];
   os = [];
   financas = [];
+  historico = [];
   renderAll();
+}
+
+// ==========================================
+// REGISTRO DE HISTÓRICO (NOVO)
+// ==========================================
+async function registrarHistorico(acao, referencia, imagemBase64 = null) {
+  try {
+    const user = auth.currentUser;
+    if (!user) return;
+    
+    const data = {
+      dataHora: new Date().toISOString(),
+      usuario: user.email,
+      acao: acao,
+      referencia: referencia,
+      imagemBase64: imagemBase64
+    };
+    
+    await addDoc(collection(db, "historico"), data);
+  } catch (e) {
+    console.error("Erro ao registrar histórico:", e);
+  }
 }
 
 // ==========================================
@@ -187,6 +213,36 @@ function renderAll() {
   renderFinanceiro();
   renderRelatorios();
   renderDashboard();
+  renderHistorico(); // Nova renderização
+}
+
+function renderHistorico() {
+  const tbody = document.getElementById('tbody-historico');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  // Ordena do evento mais recente para o mais antigo
+  const sorted = [...historico].sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
+
+  if (sorted.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--text-secondary);">Nenhum registro encontrado.</td></tr>';
+    return;
+  }
+
+  sorted.forEach((h) => {
+    const dataFormatada = new Date(h.dataHora).toLocaleString('pt-BR');
+    const imgHtml = h.imagemBase64 
+      ? `<img src="${h.imagemBase64}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid var(--border-color);" onclick="window.open('${h.imagemBase64}', '_blank')" title="Clique para ampliar">` 
+      : '-';
+
+    tbody.innerHTML += `
+      <tr>
+        <td style="font-size: 0.85rem;">${dataFormatada}</td>
+        <td style="font-weight: 500;">${h.usuario}</td>
+        <td><strong>${h.acao}</strong> <br><small style="color:var(--text-secondary)">${h.referencia}</small></td>
+        <td>${imgHtml}</td>
+      </tr>`;
+  });
 }
 
 function renderClientes() {
@@ -616,8 +672,10 @@ window.salvarCliente = async function () {
 
   if (id) {
     await updateDoc(doc(db, "clientes", id), data);
+    registrarHistorico("Editou Cliente", `Nome: ${nome}`);
   } else {
     await addDoc(collection(db, "clientes"), data);
+    registrarHistorico("Cadastrou Cliente", `Nome: ${nome}`);
   }
   closeModal('modal-cliente');
 };
@@ -638,7 +696,11 @@ window.editarCliente = function (id) {
 
 window.removerCliente = async function (id) {
   customConfirm('Remover este cliente?', async (res) => {
-    if (res) await deleteDoc(doc(db, "clientes", id));
+    if (res) {
+      const c = clientes.find(x => x.id === id);
+      await deleteDoc(doc(db, "clientes", id));
+      if (c) registrarHistorico("Removeu Cliente", `Nome: ${c.nome}`);
+    }
   });
 };
 
@@ -682,8 +744,10 @@ window.salvarEquip = async function () {
 
     if (id) {
       await updateDoc(doc(db, "equipamentos", id), data);
+      registrarHistorico("Editou Equipamento", `Equipamento: ${nome}`, data.fotoBase64);
     } else {
       await addDoc(collection(db, "equipamentos"), data);
+      registrarHistorico("Cadastrou Equipamento", `Equipamento: ${nome}`, data.fotoBase64);
     }
     closeModal('modal-equip');
   });
@@ -714,7 +778,11 @@ window.editarEquip = function (id) {
 
 window.removerEquip = async function (id) {
   customConfirm('Remover equipamento?', async (res) => {
-    if (res) await deleteDoc(doc(db, "equipamentos", id));
+    if (res) {
+      const e = equipamentos.find(x => x.id === id);
+      await deleteDoc(doc(db, "equipamentos", id));
+      if (e) registrarHistorico("Removeu Equipamento", `Equipamento: ${e.nome}`);
+    }
   });
 };
 
@@ -735,8 +803,10 @@ window.salvarAgenda = async function () {
 
   if (id) {
     await updateDoc(doc(db, "agenda", id), data);
+    registrarHistorico("Editou Agenda", `Data: ${formatDate(dataPrev)} - Status: ${status}`);
   } else {
     await addDoc(collection(db, "agenda"), data);
+    registrarHistorico("Novo Agendamento", `Data: ${formatDate(dataPrev)} - Status: ${status}`);
   }
   closeModal('modal-agenda');
 };
@@ -756,7 +826,10 @@ window.editarAgenda = function (id) {
 
 window.removerAgenda = async function (id) {
   customConfirm('Remover agendamento?', async (res) => {
-    if (res) await deleteDoc(doc(db, "agenda", id));
+    if (res) {
+      await deleteDoc(doc(db, "agenda", id));
+      registrarHistorico("Removeu Agendamento", `Um registro da agenda foi removido`);
+    }
   });
 };
 
@@ -792,8 +865,10 @@ window.salvarOS = async function () {
 
       if (id) {
         await updateDoc(doc(db, "os", id), data);
+        registrarHistorico("Editou OS", `OS Nº ${numero} - Status: ${status}`, data.fotoBase64 || data.assinaturaBase64);
       } else {
         await addDoc(collection(db, "os"), data);
+        registrarHistorico("Nova OS", `OS Nº ${numero} - Status: ${status}`, data.fotoBase64 || data.assinaturaBase64);
       }
 
       try {
@@ -840,6 +915,7 @@ window.removerOS = async function (id) {
         }
       }
       await deleteDoc(doc(db, "os", id));
+      if (o) registrarHistorico("Removeu OS", `OS Nº ${o.numero}`);
     }
   });
 };
@@ -869,8 +945,10 @@ window.salvarFin = async function () {
 
   if (id) {
     await updateDoc(doc(db, "financas", id), data);
+    registrarHistorico("Editou Lançamento Financeiro", `R$ ${valor} - ${desc}`);
   } else {
     await addDoc(collection(db, "financas"), data);
+    registrarHistorico("Novo Lançamento Financeiro", `R$ ${valor} - ${desc}`);
   }
   closeModal('modal-fin');
 };
@@ -891,7 +969,11 @@ window.editarFin = function (id) {
 
 window.removerFin = async function (id) {
   customConfirm('Remover lançamento?', async (res) => {
-    if (res) await deleteDoc(doc(db, "financas", id));
+    if (res) {
+      const f = financas.find(x => x.id === id);
+      await deleteDoc(doc(db, "financas", id));
+      if (f) registrarHistorico("Removeu Lançamento Financeiro", `R$ ${f.valor} - ${f.desc}`);
+    }
   });
 };
 
@@ -933,6 +1015,7 @@ window.enviarWhatsApp = function () {
   texto += `\nFicamos à disposição!`;
   const whatsLimpo = (dados.cliente.whats || '').replace(/\D/g, '');
   window.open(`https://wa.me/55${whatsLimpo}?text=${encodeURIComponent(texto)}`, '_blank');
+  registrarHistorico("Enviou Orçamento (WhatsApp)", `Cliente: ${dados.cliente.nome}`);
 };
 
 window.gerarPDF = function () {
@@ -1009,6 +1092,8 @@ window.gerarPDF = function () {
     html2canvas: { scale: 2 },
     jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
   }).from(divPDF).save();
+  
+  registrarHistorico("Gerou Orçamento (PDF)", `Cliente: ${dados.cliente.nome}`);
 };
 
 // ==========================================
@@ -1021,37 +1106,43 @@ function syncData() {
   // Garante que qualquer ouvinte antigo seja desligado antes de começar o novo
   limparSessao();
 
-  // OUVINTE: Clientes (apenas os do usuário)
+  // OUVINTE: Clientes
   const qClientes = query(collection(db, "clientes"), where("userId", "==", user.uid));
   unsubClientes = onSnapshot(qClientes, (snapshot) => {
     clientes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
 
-  // OUVINTE: Equipamentos (compartilhados entre todos - sem filtro de 'where')
+  // OUVINTE: Equipamentos
   unsubEquipamentos = onSnapshot(collection(db, "equipamentos"), (snapshot) => {
     equipamentos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
 
-  // OUVINTE: Agenda (apenas as do usuário)
+  // OUVINTE: Agenda
   const qAgenda = query(collection(db, "agenda"), where("userId", "==", user.uid));
   unsubAgenda = onSnapshot(qAgenda, (snapshot) => {
     agenda = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
 
-  // OUVINTE: OS (apenas as do usuário)
+  // OUVINTE: OS
   const qOS = query(collection(db, "os"), where("userId", "==", user.uid));
   unsubOS = onSnapshot(qOS, (snapshot) => {
     os = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
 
-  // OUVINTE: Finanças (apenas as do usuário)
+  // OUVINTE: Finanças
   const qFin = query(collection(db, "financas"), where("userId", "==", user.uid));
   unsubFinancas = onSnapshot(qFin, (snapshot) => {
     financas = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderAll();
+  });
+  
+  // OUVINTE: Histórico (Ouve todos os registros gerais da empresa)
+  unsubHistorico = onSnapshot(collection(db, "historico"), (snapshot) => {
+    historico = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
 }
