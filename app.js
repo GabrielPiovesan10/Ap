@@ -48,6 +48,23 @@ function aplicarPermissoes(userEmail) {
   if (areaFinancOS) {
     areaFinancOS.style.display = admin ? 'grid' : 'none';
   }
+
+  // SE NÃO FOR ADMIN, FORÇA A ABERTURA DA ABA DE ORDENS DE SERVIÇO IMEDIATAMENTE
+  if (!admin) {
+    const navItems = document.querySelectorAll('.nav-item');
+    const viewSections = document.querySelectorAll('.view-section');
+    
+    navItems.forEach(n => n.classList.remove('active'));
+    viewSections.forEach(s => s.classList.remove('active'));
+
+    const osNav = document.querySelector('.nav-item[data-view="view-os"]');
+    const osView = document.getElementById('view-os');
+    const headerTitle = document.getElementById('header-title');
+
+    if (osNav) osNav.classList.add('active');
+    if (osView) osView.classList.add('active');
+    if (headerTitle) headerTitle.textContent = "Ordens de Serviço";
+  }
 }
 
 // ==========================================
@@ -97,7 +114,6 @@ async function registrarHistorico(acao, referencia, imagemBase64 = null) {
     const user = auth.currentUser;
     if (!user) return;
     
-    // Identifica o nome correto (se for o Igor via e-mail específico, força o nome Igor)
     let nomeUsuario = user.email;
     if (user.email === 'Igornevesrc@gmail.com') {
       nomeUsuario = 'Igor';
@@ -205,12 +221,10 @@ window.openModal = function (modalId) {
       if(el) el.value = '';
     });
     
-    // GERAÇÃO AUTOMÁTICA DO NÚMERO DA OS (+1 do último)
     const proximoNumero = os.length > 0 ? Math.max(...os.map(o => parseInt(o.numero) || 0)) + 1 : 1;
     const inputOSNum = document.getElementById('os-numero');
     if(inputOSNum) inputOSNum.value = String(proximoNumero).padStart(3, '0');
 
-    // Se for o Igor, preenche o operador automaticamente como "Igor"
     const user = auth.currentUser;
     if (user && user.email === 'Igornevesrc@gmail.com') {
       const inputOp = document.getElementById('os-operador');
@@ -587,7 +601,7 @@ function renderHistoricoFinanceiro() {
         <td style="font-weight: 600;">${m.mesAno}</td>
         <td style="color: var(--accent-color);">${formatMoney(m.entradas)}</td>
         <td style="color: var(--danger-color);">${formatMoney(m.saidas)}</td>
-        <td style="font-weight: 700; color: ${saldo >= '0' ? 'var(--info-color)' : 'var(--danger-color)'};">${formatMoney(saldo)}</td>
+        <td style="font-weight: 700; color: ${saldo >= 0 ? 'var(--info-color)' : 'var(--danger-color)'};">${formatMoney(saldo)}</td>
         <td>
           <button class="btn btn-primary" style="padding:4px 10px; font-size:0.8rem;" onclick="verDetalhesMes('${m.mesAno}')"><i class="ph ph-eye"></i> Detalhes</button>
         </td>
@@ -986,7 +1000,7 @@ window.salvarOS = async function () {
   let operador = document.getElementById('os-operador').value;
   const user = auth.currentUser;
   if (user && user.email === 'Igornevesrc@gmail.com') {
-    operador = 'Igor'; // Força o nome do Igor se for ele logado
+    operador = 'Igor';
   }
 
   if (!numero || !clienteId || !equipId) { customAlert("Preencha Nº OS, Cliente e Equipamento!"); return; }
@@ -998,7 +1012,6 @@ window.salvarOS = async function () {
     assB64 = signaturePadLocal.toDataURL('image/png');
   }
 
-  // Captura valores financeiros caso o admin tenha preenchido
   const valorFechado = document.getElementById('os-valor') ? document.getElementById('os-valor').value : '';
   const formaPagto = document.getElementById('os-pagamento') ? document.getElementById('os-pagamento').value : '';
 
@@ -1021,7 +1034,6 @@ window.salvarOS = async function () {
       await addDoc(collection(db, "os"), data);
       registrarHistorico("Nova OS", `OS Nº ${numero} - Status: ${status}`);
 
-      // Se o admin já preencheu o valor na criação e finalizou, gera automaticamente o lançamento financeiro!
       if (isAdminUser(user.email) && valorFechado && Number(valorFechado) > 0) {
         const clienteObj = clientes.find(c => c.id === clienteId);
         const nomeCliente = clienteObj ? clienteObj.nome : 'Cliente';
