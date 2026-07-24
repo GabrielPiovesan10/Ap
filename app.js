@@ -885,6 +885,20 @@ window.solicitarAssinaturaRemota = function(osId) {
     customAlert("O cliente selecionado não tem WhatsApp cadastrado. O Link da OS é: \n" + link);
   }
 };
+window.abrirModalOS = function() {
+    document.getElementById('os-id').value = '';
+    const campos = ['os-numero', 'os-hini', 'os-hfim', 'os-foto', 'os-data', 'os-operador'];
+    campos.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    document.getElementById('os-status').value = 'Em Andamento';
+    document.getElementById('title-modal-os').textContent = 'Nova OS';
+    window.currentOSFoto = null;
+    window.currentOSAssinatura = null;
+    if (signaturePadLocal) signaturePadLocal.clear();
+    document.getElementById('modal-os').classList.add('active');
+};
 
 window.salvarOS = async function () {
   const id = document.getElementById('os-id').value;
