@@ -77,7 +77,7 @@ function limparSessao() {
 }
 
 // ==========================================
-// REGISTRO DE HISTÓRICO (CORRIGIDO)
+// REGISTRO DE HISTÓRICO
 // ==========================================
 async function registrarHistorico(acao, referencia, imagemBase64 = null) {
   try {
@@ -1095,7 +1095,7 @@ window.gerarPDF = function () {
 };
 
 // ==========================================
-// SINCRONIZAÇÃO TEMPO REAL COM FIRESTORE
+// SINCRONIZAÇÃO TEMPO REAL COM FIRESTORE (COMPARTILHADO)
 // ==========================================
 function syncData() {
   const user = auth.currentUser;
@@ -1103,43 +1103,38 @@ function syncData() {
 
   limparSessao();
 
-  // OUVINTE: Clientes
-  const qClientes = query(collection(db, "clientes"), where("userId", "==", user.uid));
-  unsubClientes = onSnapshot(qClientes, (snapshot) => {
+  // OUVINTE: Clientes (Todos da empresa veem)
+  unsubClientes = onSnapshot(collection(db, "clientes"), (snapshot) => {
     clientes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
 
-  // OUVINTE: Equipamentos
+  // OUVINTE: Equipamentos (Todos da empresa veem)
   unsubEquipamentos = onSnapshot(collection(db, "equipamentos"), (snapshot) => {
     equipamentos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
 
-  // OUVINTE: Agenda
-  const qAgenda = query(collection(db, "agenda"), where("userId", "==", user.uid));
-  unsubAgenda = onSnapshot(qAgenda, (snapshot) => {
+  // OUVINTE: Agenda (Todos da empresa veem)
+  unsubAgenda = onSnapshot(collection(db, "agenda"), (snapshot) => {
     agenda = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
 
-  // OUVINTE: OS
-  const qOS = query(collection(db, "os"), where("userId", "==", user.uid));
-  unsubOS = onSnapshot(qOS, (snapshot) => {
+  // OUVINTE: OS (Todos da empresa veem)
+  unsubOS = onSnapshot(collection(db, "os"), (snapshot) => {
     os = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
 
-  // OUVINTE: Finanças
-  const qFin = query(collection(db, "financas"), where("userId", "==", user.uid));
-  unsubFinancas = onSnapshot(qFin, (snapshot) => {
+  // OUVINTE: Finanças (Todos da empresa veem)
+  unsubFinancas = onSnapshot(collection(db, "financas"), (snapshot) => {
     financas = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
   
-  // OUVINTE: Histórico
-  const qHistorico = query(collection(db, "historico"), where("userId", "==", user.uid));
-  unsubHistorico = onSnapshot(qHistorico, (snapshot) => {
+  // OUVINTE: Histórico (Todos da empresa veem)
+  unsubHistorico = onSnapshot(collection(db, "historico"), (snapshot) => {
     historico = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
