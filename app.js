@@ -887,7 +887,7 @@ window.solicitarAssinaturaRemota = function(osId) {
 };
 window.abrirModalOS = function() {
     document.getElementById('os-id').value = '';
-    const campos = ['os-numero', 'os-hini', 'os-hfim', 'os-foto', 'os-data', 'os-operador'];
+    const campos = ['os-numero', 'os-cliente', 'os-equip', 'os-hini', 'os-hfim', 'os-foto', 'os-data', 'os-operador'];
     campos.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
