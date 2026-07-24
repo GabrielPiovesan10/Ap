@@ -102,7 +102,8 @@ body {
 .brand span { color: var(--text-primary); }
 
 .nav-menu { 
-  padding: 20px 12px; 
+  /* Aumentei o espaço no final (40px) pra aba não ficar esmagada lá no fundo */
+  padding: 20px 12px 40px 12px; 
   display: flex; 
   flex-direction: column; 
   gap: 8px; 
@@ -255,7 +256,12 @@ tr:hover td { background: rgba(255, 255, 255, 0.02); }
 .mobile-menu-overlay.active { display: block; }
 
 @media (max-width: 768px) {
-  .sidebar { position: fixed; transform: translateX(-100%); height: 100vh; }
+  .sidebar { 
+    position: fixed; 
+    transform: translateX(-100%); 
+    height: 100vh;
+    height: 100dvh; /* <-- O milagre acontece aqui */ 
+  }
   .sidebar.mobile-open { transform: translateX(0); }
   
   .main-content { width: 100%; }
