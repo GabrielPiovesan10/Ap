@@ -75,27 +75,24 @@ body {
 /* ================= LAYOUT PRINCIPAL ================= */
 .app-container { display: flex; width: 100vw; height: 100vh; overflow: hidden; }
 
-/* Sidebar */
-.sidebar {
-  width: 280px;
-  background: var(--sidebar-bg);
-  backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
-  border-right: 1px solid var(--border-color);
-  display: flex; flex-direction: column;
-  transition: transform 0.3s ease;
-  z-index: 100;
+/* Sidebar Corrigida */
 .sidebar {
   position: fixed;
   top: 0;
   left: 0;
-  width: 250px;
+  width: 280px;
   height: 100vh;
+  background: var(--sidebar-bg);
+  backdrop-filter: var(--blur); 
+  -webkit-backdrop-filter: var(--blur);
+  border-right: 1px solid var(--border-color);
+  display: flex; 
+  flex-direction: column;
+  transition: transform 0.3s ease;
+  z-index: 100;
   overflow-y: auto;
   overscroll-behavior-y: contain;
 }
-
-}
-
 
 .brand {
   padding: 24px; font-size: 1.5rem; font-weight: 700;
@@ -264,6 +261,7 @@ tr:hover td { background: rgba(255, 255, 255, 0.02); }
   
   .stat-card { padding: 16px; }
 }
+
 html, body {
   max-width: 100%;
   overflow-x: hidden;
