@@ -90,11 +90,16 @@
         <a href="#" class="nav-item" data-view="view-os">
           <i class="ph ph-clipboard-text"></i> Ordens de Serviço
         </a>
-        <a href="#" class="nav-item somente-admin" data-view="view-financeiro">
+        <!-- FINANÇAS AGORA APARECE PARA O FUNCIONÁRIO (sem a classe somente-admin) -->
+        <a href="#" class="nav-item" data-view="view-financeiro">
           <i class="ph ph-currency-dollar"></i> Financeiro
         </a>
         <a href="#" class="nav-item somente-admin" data-view="view-relatorios">
           <i class="ph ph-chart-bar"></i> Relatórios
+        </a>
+        <!-- NOVA ABA DE HISTÓRICO E FOTOS (Apenas Admin) -->
+        <a href="#" class="nav-item somente-admin" data-view="view-historico">
+          <i class="ph ph-images"></i> Fotos e Histórico
         </a>
       </nav>
     </aside>
@@ -409,8 +414,8 @@
             </button>
           </div>
 
-          <!-- Novos Cards do Financeiro -->
-          <div class="grid-cards" style="margin-bottom: 24px;">
+          <!-- Novos Cards do Financeiro (OCULTOS PARA FUNCIONÁRIOS) -->
+          <div class="grid-cards somente-admin" style="margin-bottom: 24px;">
             <div class="glass-card stat-card" style="border-left: 4px solid var(--accent-color);">
               <div class="stat-info">
                 <h3>Entradas</h3>
@@ -431,7 +436,7 @@
             </div>
           </div>
 
-          <div class="grid-cards" style="margin-bottom: 24px;">
+          <div class="grid-cards somente-admin" style="margin-bottom: 24px;">
             <div class="glass-card stat-card">
               <div class="stat-info">
                 <h3>Contas a Receber</h3>
@@ -452,14 +457,14 @@
             </div>
           </div>
 
-          <div class="glass-card" style="margin-bottom: 24px;">
+          <div class="glass-card somente-admin" style="margin-bottom: 24px;">
             <h3>Gráfico de Faturamento / Fluxo</h3>
             <div style="position: relative; height: 300px; width: 100%;">
               <canvas id="chartFinanceiroSecundario"></canvas>
             </div>
           </div>
 
-          <!-- Tabela Financeira Existente -->
+          <!-- Tabela Financeira Existente (VISÍVEL PARA FUNCIONÁRIOS) -->
           <div class="glass-card" style="padding: 0;">
             <div class="table-responsive">
               <table>
@@ -539,6 +544,35 @@
                   <!-- Preenchido pelo JS -->
                 </ul>
               </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= Fotos e Histórico (NOVA ABA) ================= -->
+        <section id="view-historico" class="view-section">
+          <div class="top-bar-actions">
+            <h2>Fotos e Histórico do Sistema</h2>
+          </div>
+          <div class="glass-card" style="padding: 0;">
+            <div class="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Data/Hora</th>
+                    <th>Usuário</th>
+                    <th>Ação / Ref.</th>
+                    <th>Foto / Assinatura</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-historico">
+                  <!-- Será preenchido pelo JS na próxima etapa -->
+                  <tr>
+                    <td colspan="4" style="text-align: center; padding: 20px; color: var(--text-secondary);">
+                      Nenhum registro carregado ainda. (O JavaScript será ajustado na próxima etapa para preencher esta lista).
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </section>
