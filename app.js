@@ -23,8 +23,6 @@ const db = getFirestore(firebaseApp);
 // ==========================================
 // CONTROLE DE ACESSO (PERFIS)
 // ==========================================
-// Coloque aqui os e-mails que terão acesso total (Administradores)
-// Quem não estiver nessa lista, será considerado "Funcionário" e não verá o financeiro.
 const ADMIN_EMAILS = [
   'gabrielpiovesan3010@gmail.com','alianetp@icloud.com','weliaoliveira3010@gmail.com'
 ];
@@ -50,7 +48,7 @@ let equipamentos = [];
 let agenda = [];
 let os = [];
 let financas = [];
-let historico = []; // Nova variável para o Histórico
+let historico = [];
 
 // Variáveis para guardar e cancelar as conexões (ouvintes) ao trocar de conta
 let unsubClientes = null;
@@ -58,7 +56,7 @@ let unsubEquipamentos = null;
 let unsubAgenda = null;
 let unsubOS = null;
 let unsubFinancas = null;
-let unsubHistorico = null; // Novo ouvinte
+let unsubHistorico = null;
 
 // Função para limpar os dados da memória quando o usuário deslogar
 function limparSessao() {
@@ -79,7 +77,7 @@ function limparSessao() {
 }
 
 // ==========================================
-// REGISTRO DE HISTÓRICO (NOVO)
+// REGISTRO DE HISTÓRICO (CORRIGIDO)
 // ==========================================
 async function registrarHistorico(acao, referencia, imagemBase64 = null) {
   try {
@@ -91,7 +89,8 @@ async function registrarHistorico(acao, referencia, imagemBase64 = null) {
       usuario: user.email,
       acao: acao,
       referencia: referencia,
-      imagemBase64: imagemBase64
+      imagemBase64: imagemBase64,
+      userId: user.uid
     };
     
     await addDoc(collection(db, "historico"), data);
@@ -143,13 +142,13 @@ function compressImage(file, callback) {
     img.src = event.target.result;
     img.onload = () => {
       const canvas = document.createElement('canvas');
-      const MAX_WIDTH = 800; // Limita a largura máxima
+      const MAX_WIDTH = 800;
       const scaleSize = MAX_WIDTH / img.width;
       canvas.width = MAX_WIDTH;
       canvas.height = img.height * scaleSize;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      callback(canvas.toDataURL('image/jpeg', 0.7)); // Compressão 70%
+      callback(canvas.toDataURL('image/jpeg', 0.7));
     }
   }
 }
@@ -213,7 +212,7 @@ function renderAll() {
   renderFinanceiro();
   renderRelatorios();
   renderDashboard();
-  renderHistorico(); // Nova renderização
+  renderHistorico();
 }
 
 function renderHistorico() {
@@ -221,7 +220,6 @@ function renderHistorico() {
   if (!tbody) return;
   tbody.innerHTML = '';
 
-  // Ordena do evento mais recente para o mais antigo
   const sorted = [...historico].sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
 
   if (sorted.length === 0) {
@@ -1103,7 +1101,6 @@ function syncData() {
   const user = auth.currentUser;
   if (!user) return;
 
-  // Garante que qualquer ouvinte antigo seja desligado antes de começar o novo
   limparSessao();
 
   // OUVINTE: Clientes
@@ -1140,8 +1137,9 @@ function syncData() {
     renderAll();
   });
   
-  // OUVINTE: Histórico (Ouve todos os registros gerais da empresa)
-  unsubHistorico = onSnapshot(collection(db, "historico"), (snapshot) => {
+  // OUVINTE: Histórico
+  const qHistorico = query(collection(db, "historico"), where("userId", "==", user.uid));
+  unsubHistorico = onSnapshot(qHistorico, (snapshot) => {
     historico = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
@@ -1204,15 +1202,13 @@ document.addEventListener('DOMContentLoaded', () => {
       authBtn.textContent = isRegistering ? "Cadastrar" : "Entrar no Sistema";
       authRegisterToggle.textContent = isRegistering ? "Voltar para Login" : "Criar conta";
       
-      // Limpa os campos para dar a sensação clara de mudança de tela
       document.getElementById('auth-email').value = '';
       document.getElementById('auth-pass').value = '';
       
-      // Muda a cor do botão para a pessoa notar que a ação principal mudou
       if (isRegistering) {
-        authBtn.style.backgroundColor = "var(--accent-color, #10b981)"; // Fica verde
+        authBtn.style.backgroundColor = "var(--accent-color, #10b981)";
       } else {
-        authBtn.style.backgroundColor = "var(--primary-color, #3b82f6)"; // Volta pro azul original
+        authBtn.style.backgroundColor = "var(--primary-color, #3b82f6)";
       }
 
       authError.style.display = 'none';
@@ -1280,7 +1276,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnLogout) {
     btnLogout.addEventListener('click', async () => {
       await signOut(auth);
-      // Limpa os dados na hora do logout
       limparSessao();
     });
   }
@@ -1289,16 +1284,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (user) {
       document.getElementById('auth-wrapper').style.display = 'none';
       document.getElementById('app-container').style.display = 'flex';
-      
-      // *** MÁGICA DOS PERFIS ACONTECE AQUI ***
-      // Verifica o e-mail e esconde os campos restritos se não for admin
       aplicarPermissoes(user.email);
-      
       syncData();
     } else {
       document.getElementById('auth-wrapper').style.display = 'flex';
       document.getElementById('app-container').style.display = 'none';
-      // Limpa a tela caso inicie o aplicativo sem login
       limparSessao(); 
     }
   });
