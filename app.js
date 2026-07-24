@@ -27,17 +27,27 @@ const ADMIN_EMAILS = [
   'gabrielpiovesan3010@gmail.com','alianetp@icloud.com','weliaoliveira3010@gmail.com','felipebianchin25@hotmail.com'
 ];
 
+function isAdminUser(email) {
+  return ADMIN_EMAILS.includes(email);
+}
+
 function aplicarPermissoes(userEmail) {
-  const isAdmin = ADMIN_EMAILS.includes(userEmail);
+  const admin = isAdminUser(userEmail);
   const itensRestritos = document.querySelectorAll('.somente-admin');
   
   itensRestritos.forEach(item => {
-    if (!isAdmin) {
+    if (!admin) {
       item.style.display = 'none'; // Esconde para funcionários
     } else {
       item.style.display = ''; // Mostra normalmente para administradores
     }
   });
+
+  // Visibilidade do painel financeiro na OS (Apenas Admins podem ver/preencher valores)
+  const areaFinancOS = document.getElementById('area-financeira-os');
+  if (areaFinancOS) {
+    areaFinancOS.style.display = admin ? 'grid' : 'none';
+  }
 }
 
 // ==========================================
@@ -87,9 +97,15 @@ async function registrarHistorico(acao, referencia, imagemBase64 = null) {
     const user = auth.currentUser;
     if (!user) return;
     
+    // Identifica o nome correto (se for o Igor via e-mail específico, força o nome Igor)
+    let nomeUsuario = user.email;
+    if (user.email === 'Igornevesrc@gmail.com') {
+      nomeUsuario = 'Igor';
+    }
+
     const data = {
       dataHora: new Date().toISOString(),
-      usuario: user.email,
+      usuario: nomeUsuario,
       acao: acao,
       referencia: referencia,
       imagemBase64: imagemBase64,
@@ -184,7 +200,23 @@ window.openModal = function (modalId) {
     document.getElementById('title-modal-agenda').textContent = "Novo Agendamento";
   } else if (modalId === 'modal-os') {
     document.getElementById('os-id').value = '';
-    ['os-numero', 'os-hini', 'os-hfim', 'os-foto', 'os-data', 'os-operador'].forEach(id => document.getElementById(id).value = '');
+    ['os-hini', 'os-hfim', 'os-foto', 'os-data', 'os-operador', 'os-valor', 'os-pagamento'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.value = '';
+    });
+    
+    // GERAÇÃO AUTOMÁTICA DO NÚMERO DA OS (+1 do último)
+    const proximoNumero = os.length > 0 ? Math.max(...os.map(o => parseInt(o.numero) || 0)) + 1 : 1;
+    const inputOSNum = document.getElementById('os-numero');
+    if(inputOSNum) inputOSNum.value = String(proximoNumero).padStart(3, '0');
+
+    // Se for o Igor, preenche o operador automaticamente como "Igor"
+    const user = auth.currentUser;
+    if (user && user.email === 'Igornevesrc@gmail.com') {
+      const inputOp = document.getElementById('os-operador');
+      if (inputOp) inputOp.value = 'Igor';
+    }
+
     document.getElementById('os-status').value = 'Em Andamento';
     document.getElementById('title-modal-os').textContent = "Nova Ordem de Serviço";
     window.currentOSFoto = null;
@@ -214,6 +246,7 @@ function renderAll() {
   renderAgenda();
   renderOS();
   renderFinanceiro();
+  renderHistoricoFinanceiro();
   renderRelatorios();
   renderDashboard();
   renderHistorico();
@@ -227,22 +260,18 @@ function renderHistorico() {
   const sorted = [...historico].sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
 
   if (sorted.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--text-secondary);">Nenhum registro encontrado.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 20px; color: var(--text-secondary);">Nenhum log registrado ainda.</td></tr>';
     return;
   }
 
   sorted.forEach((h) => {
     const dataFormatada = new Date(h.dataHora).toLocaleString('pt-BR');
-    const imgHtml = h.imagemBase64 
-      ? `<img src="${h.imagemBase64}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid var(--border-color);" onclick="window.open('${h.imagemBase64}', '_blank')" title="Clique para ampliar">` 
-      : '-';
-
+    
     tbody.innerHTML += `
       <tr>
         <td style="font-size: 0.85rem;">${dataFormatada}</td>
         <td style="font-weight: 500;">${h.usuario}</td>
         <td><strong>${h.acao}</strong> <br><small style="color:var(--text-secondary)">${h.referencia}</small></td>
-        <td>${imgHtml}</td>
       </tr>`;
   });
 }
@@ -514,6 +543,63 @@ function renderFinanceiro() {
   }
 }
 
+// RENDERIZAÇÃO DO HISTÓRICO FINANCEIRO MENSAL
+function renderHistoricoFinanceiro() {
+  const tbody = document.getElementById('tbody-historico-financeiro');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  const mesesMap = {};
+
+  financas.forEach(f => {
+    if (!f.data) return;
+    const [ano, mes] = f.data.split('-');
+    const chave = `${mes}/${ano}`;
+
+    if (!mesesMap[chave]) {
+      mesesMap[chave] = { mesAno: chave, anoNum: parseInt(ano), mesNum: parseInt(mes), entradas: 0, saidas: 0 };
+    }
+
+    const val = Number(f.valor) || 0;
+    if (f.statusPagamento === 'Pago') {
+      if (f.tipo === 'Receita') {
+        mesesMap[chave].entradas += val;
+      } else if (f.tipo === 'Despesa') {
+        mesesMap[chave].saidas += val;
+      }
+    }
+  });
+
+  const listaMeses = Object.values(mesesMap).sort((a, b) => {
+    if (a.anoNum !== b.anoNum) return b.anoNum - a.anoNum;
+    return b.mesNum - a.mesNum;
+  });
+
+  if (listaMeses.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--text-secondary);">Nenhum fechamento mensal encontrado.</td></tr>';
+    return;
+  }
+
+  listaMeses.forEach(m => {
+    const saldo = m.entradas - m.saidas;
+    tbody.innerHTML += `
+      <tr>
+        <td style="font-weight: 600;">${m.mesAno}</td>
+        <td style="color: var(--accent-color);">${formatMoney(m.entradas)}</td>
+        <td style="color: var(--danger-color);">${formatMoney(m.saidas)}</td>
+        <td style="font-weight: 700; color: ${saldo >= '0' ? 'var(--info-color)' : 'var(--danger-color)'};">${formatMoney(saldo)}</td>
+        <td>
+          <button class="btn btn-primary" style="padding:4px 10px; font-size:0.8rem;" onclick="verDetalhesMes('${m.mesAno}')"><i class="ph ph-eye"></i> Detalhes</button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+window.verDetalhesMes = function(mesAno) {
+  customAlert(`Visualizando resumo fechado de ${mesAno}. Você pode conferir os lançamentos detalhados na aba Financeiro.`, `Fechamento ${mesAno}`);
+};
+
 function renderRelatorios() {
   let fatMes = 0;
   let recTotal = 0;
@@ -708,7 +794,7 @@ window.removerCliente = async function (id) {
 };
 
 // ==========================================
-// CRUD - EQUIPAMENTOS (COM CATEGORIA)
+// CRUD - EQUIPAMENTOS
 // ==========================================
 window.salvarEquip = async function () {
   const id = document.getElementById('eq-id').value;
@@ -747,10 +833,10 @@ window.salvarEquip = async function () {
 
     if (id) {
       await updateDoc(doc(db, "equipamentos", id), data);
-      registrarHistorico("Editou Equipamento", `Equipamento: ${nome}`, data.fotoBase64);
+      registrarHistorico("Editou Equipamento", `Equipamento: ${nome}`);
     } else {
       await addDoc(collection(db, "equipamentos"), data);
-      registrarHistorico("Cadastrou Equipamento", `Equipamento: ${nome}`, data.fotoBase64);
+      registrarHistorico("Cadastrou Equipamento", `Equipamento: ${nome}`);
     }
     closeModal('modal-equip');
   });
@@ -853,7 +939,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     window.addEventListener("resize", resizeCanvasLocal);
     
-    // Dispara o resize quando o modal da OS termina de abrir
     const modalOsEl = document.getElementById('modal-os');
     if(modalOsEl) {
       modalOsEl.addEventListener('transitionend', resizeCanvasLocal);
@@ -866,13 +951,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Ação do Botão WhatsApp (Assinatura Remota)
 window.solicitarAssinaturaRemota = function(osId) {
   const o = os.find(x => x.id === osId);
   if(!o) return;
   const c = clientes.find(x => x.id === o.clienteId);
   
-  // Pega o endereço base do site para criar o link (ajusta caso esteja em subpasta)
   const urlBase = window.location.href.split('index.html')[0].replace(/\/$/, "");
   const link = `${urlBase}/assinar.html?id=${osId}`;
   
@@ -885,19 +968,9 @@ window.solicitarAssinaturaRemota = function(osId) {
     customAlert("O cliente selecionado não tem WhatsApp cadastrado. O Link da OS é: \n" + link);
   }
 };
+
 window.abrirModalOS = function() {
-    document.getElementById('os-id').value = '';
-    const campos = ['os-numero', 'os-cliente', 'os-equip', 'os-hini', 'os-hfim', 'os-foto', 'os-data', 'os-operador'];
-    campos.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-    });
-    document.getElementById('os-status').value = 'Em Andamento';
-    document.getElementById('title-modal-os').textContent = 'Nova OS';
-    window.currentOSFoto = null;
-    window.currentOSAssinatura = null;
-    if (signaturePadLocal) signaturePadLocal.clear();
-    document.getElementById('modal-os').classList.add('active');
+    window.openModal('modal-os');
 };
 
 window.salvarOS = async function () {
@@ -909,33 +982,61 @@ window.salvarOS = async function () {
   const hfim = document.getElementById('os-hfim').value;
   const status = document.getElementById('os-status').value;
   const dataLanc = document.getElementById('os-data').value;
-  const operador = document.getElementById('os-operador').value;
+  
+  let operador = document.getElementById('os-operador').value;
+  const user = auth.currentUser;
+  if (user && user.email === 'Igornevesrc@gmail.com') {
+    operador = 'Igor'; // Força o nome do Igor se for ele logado
+  }
 
   if (!numero || !clienteId || !equipId) { customAlert("Preencha Nº OS, Cliente e Equipamento!"); return; }
 
   const fotoFile = document.getElementById('os-foto').files[0];
 
-  // Captura assinatura desenhada na hora (se tiver)
   let assB64 = window.currentOSAssinatura; 
   if (signaturePadLocal && !signaturePadLocal.isEmpty()) {
     assB64 = signaturePadLocal.toDataURL('image/png');
   }
 
+  // Captura valores financeiros caso o admin tenha preenchido
+  const valorFechado = document.getElementById('os-valor') ? document.getElementById('os-valor').value : '';
+  const formaPagto = document.getElementById('os-pagamento') ? document.getElementById('os-pagamento').value : '';
+
   compressImage(fotoFile, async (fotoB64) => {
     const data = {
       numero, clienteId, equipId, hini, hfim, status,
-      data: dataLanc, operador,
+      data: dataLanc || new Date().toISOString().split('T')[0],
+      operador: operador || 'Geral',
+      valor: valorFechado ? Number(valorFechado) : 0,
+      formaPagamento: formaPagto || '',
       fotoBase64: fotoB64 || window.currentOSFoto || null,
       assinaturaBase64: assB64 || null,
-      userId: auth.currentUser.uid
+      userId: user.uid
     };
 
     if (id) {
       await updateDoc(doc(db, "os", id), data);
-      registrarHistorico("Editou OS", `OS Nº ${numero} - Status: ${status}`, data.fotoBase64 || data.assinaturaBase64);
+      registrarHistorico("Editou OS", `OS Nº ${numero} - Status: ${status}`);
     } else {
       await addDoc(collection(db, "os"), data);
-      registrarHistorico("Nova OS", `OS Nº ${numero} - Status: ${status}`, data.fotoBase64 || data.assinaturaBase64);
+      registrarHistorico("Nova OS", `OS Nº ${numero} - Status: ${status}`);
+
+      // Se o admin já preencheu o valor na criação e finalizou, gera automaticamente o lançamento financeiro!
+      if (isAdminUser(user.email) && valorFechado && Number(valorFechado) > 0) {
+        const clienteObj = clientes.find(c => c.id === clienteId);
+        const nomeCliente = clienteObj ? clienteObj.nome : 'Cliente';
+        
+        await addDoc(collection(db, "financas"), {
+          desc: `Locação OS nº ${numero} - ${nomeCliente} (${formaPagto || 'Pix'})`,
+          tipo: 'Receita',
+          categoria: 'Serviço',
+          statusPagamento: 'Pago',
+          valor: Number(valorFechado),
+          data: data.data,
+          userId: user.uid
+        });
+        registrarHistorico("Lançamento Financeiro Automático", `Gerado via OS Nº ${numero} - R$ ${valorFechado}`);
+      }
     }
 
     try {
@@ -962,6 +1063,9 @@ window.editarOS = function (id) {
   document.getElementById('os-hini').value = o.hini || '';
   document.getElementById('os-hfim').value = o.hfim || '';
   document.getElementById('os-status').value = o.status || 'Em Andamento';
+
+  if (document.getElementById('os-valor')) document.getElementById('os-valor').value = o.valor || '';
+  if (document.getElementById('os-pagamento')) document.getElementById('os-pagamento').value = o.formaPagamento || '';
 
   window.currentOSFoto = o.fotoBase64 || null;
   window.currentOSAssinatura = o.assinaturaBase64 || null;
@@ -1166,7 +1270,7 @@ window.gerarPDF = function () {
 };
 
 // ==========================================
-// SINCRONIZAÇÃO TEMPO REAL COM FIRESTORE (COMPARTILHADO)
+// SINCRONIZAÇÃO TEMPO REAL COM FIRESTORE
 // ==========================================
 function syncData() {
   const user = auth.currentUser;
@@ -1174,37 +1278,31 @@ function syncData() {
 
   limparSessao();
 
-  // OUVINTE: Clientes (Todos da empresa veem)
   unsubClientes = onSnapshot(collection(db, "clientes"), (snapshot) => {
     clientes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
 
-  // OUVINTE: Equipamentos (Todos da empresa veem)
   unsubEquipamentos = onSnapshot(collection(db, "equipamentos"), (snapshot) => {
     equipamentos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
 
-  // OUVINTE: Agenda (Todos da empresa veem)
   unsubAgenda = onSnapshot(collection(db, "agenda"), (snapshot) => {
     agenda = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
 
-  // OUVINTE: OS (Todos da empresa veem)
   unsubOS = onSnapshot(collection(db, "os"), (snapshot) => {
     os = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
 
-  // OUVINTE: Finanças (Todos da empresa veem)
   unsubFinancas = onSnapshot(collection(db, "financas"), (snapshot) => {
     financas = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
   
-  // OUVINTE: Histórico (Todos da empresa veem)
   unsubHistorico = onSnapshot(collection(db, "historico"), (snapshot) => {
     historico = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
