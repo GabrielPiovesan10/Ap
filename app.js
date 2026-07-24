@@ -58,6 +58,9 @@ let unsubOS = null;
 let unsubFinancas = null;
 let unsubHistorico = null;
 
+// Quadro de assinatura local
+let signaturePadLocal = null;
+
 // Função para limpar os dados da memória quando o usuário deslogar
 function limparSessao() {
   if (unsubClientes) unsubClientes();
@@ -181,11 +184,12 @@ window.openModal = function (modalId) {
     document.getElementById('title-modal-agenda').textContent = "Novo Agendamento";
   } else if (modalId === 'modal-os') {
     document.getElementById('os-id').value = '';
-    ['os-numero', 'os-hini', 'os-hfim', 'os-foto', 'os-assinatura', 'os-data', 'os-operador'].forEach(id => document.getElementById(id).value = '');
+    ['os-numero', 'os-hini', 'os-hfim', 'os-foto', 'os-data', 'os-operador'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('os-status').value = 'Em Andamento';
     document.getElementById('title-modal-os').textContent = "Nova Ordem de Serviço";
     window.currentOSFoto = null;
     window.currentOSAssinatura = null;
+    if (signaturePadLocal) signaturePadLocal.clear();
   } else if (modalId === 'modal-fin') {
     document.getElementById('fin-id').value = '';
     ['fin-desc', 'fin-valor', 'fin-data'].forEach(id => document.getElementById(id).value = '');
@@ -431,6 +435,7 @@ function renderOS() {
           <td>
             <div class="td-actions">
               <button class="btn btn-primary" style="padding:4px 8px;font-size:0.8rem;" onclick="editarOS('${o.id}')">Editar</button>
+              <button class="btn" style="padding:4px 8px;font-size:0.8rem;background:#10b981;color:white;border:none;" onclick="solicitarAssinaturaRemota('${o.id}')" title="Enviar para o Cliente"><i class="ph ph-whatsapp-logo"></i></button>
               <button class="btn btn-danger" style="padding:4px 8px;font-size:0.8rem;background:var(--danger-color);color:white;border:none;" onclick="removerOS('${o.id}')">Remover</button>
             </div>
           </td>
@@ -832,8 +837,55 @@ window.removerAgenda = async function (id) {
 };
 
 // ==========================================
-// CRUD - ORDENS DE SERVIÇO 
+// CRUD E ASSINATURAS - ORDENS DE SERVIÇO 
 // ==========================================
+
+document.addEventListener('DOMContentLoaded', () => {
+  const canvasLocal = document.getElementById('canvas-assinatura-local');
+  if (canvasLocal) {
+    signaturePadLocal = new SignaturePad(canvasLocal, { backgroundColor: 'rgb(255, 255, 255)' });
+    function resizeCanvasLocal() {
+      const ratio = Math.max(window.devicePixelRatio || 1, 1);
+      canvasLocal.width = canvasLocal.offsetWidth * ratio;
+      canvasLocal.height = canvasLocal.offsetHeight * ratio;
+      canvasLocal.getContext("2d").scale(ratio, ratio);
+      signaturePadLocal.clear();
+    }
+    window.addEventListener("resize", resizeCanvasLocal);
+    
+    // Dispara o resize quando o modal da OS termina de abrir
+    const modalOsEl = document.getElementById('modal-os');
+    if(modalOsEl) {
+      modalOsEl.addEventListener('transitionend', resizeCanvasLocal);
+    }
+  }
+
+  const btnLimparLocal = document.getElementById('btn-limpar-assinatura-local');
+  if (btnLimparLocal && signaturePadLocal) {
+    btnLimparLocal.addEventListener('click', () => signaturePadLocal.clear());
+  }
+});
+
+// Ação do Botão WhatsApp (Assinatura Remota)
+window.solicitarAssinaturaRemota = function(osId) {
+  const o = os.find(x => x.id === osId);
+  if(!o) return;
+  const c = clientes.find(x => x.id === o.clienteId);
+  
+  // Pega o endereço base do site para criar o link (ajusta caso esteja em subpasta)
+  const urlBase = window.location.href.split('index.html')[0].replace(/\/$/, "");
+  const link = `${urlBase}/assinar.html?id=${osId}`;
+  
+  let texto = `Olá, aqui é da *Bianchin Escavações*.\n\nSua Ordem de Serviço (Nº ${o.numero}) está pronta para aprovação.\n\nPor favor, clique no link abaixo para assinar na tela do seu celular:\n${link}`;
+  
+  const whatsLimpo = (c && c.whats) ? c.whats.replace(/\D/g, '') : '';
+  if(whatsLimpo) {
+    window.open(`https://wa.me/55${whatsLimpo}?text=${encodeURIComponent(texto)}`, '_blank');
+  } else {
+    customAlert("O cliente selecionado não tem WhatsApp cadastrado. O Link da OS é: \n" + link);
+  }
+};
+
 window.salvarOS = async function () {
   const id = document.getElementById('os-id').value;
   const numero = document.getElementById('os-numero').value;
@@ -848,36 +900,39 @@ window.salvarOS = async function () {
   if (!numero || !clienteId || !equipId) { customAlert("Preencha Nº OS, Cliente e Equipamento!"); return; }
 
   const fotoFile = document.getElementById('os-foto').files[0];
-  const assFile = document.getElementById('os-assinatura').files[0];
+
+  // Captura assinatura desenhada na hora (se tiver)
+  let assB64 = window.currentOSAssinatura; 
+  if (signaturePadLocal && !signaturePadLocal.isEmpty()) {
+    assB64 = signaturePadLocal.toDataURL('image/png');
+  }
 
   compressImage(fotoFile, async (fotoB64) => {
-    compressImage(assFile, async (assB64) => {
+    const data = {
+      numero, clienteId, equipId, hini, hfim, status,
+      data: dataLanc, operador,
+      fotoBase64: fotoB64 || window.currentOSFoto || null,
+      assinaturaBase64: assB64 || null,
+      userId: auth.currentUser.uid
+    };
 
-      const data = {
-        numero, clienteId, equipId, hini, hfim, status,
-        data: dataLanc, operador,
-        fotoBase64: fotoB64 || window.currentOSFoto || null,
-        assinaturaBase64: assB64 || window.currentOSAssinatura || null,
-        userId: auth.currentUser.uid
-      };
+    if (id) {
+      await updateDoc(doc(db, "os", id), data);
+      registrarHistorico("Editou OS", `OS Nº ${numero} - Status: ${status}`, data.fotoBase64 || data.assinaturaBase64);
+    } else {
+      await addDoc(collection(db, "os"), data);
+      registrarHistorico("Nova OS", `OS Nº ${numero} - Status: ${status}`, data.fotoBase64 || data.assinaturaBase64);
+    }
 
-      if (id) {
-        await updateDoc(doc(db, "os", id), data);
-        registrarHistorico("Editou OS", `OS Nº ${numero} - Status: ${status}`, data.fotoBase64 || data.assinaturaBase64);
-      } else {
-        await addDoc(collection(db, "os"), data);
-        registrarHistorico("Nova OS", `OS Nº ${numero} - Status: ${status}`, data.fotoBase64 || data.assinaturaBase64);
-      }
+    try {
+      const novoStatusEquip = (status === 'Finalizada') ? 'Operacional' : 'Alugado';
+      await updateDoc(doc(db, "equipamentos", equipId), { status: novoStatusEquip });
+    } catch (err) {
+      console.error("Erro ao atualizar o equipamento:", err);
+    }
 
-      try {
-        const novoStatusEquip = (status === 'Finalizada') ? 'Operacional' : 'Alugado';
-        await updateDoc(doc(db, "equipamentos", equipId), { status: novoStatusEquip });
-      } catch (err) {
-        console.error("Erro ao atualizar o equipamento:", err);
-      }
-
-      closeModal('modal-os');
-    });
+    closeModal('modal-os');
+    if (signaturePadLocal) signaturePadLocal.clear();
   });
 };
 
@@ -896,6 +951,8 @@ window.editarOS = function (id) {
 
   window.currentOSFoto = o.fotoBase64 || null;
   window.currentOSAssinatura = o.assinaturaBase64 || null;
+  
+  if (signaturePadLocal) signaturePadLocal.clear();
 
   document.getElementById('title-modal-os').textContent = "Editar OS";
   document.getElementById('modal-os').classList.add('active');
