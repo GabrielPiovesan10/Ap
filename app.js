@@ -477,7 +477,12 @@ function renderOS() {
   const tbody = document.getElementById('tbody-os');
   if (tbody) {
     tbody.innerHTML = '';
-    os.forEach((o) => {
+    
+    // ORDENAÇÃO: Pega as OS e organiza do maior número (mais nova) para o menor
+    const osOrdenadas = [...os].sort((a, b) => Number(b.numero) - Number(a.numero));
+
+    // Agora desenhamos a tabela usando o array ordenado
+    osOrdenadas.forEach((o) => {
       const cliName = (clientes.find(c => c.id === o.clienteId) || {}).nome || 'Desconhecido';
       const eqName = (equipamentos.find(e => e.id === o.equipId) || {}).nome || 'Desconhecido';
       tbody.innerHTML += `
@@ -500,6 +505,7 @@ function renderOS() {
     });
   }
 }
+
 
 let chartInstanceSecundario = null;
 function renderFinanceiro() {
@@ -774,28 +780,38 @@ function renderDashboard() {
 // ==========================================
 // CRUD - CLIENTES
 // ==========================================
+let bloqueioSalvarCliente = false;
+
 window.salvarCliente = async function () {
-  const id = document.getElementById('cli-id').value;
-  const nome = document.getElementById('cli-nome').value;
-  const cpf = document.getElementById('cli-cpf').value;
-  const whats = document.getElementById('cli-whats').value;
-  const email = document.getElementById('cli-email').value;
-  const endereco = document.getElementById('cli-endereco').value;
-  const obs = document.getElementById('cli-obs').value;
+  if (bloqueioSalvarCliente) return; // Trava ativada
+  bloqueioSalvarCliente = true;
 
-  if (!nome || !whats) { customAlert("Nome e WhatsApp são obrigatórios!"); return; }
-  
-  const data = { nome, cpf, whats, email, endereco, obs, userId: auth.currentUser.uid };
+  try {
+    const id = document.getElementById('cli-id').value;
+    const nome = document.getElementById('cli-nome').value;
+    const cpf = document.getElementById('cli-cpf').value;
+    const whats = document.getElementById('cli-whats').value;
+    const email = document.getElementById('cli-email').value;
+    const endereco = document.getElementById('cli-endereco').value;
+    const obs = document.getElementById('cli-obs').value;
 
-  if (id) {
-    await updateDoc(doc(db, "clientes", id), data);
-    registrarHistorico("Editou Cliente", `Nome: ${nome}`);
-  } else {
-    await addDoc(collection(db, "clientes"), data);
-    registrarHistorico("Cadastrou Cliente", `Nome: ${nome}`);
+    if (!nome || !whats) { customAlert("Nome e WhatsApp são obrigatórios!"); return; }
+    
+    const data = { nome, cpf, whats, email, endereco, obs, userId: auth.currentUser.uid };
+
+    if (id) {
+      await updateDoc(doc(db, "clientes", id), data);
+      registrarHistorico("Editou Cliente", `Nome: ${nome}`);
+    } else {
+      await addDoc(collection(db, "clientes"), data);
+      registrarHistorico("Cadastrou Cliente", `Nome: ${nome}`);
+    }
+    closeModal('modal-cliente');
+  } finally {
+    bloqueioSalvarCliente = false; // Libera a trava no final
   }
-  closeModal('modal-cliente');
 };
+
 
 window.editarCliente = function (id) {
   const c = clientes.find(x => x.id === id);
@@ -824,13 +840,16 @@ window.removerCliente = async function (id) {
 // ==========================================
 // CRUD - EQUIPAMENTOS
 // ==========================================
+let bloqueioSalvarEquip = false;
+
 window.salvarEquip = async function () {
+  if (bloqueioSalvarEquip) return; // Trava ativada
+  bloqueioSalvarEquip = true;
+
   const id = document.getElementById('eq-id').value;
   const nome = document.getElementById('eq-nome').value;
-
   const selectCat = document.getElementById('eq-categoria');
   const categoria = selectCat ? selectCat.value : 'Equipamentos';
-
   const horimetro = document.getElementById('eq-hori').value;
   const status = document.getElementById('eq-status').value;
   const oleo = document.getElementById('eq-oleo').value;
@@ -839,34 +858,42 @@ window.salvarEquip = async function () {
   const seguro = document.getElementById('eq-seguro').value;
   const custos = document.getElementById('eq-custos').value;
 
-  if (!nome) { customAlert("Nome do equipamento é obrigatório!"); return; }
+  if (!nome) { 
+    customAlert("Nome do equipamento é obrigatório!"); 
+    bloqueioSalvarEquip = false; // Libera caso pare aqui
+    return; 
+  }
 
   const inputImagem = document.getElementById('eq-imagem');
   const fotoFile = inputImagem ? inputImagem.files[0] : null;
 
   compressImage(fotoFile, async (fotoB64) => {
-    const data = {
-      nome,
-      categoria,
-      horimetro: horimetro || '0',
-      status,
-      oleo,
-      manutencao,
-      documentacao: docum,
-      seguro,
-      custosAcumulados: Number(custos || 0),
-      fotoBase64: fotoB64 || window.currentEquipFoto || null,
-      userId: auth.currentUser.uid
-    };
+    try {
+      const data = {
+        nome,
+        categoria,
+        horimetro: horimetro || '0',
+        status,
+        oleo,
+        manutencao,
+        documentacao: docum,
+        seguro,
+        custosAcumulados: Number(custos || 0),
+        fotoBase64: fotoB64 || window.currentEquipFoto || null,
+        userId: auth.currentUser.uid
+      };
 
-    if (id) {
-      await updateDoc(doc(db, "equipamentos", id), data);
-      registrarHistorico("Editou Equipamento", `Equipamento: ${nome}`);
-    } else {
-      await addDoc(collection(db, "equipamentos"), data);
-      registrarHistorico("Cadastrou Equipamento", `Equipamento: ${nome}`);
+      if (id) {
+        await updateDoc(doc(db, "equipamentos", id), data);
+        registrarHistorico("Editou Equipamento", `Equipamento: ${nome}`);
+      } else {
+        await addDoc(collection(db, "equipamentos"), data);
+        registrarHistorico("Cadastrou Equipamento", `Equipamento: ${nome}`);
+      }
+      closeModal('modal-equip');
+    } finally {
+      bloqueioSalvarEquip = false; // Libera a trava no final
     }
-    closeModal('modal-equip');
   });
 };
 
@@ -906,27 +933,37 @@ window.removerEquip = async function (id) {
 // ==========================================
 // CRUD - AGENDA
 // ==========================================
+let bloqueioSalvarAgenda = false;
+
 window.salvarAgenda = async function () {
-  const id = document.getElementById('ag-id').value;
-  const clienteId = document.getElementById('ag-cliente').value;
-  const equipId = document.getElementById('ag-equip').value;
-  const dataPrev = document.getElementById('ag-data').value;
-  const horaPrev = document.getElementById('ag-hora').value;
-  const status = document.getElementById('ag-status').value;
-
-  if (!clienteId || !equipId || !dataPrev) { customAlert("Preencha os campos obrigatórios!"); return; }
+  if (bloqueioSalvarAgenda) return; // Trava ativada
+  bloqueioSalvarAgenda = true;
   
-  const data = { clienteId, equipId, data: dataPrev, hora: horaPrev, status, userId: auth.currentUser.uid };
+  try {
+    const id = document.getElementById('ag-id').value;
+    const clienteId = document.getElementById('ag-cliente').value;
+    const equipId = document.getElementById('ag-equip').value;
+    const dataPrev = document.getElementById('ag-data').value;
+    const horaPrev = document.getElementById('ag-hora').value;
+    const status = document.getElementById('ag-status').value;
 
-  if (id) {
-    await updateDoc(doc(db, "agenda", id), data);
-    registrarHistorico("Editou Agenda", `Data: ${formatDate(dataPrev)} - Status: ${status}`);
-  } else {
-    await addDoc(collection(db, "agenda"), data);
-    registrarHistorico("Novo Agendamento", `Data: ${formatDate(dataPrev)} - Status: ${status}`);
+    if (!clienteId || !equipId || !dataPrev) { customAlert("Preencha os campos obrigatórios!"); return; }
+    
+    const data = { clienteId, equipId, data: dataPrev, hora: horaPrev, status, userId: auth.currentUser.uid };
+
+    if (id) {
+      await updateDoc(doc(db, "agenda", id), data);
+      registrarHistorico("Editou Agenda", `Data: ${formatDate(dataPrev)} - Status: ${status}`);
+    } else {
+      await addDoc(collection(db, "agenda"), data);
+      registrarHistorico("Novo Agendamento", `Data: ${formatDate(dataPrev)} - Status: ${status}`);
+    }
+    closeModal('modal-agenda');
+  } finally {
+    bloqueioSalvarAgenda = false; // Libera a trava no final
   }
-  closeModal('modal-agenda');
 };
+
 
 window.editarAgenda = function (id) {
   const a = agenda.find(x => x.id === id);
@@ -1004,8 +1041,14 @@ window.solicitarAssinaturaRemota = function(osId) {
 window.abrirModalOS = function() {
     window.openModal('modal-os');
 };
+// Variável global de trava para evitar cliques repetidos
+let bloqueioSalvarOS = false;
 
 window.salvarOS = async function () {
+  // SE A TRAVA ESTIVER ATIVA, IGNORA O CLIQUE
+  if (bloqueioSalvarOS) return; 
+  bloqueioSalvarOS = true; // Ativa a trava no primeiro clique
+
   const id = document.getElementById('os-id').value;
   const numero = document.getElementById('os-numero').value;
   const clientId = document.getElementById('os-cliente').value;
@@ -1101,8 +1144,12 @@ window.salvarOS = async function () {
   } catch (err) {
     console.error("Erro ao salvar OS:", err);
     customAlert("Erro ao salvar a Ordem de Serviço. Verifique o console.");
+  } finally {
+    // LIBERA A TRAVA AO FINALIZAR (Tanto se deu sucesso quanto erro)
+    bloqueioSalvarOS = false;
   }
 };
+
 
 window.editarOS = function (id) {
   const o = os.find(x => x.id === id);
@@ -1150,34 +1197,43 @@ window.removerOS = async function (id) {
 // ==========================================
 // CRUD - FINANCEIRO
 // ==========================================
+let bloqueioSalvarFin = false;
+
 window.salvarFin = async function () {
-  const id = document.getElementById('fin-id').value;
-  const desc = document.getElementById('fin-desc').value;
-  const tipo = document.getElementById('fin-tipo').value;
-  const valor = document.getElementById('fin-valor').value;
-  const cat = document.getElementById('fin-cat').value;
-  const statusPayment = document.getElementById('fin-status').value;
-  const dataLanc = document.getElementById('fin-data').value;
+  if (bloqueioSalvarFin) return; // Trava ativada
+  bloqueioSalvarFin = true;
+  
+  try {
+    const id = document.getElementById('fin-id').value;
+    const desc = document.getElementById('fin-desc').value;
+    const tipo = document.getElementById('fin-tipo').value;
+    const valor = document.getElementById('fin-valor').value;
+    const cat = document.getElementById('fin-cat').value;
+    const statusPayment = document.getElementById('fin-status').value;
+    const dataLanc = document.getElementById('fin-data').value;
 
-  if (!desc || !valor || !dataLanc) { customAlert("Preencha todos os campos!"); return; }
-  const data = {
-    desc,
-    tipo,
-    categoria: cat,
-    statusPagamento: statusPayment,
-    valor: Number(valor),
-    data: dataLanc,
-    userId: auth.currentUser.uid
-  };
+    if (!desc || !valor || !dataLanc) { customAlert("Preencha todos os campos!"); return; }
+    const data = {
+      desc,
+      tipo,
+      categoria: cat,
+      statusPagamento: statusPayment,
+      valor: Number(valor),
+      data: dataLanc,
+      userId: auth.currentUser.uid
+    };
 
-  if (id) {
-    await updateDoc(doc(db, "financas", id), data);
-    registrarHistorico("Editou Lançamento Financeiro", `R$ ${valor} - ${desc}`);
-  } else {
-    await addDoc(collection(db, "financas"), data);
-    registrarHistorico("Novo Lançamento Financeiro", `R$ ${valor} - ${desc}`);
+    if (id) {
+      await updateDoc(doc(db, "financas", id), data);
+      registrarHistorico("Editou Lançamento Financeiro", `R$ ${valor} - ${desc}`);
+    } else {
+      await addDoc(collection(db, "financas"), data);
+      registrarHistorico("Novo Lançamento Financeiro", `R$ ${valor} - ${desc}`);
+    }
+    closeModal('modal-fin');
+  } finally {
+    bloqueioSalvarFin = false; // Libera a trava no final
   }
-  closeModal('modal-fin');
 };
 
 window.editarFin = function (id) {
