@@ -996,106 +996,85 @@ window.abrirModalOS = function() {
 window.salvarOS = async function () {
   const id = document.getElementById('os-id').value;
   const numero = document.getElementById('os-numero').value;
-  const clienteId = document.getElementById('os-cliente').value;
+  const clientId = document.getElementById('os-cliente').value;
   const equipId = document.getElementById('os-equip').value;
   const hini = document.getElementById('os-hini').value;
   const hfim = document.getElementById('os-hfim').value;
   const status = document.getElementById('os-status').value;
-  const dataLanc = document.getElementById('os-data').value;
-  
+  const dataLanc = document.getElementById('os-datalanc').value;
+
   let operador = document.getElementById('os-operador').value;
   const user = auth.currentUser;
-  if (user && user.email === 'Igornevesrc@gmail.com') {
+  if (user && user.email === 'igornevesrc@gmail.com') {
     operador = 'Igor';
   }
 
-  if (!numero || !clienteId || !equipId) { customAlert("Preencha Nº OS, Cliente e Equipamento!"); return; }
+  const clienteObj = clientes.find(c => c.id === clientId);
+  const equipObj = equipamentos.find(e => e.id === equipId);
 
-  const fotoFile = document.getElementById('os-foto').files[0];
+  const data = {
+    numero,
+    clientId,
+    clienteName: clienteObj ? clienteObj.nome : 'Cliente',
+    equipId,
+    equipNome: equipObj ? equipObj.nome : 'Equipamento',
+    operador: operador || 'Geral',
+    hini,
+    hfim,
+    status,
+    dataData: dataLanc || new Date().toISOString(),
+    valorFechado: Number(document.getElementById('os-valor-fechado').value) || 0,
+    formaPagamento: document.getElementById('os-forma-pagamento').value || '',
+    vencimento: document.getElementById('os-vencimento').value || '',
+    fotoBase64: window.currentOSFoto || null,
+    assinaturaBase64: assPad64 || null,
+    userId: user.uid
+  };
 
-  let assB64 = window.currentOSAssinatura; 
-  if (signaturePadLocal && !signaturePadLocal.isEmpty()) {
-    assB64 = signaturePadLocal.toDataURL('image/png');
+  let osIdFinal = id;
+
+  if (id) {
+    await updateDoc(doc(db, "os", id), data);
+    registrarHistorico("Editou OS", `OS Nº ${numero} - Status: ${status}`);
+  } else {
+    const docRef = await addDoc(collection(db, "os"), data);
+    osIdFinal = docRef.id;
+    registrarHistorico("Nova OS", `OS Nº ${numero} - Status: ${status}`);
   }
 
-  // MUDANÇA: Puxando o novo campo de vencimento e salvando na var
-  const valorFechado = document.getElementById('os-valor') ? document.getElementById('os-valor').value : '';
-  const formaPagto = document.getElementById('os-pagamento') ? document.getElementById('os-pagamento').value : '';
-  const vencimentoOS = document.getElementById('os-vencimento') ? document.getElementById('os-vencimento').value : '';
+  const finExistente = financas.find(f => f.osId === osIdFinal);
 
-  compressImage(fotoFile, async (fotoB64) => {
-        const clienteObj = clientes.find(c => c.id === clienteId);
-    const equipObj = equipamentos.find(e => e.id === equipId); // Pega o objeto do equipamento
+  const dadosFinanc = {
+    desc: `Locação OS nº ${numero} - ${clienteObj ? clienteObj.nome : 'Cliente'} (${document.getElementById('os-forma-pagamento').value || 'Pix'})`,
+    tipo: 'Receita',
+    categoria: 'Serviço',
+    statusPagamento: 'Pago',
+    valor: Number(document.getElementById('os-valor-fechado').value) || 0,
+    data: data.dataData,
+    osId: osIdFinal,
+    userId: user.uid
+  };
 
-    const data = {
-      numero, 
-      clienteId, 
-      clienteNome: clienteObj ? clienteObj.nome : '', // Salva o nome do cliente direto
-      equipId, 
-      equipNome: equipObj ? equipObj.nome : '',       // Salva o nome do equipamento direto na OS!
-      operador: operador || 'Geral',                  // Salva o operador direto na OS!
-      hini, 
-      hfim, 
-      status,
-      data: dataLanc || new Date().toISOString().split('T')[0],
-      valor: valorFechado ? Number(valorFechado) : 0,
-      formaPagamento: formaPagto || '',
-      vencimento: vencimentoOS || '', 
-      fotoBase64: fotoB64 || window.currentOSFoto || null,
-      assinaturaBase64: assB64 || null,
-      userId: user.uid
-    };
+  if (finExistente) {
+    await updateDoc(doc(db, "financas", finExistente.id), dadosFinanc);
+    registrarHistorico("Atualização Financeira Automática", `Atualizado via OS Nº ${numero} - R$ ${dadosFinanc.valor}`);
+  } else {
+    await addDoc(collection(db, "financas"), dadosFinanc);
+    registrarHistorico("Lançamento Financeiro Automático", `Gerado via OS Nº ${numero} - R$ ${dadosFinanc.valor}`);
+  }
 
+  try {
+    const novoStatusEquip = (status === 'Finalizada') ? 'Operacional' : 'Alugado';
+    await updateDoc(doc(db, "equipamentos", equipId), { status: novoStatusEquip });
+  } catch (err) {
+    console.error("Erro ao atualizar o equipamento:", err);
+  }
 
-    let osIdFinal = id;
+  closeModal('modal-os');
 
-    if (id) {
-      await updateDoc(doc(db, "os", id), data);
-      registrarHistorico("Editou OS", `OS Nº ${numero} - Status: ${status}`);
-    } else {
-      const docRef = await addDoc(collection(db, "os"), data);
-      osIdFinal = docRef.id;
-      registrarHistorico("Nova OS", `OS Nº ${numero} - Status: ${status}`);
-    }
-
-    // Integração financeira unificada (funciona tanto para criação quanto para edição)
-    if (isAdminUser(user.email) && valorFechado && Number(valorFechado) > 0) {
-      const clienteObj = clientes.find(c => c.id === clienteId);
-      const nomeCliente = clienteObj ? clienteObj.nome : 'Cliente';
-      
-      const dadosFinanc = {
-        desc: `Locação OS nº ${numero} - ${nomeCliente} (${formaPagto || 'Pix'})`,
-        tipo: 'Receita',
-        categoria: 'Serviço',
-        statusPagamento: 'Pago',
-        valor: Number(valorFechado),
-        data: data.data,
-        osId: osIdFinal,
-        userId: user.uid
-      };
-
-      // Verifica se já existe um lançamento financeiro atrelado a esta OS
-      const finExistente = financas.find(f => f.osId === osIdFinal);
-
-      if (finExistente) {
-        await updateDoc(doc(db, "financas", finExistente.id), dadosFinanc);
-        registrarHistorico("Atualização Financeira Automática", `Atualizado via OS Nº ${numero} - R$ ${valorFechado}`);
-      } else {
-        await addDoc(collection(db, "financas"), dadosFinanc);
-        registrarHistorico("Lançamento Financeiro Automático", `Gerado via OS Nº ${numero} - R$ ${valorFechado}`);
-      }
-    }
-
-    try {
-      const novoStatusEquip = (status === 'Finalizada') ? 'Operacional' : 'Alugado';
-      await updateDoc(doc(db, "equipamentos", equipId), { status: novoStatusEquip });
-    } catch (err) {
-      console.error("Erro ao atualizar o equipamento:", err);
-    }
-
-    closeModal('modal-os');
-    if (signaturePadLocal) signaturePadLocal.clear();
-  });
+  if (signaturePadLocal) {
+    signaturePadLocal.clear();
+  }
 };
 
 window.editarOS = function (id) {
