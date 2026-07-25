@@ -1079,7 +1079,8 @@ window.abrirModalOS = function() {
     window.openModal('modal-os');
 };
 
-window.salvarOS = async function () {
+window.salvarOS = async function (event) {
+  if (event) event.preventDefault(); // Impede o comportamento padrão do formulário
   if (window.isSaving) return;
   window.isSaving = true;
 
@@ -1169,8 +1170,11 @@ window.salvarOS = async function () {
       await updateDoc(doc(db, "equipamentos", equipId), { status: novoStatusEquip });
     }
 
-    // FECHA O MODAL AUTOMATICAMENTE AO SALVAR COM SUCESSO
-    closeModal('modal-os');
+    // FORÇA O FECHAMENTO DO MODAL IMEDIATAMENTE NA MARRA
+    const modalOS = document.getElementById('modal-os');
+    if (modalOS) {
+      modalOS.classList.remove('active');
+    }
     
     if (signaturePadLocal) {
       signaturePadLocal.clear();
