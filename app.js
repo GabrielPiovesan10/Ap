@@ -483,8 +483,12 @@ function renderOS() {
   if (tbody) {
     tbody.innerHTML = '';
     
-    // ORDENAÇÃO: Organiza do maior número (mais nova) para o menor
-    const osOrdenadas = [...os].sort((a, b) => Number(b.numero) - Number(a.numero));
+    // ORDENAÇÃO BLINDADA: Transforma número em valor real para não quebrar.
+    const osOrdenadas = [...os].sort((a, b) => {
+      const numA = parseInt(a.numero, 10) || 0;
+      const numB = parseInt(b.numero, 10) || 0;
+      return numB - numA; // O maior (mais novo) fica no topo
+    });
 
     osOrdenadas.forEach((o) => {
       const cliName = (clientes.find(c => c.id === o.clienteId) || {}).nome || 'Desconhecido';
@@ -796,7 +800,11 @@ window.salvarCliente = async function () {
     const endereco = document.getElementById('cli-endereco').value;
     const obs = document.getElementById('cli-obs').value;
 
-    if (!nome || !whats) { customAlert("Nome e WhatsApp são obrigatórios!"); return; }
+    if (!nome || !whats) { 
+      customAlert("Nome e WhatsApp são obrigatórios!"); 
+      window.isSaving = false; 
+      return; 
+    }
     
     const data = { nome, cpf, whats, email, endereco, obs, userId: auth.currentUser.uid };
 
@@ -844,57 +852,57 @@ window.salvarEquip = async function () {
   if (window.isSaving) return;
   window.isSaving = true;
 
-  try {
-    const id = document.getElementById('eq-id').value;
-    const nome = document.getElementById('eq-nome').value;
+  const id = document.getElementById('eq-id').value;
+  const nome = document.getElementById('eq-nome').value;
 
-    const selectCat = document.getElementById('eq-categoria');
-    const categoria = selectCat ? selectCat.value : 'Equipamentos';
+  const selectCat = document.getElementById('eq-categoria');
+  const categoria = selectCat ? selectCat.value : 'Equipamentos';
 
-    const horimetro = document.getElementById('eq-hori').value;
-    const status = document.getElementById('eq-status').value;
-    const oleo = document.getElementById('eq-oleo').value;
-    const manutencao = document.getElementById('eq-manut').value;
-    const docum = document.getElementById('eq-doc').value;
-    const seguro = document.getElementById('eq-seguro').value;
-    const custos = document.getElementById('eq-custos').value;
+  const horimetro = document.getElementById('eq-hori').value;
+  const status = document.getElementById('eq-status').value;
+  const oleo = document.getElementById('eq-oleo').value;
+  const manutencao = document.getElementById('eq-manut').value;
+  const docum = document.getElementById('eq-doc').value;
+  const seguro = document.getElementById('eq-seguro').value;
+  const custos = document.getElementById('eq-custos').value;
 
-    if (!nome) { customAlert("Nome do equipamento é obrigatório!"); return; }
-
-    const inputImagem = document.getElementById('eq-imagem');
-    const fotoFile = inputImagem ? inputImagem.files[0] : null;
-
-    compressImage(fotoFile, async (fotoB64) => {
-      try {
-        const data = {
-          nome,
-          categoria,
-          horimetro: horimetro || '0',
-          status,
-          oleo,
-          manutencao,
-          documentacao: docum,
-          seguro,
-          custosAcumulados: Number(custos || 0),
-          fotoBase64: fotoB64 || window.currentEquipFoto || null,
-          userId: auth.currentUser.uid
-        };
-
-        if (id) {
-          await updateDoc(doc(db, "equipamentos", id), data);
-          registrarHistorico("Editou Equipamento", `Equipamento: ${nome}`);
-        } else {
-          await addDoc(collection(db, "equipamentos"), data);
-          registrarHistorico("Cadastrou Equipamento", `Equipamento: ${nome}`);
-        }
-        closeModal('modal-equip');
-      } finally {
-        window.isSaving = false;
-      }
-    });
-  } catch(e) {
-      window.isSaving = false;
+  if (!nome) { 
+    customAlert("Nome do equipamento é obrigatório!"); 
+    window.isSaving = false; 
+    return; 
   }
+
+  const inputImagem = document.getElementById('eq-imagem');
+  const fotoFile = inputImagem ? inputImagem.files[0] : null;
+
+  compressImage(fotoFile, async (fotoB64) => {
+    try {
+      const data = {
+        nome,
+        categoria,
+        horimetro: horimetro || '0',
+        status,
+        oleo,
+        manutencao,
+        documentacao: docum,
+        seguro,
+        custosAcumulados: Number(custos || 0),
+        fotoBase64: fotoB64 || window.currentEquipFoto || null,
+        userId: auth.currentUser.uid
+      };
+
+      if (id) {
+        await updateDoc(doc(db, "equipamentos", id), data);
+        registrarHistorico("Editou Equipamento", `Equipamento: ${nome}`);
+      } else {
+        await addDoc(collection(db, "equipamentos"), data);
+        registrarHistorico("Cadastrou Equipamento", `Equipamento: ${nome}`);
+      }
+      closeModal('modal-equip');
+    } finally {
+      window.isSaving = false;
+    }
+  });
 };
 
 window.editarEquip = function (id) {
@@ -945,7 +953,11 @@ window.salvarAgenda = async function () {
     const horaPrev = document.getElementById('ag-hora').value;
     const status = document.getElementById('ag-status').value;
 
-    if (!clienteId || !equipId || !dataPrev) { customAlert("Preencha os campos obrigatórios!"); return; }
+    if (!clienteId || !equipId || !dataPrev) { 
+      customAlert("Preencha os campos obrigatórios!"); 
+      window.isSaving = false; 
+      return; 
+    }
     
     const data = { clienteId, equipId, data: dataPrev, hora: horaPrev, status, userId: auth.currentUser.uid };
 
@@ -1040,15 +1052,15 @@ window.abrirModalOS = function() {
 };
 
 window.salvarOS = async function () {
-  if (window.isSaving) return; // TRAVA BLOQUEIA CLIQUE DUPLO AQUI
+  if (window.isSaving) return;
   window.isSaving = true;
 
   try {
     const id = document.getElementById('os-id').value;
     const numero = document.getElementById('os-numero').value;
     
-    // CORRIGIDO PARA `clienteId` - Era isso que dava "Desconhecido"
-    const clienteId = document.getElementById('os-cliente').value; 
+    // ATENÇÃO: Pegando o cliente corretamente e salvando a propriedade como clienteId
+    const clienteId = document.getElementById('os-cliente').value;
     
     const equipId = document.getElementById('os-equip').value;
     const hini = document.getElementById('os-hini').value;
@@ -1060,7 +1072,7 @@ window.salvarOS = async function () {
 
     let operador = document.getElementById('os-operador').value;
     const user = auth.currentUser;
-    if (user && user.email === 'igornevesrc@gmail.com') { // Corrigido para minúsculas
+    if (user && user.email === 'Igornevesrc@gmail.com') {
       operador = 'Igor';
     }
 
@@ -1079,7 +1091,7 @@ window.salvarOS = async function () {
 
     const data = {
       numero,
-      clienteId: clienteId, // CORRIGIDO: Passando como clienteId igual ao banco
+      clienteId: clienteId, // << ISSO AQUI FOI CORRIGIDO PARA PARAR DE DAR "DESCONHECIDO"
       clienteName: clienteObj ? clienteObj.nome : 'Cliente',
       equipId,
       equipNome: equipObj ? equipObj.nome : 'Equipamento',
@@ -1142,7 +1154,7 @@ window.salvarOS = async function () {
     console.error("Erro ao salvar OS:", err);
     customAlert("Erro ao salvar a Ordem de Serviço. Verifique o console.");
   } finally {
-    window.isSaving = false; // DESTRANCA O BOTÃO AO TERMINAR
+    window.isSaving = false;
   }
 };
 
@@ -1161,7 +1173,7 @@ window.editarOS = function (id) {
 
   if (document.getElementById('os-valor')) document.getElementById('os-valor').value = o.valor || '';
   if (document.getElementById('os-pagamento')) document.getElementById('os-pagamento').value = o.formaPagamento || '';
-  if (document.getElementById('os-vencimento')) document.getElementById('os-vencimento').value = o.vencimento || ''; // MUDANÇA: Puxando o vencimento do Banco
+  if (document.getElementById('os-vencimento')) document.getElementById('os-vencimento').value = o.vencimento || ''; 
 
   window.currentOSFoto = o.fotoBase64 || null;
   window.currentOSAssinatura = o.assinaturaBase64 || null;
@@ -1205,7 +1217,11 @@ window.salvarFin = async function () {
     const statusPayment = document.getElementById('fin-status').value;
     const dataLanc = document.getElementById('fin-data').value;
 
-    if (!desc || !valor || !dataLanc) { customAlert("Preencha todos os campos!"); return; }
+    if (!desc || !valor || !dataLanc) { 
+      customAlert("Preencha todos os campos!"); 
+      window.isSaving = false; 
+      return; 
+    }
     const data = {
       desc,
       tipo,
