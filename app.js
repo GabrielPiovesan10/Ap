@@ -1115,7 +1115,9 @@ window.salvarOS = async function () {
     }
 
     // =========================================================================
-    // REGRA FINANCEIRA: Se OS "Em Andamento" = Pendente | Se "Finalizada" = Pago
+    // REGRA FINANCEIRA BLINDADA: 
+    // Em Andamento = 'Pendente' (Contas a Receber)
+    // Finalizada   = 'Pago' (Fluxo de Caixa)
     // =========================================================================
     const statusPagamentoIdeal = (status === 'Finalizada') ? 'Pago' : 'Pendente';
 
@@ -1124,7 +1126,7 @@ window.salvarOS = async function () {
       desc: `Locação OS nº ${numero} - ${clienteObj ? clienteObj.nome : 'Cliente'} (${formaPagamento || 'Pix'})`,
       tipo: 'Receita',
       categoria: 'Serviço',
-      statusPagamento: statusPagamentoIdeal, // Atualiza dinamicamente baseado no status da OS
+      statusPagamento: statusPagamentoIdeal, // Respeita rigorosamente se está em andamento ou finalizada
       valor: valorFechado,
       data: dataLanc,
       osId: osIdFinal,
