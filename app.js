@@ -988,76 +988,29 @@ window.abrirModalOS = function() {
 };
 
 window.salvarOS = async function () {
-  try {
-    const id = document.getElementById("os-id")?.value;
-    const cliente = document.getElementById("os-cliente")?.value;
-    const equipamento = document.getElementById("os-equipamento")?.value;
-    const status = document.getElementById("os-status")?.value;
-    const valorStr = document.getElementById("os-valor")?.value || "0";
-    const formaPagamento = document.getElementById("os-forma-pagamento")?.value || "A definir";
-    
-    const valor = parseFloat(valorStr.replace(",", ".")) || 0;
-
-    const usuarioAtual = firebase.auth().currentUser;
-    const usuarioEmail = usuarioAtual ? usuarioAtual.email : "Igor";
-    const usuarioNome = usuarioAtual?.displayName || "Igor";
-
-    const osData = {
-      cliente: cliente,
-      equipamento: equipamento,
-      status: status,
-      valor: valor,
-      formaPagamento: formaPagamento,
-      tecnicoResponsavel: usuarioNome,
-      tecnicoEmail: usuarioEmail,
-      atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
-    };
-
-    let osIdFinal = id;
-
-    if (!id) {
-      osData.criadoEm = firebase.firestore.FieldValue.serverTimestamp();
-      osData.criadoPor = usuarioEmail;
-      const docRef = await db.collection("ordens_servico").add(osData);
-      osIdFinal = docRef.id;
-    } else {
-      await db.collection("ordens_servico").doc(id).update(osData);
-    }
-
-    const statusFinalizado = ["Finalizada", "Concluída", "Finalizado"].includes(status);
-
-    if (valor > 0 && statusFinalizado) {
-      const financeiroRef = db.collection("financeiro");
-      const snapshot = await financeiroRef.where("osId", "==", osIdFinal).get();
-
-      const dadosLancamento = {
-        descricao: `Receita OS #${osIdFinal} - ${cliente}`,
-        valor: valor,
-        tipo: "receita",
-        formaPagamento: formaPagamento,
-        osId: osIdFinal,
-        registradoPor: usuarioEmail,
-        data: firebase.firestore.FieldValue.serverTimestamp()
-      };
-
-      if (snapshot.empty) {
-        await financeiroRef.add(dadosLancamento);
-        console.log("Lançamento financeiro criado com sucesso!");
-      } else {
-        const lancamentoId = snapshot.docs[0].id;
-        await financeiroRef.doc(lancamentoId).update(dadosLancamento);
-        console.log("Lançamento financeiro atualizado com sucesso!");
-      }
-    }
-
-    alert("Ordem de serviço salva com sucesso!");
-    if (typeof fecharModalOS === "function") fecharModalOS();
-
-  } catch (error) {
-    console.error("Erro ao salvar OS:", error);
-    alert("Erro ao salvar a ordem de serviço: " + error.message);
+  const id = document.getElementById('os-id').value;
+  const numero = document.getElementById('os-numero').value;
+  const clienteId = document.getElementById('os-cliente').value;
+  const equipId = document.getElementById('os-equip').value;
+  const hini = document.getElementById('os-hini').value;
+  const hfim = document.getElementById('os-hfim').value;
+  const status = document.getElementById('os-status').value;
+  const dataLanc = document.getElementById('os-data').value;
+  
+  let operador = document.getElementById('os-operador').value;
+  const user = auth.currentUser;
+  if (user && user.email === 'Igornevesrc@gmail.com') {
+    operador = 'Igor';
   }
-};
+
+  if (!numero || !clienteId || !equipId) { customAlert("Preencha Nº OS, Cliente e Equipamento!"); return; }
+
+  const fotoFile = document.getElementById('os-foto').files[0];
+
+  let assB64 = window.currentOSAssinatura; 
+  if (signaturePadLocal && !signaturePadLocal.isEmpty()) {
+    assB64 = signaturePadLocal.toDataURL('image/png');
+  }
 
   const valorFechado = document.getElementById('os-valor') ? document.getElementById('os-valor').value : '';
   const formaPagto = document.getElementById('os-pagamento') ? document.getElementById('os-pagamento').value : '';
