@@ -1033,6 +1033,67 @@ window.salvarOS = async function () {
     } else {
       await addDoc(collection(db, "os"), data);
       registrarHistorico("Nova OS", `OS Nº ${numero} - Status: ${status}`);
+    }
+
+    // Lançamento financeiro automático (agora funciona tanto ao criar quanto ao editar)
+    if (valorFechado && Number(valorFechado) > 0) {
+      const clienteObj = clientes.find(c => c.id === clienteId);
+      const nomeCliente = clienteObj ? clienteObj.nome : 'Cliente';
+      
+      await addDoc(collection(db, "financas"), {
+        desc: `Locação OS nº ${numero} - ${nomeCliente} (${formaPagto || 'Pix'})`,
+        tipo: 'Receita',
+        categoria: 'Serviço',
+        statusPagamento: 'Pago',
+        valor: Number(valorFechado),
+        data: data.data,
+        userId: user.uid
+      });
+      registrarHistorico("Lançamento Financeiro Automático", `Gerado via OS Nº ${numero} - R$ ${valorFechado}`);
+    }
+
+    try {
+      const novoStatusEquip = (status === 'Finalizada') ? 'Operacional' : 'Alugado';
+      await updateDoc(doc(db, "equipamentos", equipId), { status: novoStatusEquip });
+    } catch (err) {
+      console.error("Erro ao atualizar o equipamento:", err);
+    }
+
+    closeModal('modal-os');
+    if (signaturePadLocal) signaturePadLocal.clear();
+  });
+};
+
+  if (!numero || !clienteId || !equipId) { customAlert("Preencha Nº OS, Cliente e Equipamento!"); return; }
+
+  const fotoFile = document.getElementById('os-foto').files[0];
+
+  let assB64 = window.currentOSAssinatura; 
+  if (signaturePadLocal && !signaturePadLocal.isEmpty()) {
+    assB64 = signaturePadLocal.toDataURL('image/png');
+  }
+
+  const valorFechado = document.getElementById('os-valor') ? document.getElementById('os-valor').value : '';
+  const formaPagto = document.getElementById('os-pagamento') ? document.getElementById('os-pagamento').value : '';
+
+  compressImage(fotoFile, async (fotoB64) => {
+    const data = {
+      numero, clienteId, equipId, hini, hfim, status,
+      data: dataLanc || new Date().toISOString().split('T')[0],
+      operador: operador || 'Geral',
+      valor: valorFechado ? Number(valorFechado) : 0,
+      formaPagamento: formaPagto || '',
+      fotoBase64: fotoB64 || window.currentOSFoto || null,
+      assinaturaBase64: assB64 || null,
+      userId: user.uid
+    };
+
+    if (id) {
+      await updateDoc(doc(db, "os", id), data);
+      registrarHistorico("Editou OS", `OS Nº ${numero} - Status: ${status}`);
+    } else {
+      await addDoc(collection(db, "os"), data);
+      registrarHistorico("Nova OS", `OS Nº ${numero} - Status: ${status}`);
 
       if (isAdminUser(user.email) && valorFechado && Number(valorFechado) > 0) {
         const clienteObj = clientes.find(c => c.id === clienteId);
