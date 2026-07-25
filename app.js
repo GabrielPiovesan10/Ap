@@ -216,7 +216,9 @@ window.openModal = function (modalId) {
     document.getElementById('title-modal-agenda').textContent = "Novo Agendamento";
   } else if (modalId === 'modal-os') {
     document.getElementById('os-id').value = '';
-    ['os-hini', 'os-hfim', 'os-foto', 'os-data', 'os-operador', 'os-valor', 'os-pagamento'].forEach(id => {
+    
+    // MUDANÇA: Adicionado o os-vencimento na lista de limpeza
+    ['os-hini', 'os-hfim', 'os-foto', 'os-data', 'os-operador', 'os-valor', 'os-pagamento', 'os-vencimento'].forEach(id => {
       const el = document.getElementById(id);
       if(el) el.value = '';
     });
@@ -971,7 +973,11 @@ window.solicitarAssinaturaRemota = function(osId) {
   const c = clientes.find(x => x.id === o.clienteId);
   
   const urlBase = window.location.href.split('index.html')[0].replace(/\/$/, "");
-  const link = `${urlBase}/assinar.html?id=${osId}`;
+  
+  // MUDANÇA: Link gerado já embute as informações na URL!
+  let link = `${urlBase}/assinar.html?id=${osId}&os=${o.numero || ''}`;
+  if (o.vencimento) link += `&venc=${o.vencimento}`;
+  if (o.valor) link += `&valor=${o.valor}`;
   
   let texto = `Olá, aqui é da *Bianchin Escavações*.\n\nSua Ordem de Serviço (Nº ${o.numero}) está pronta para aprovação.\n\nPor favor, clique no link abaixo para assinar na tela do seu celular:\n${link}`;
   
@@ -1012,8 +1018,10 @@ window.salvarOS = async function () {
     assB64 = signaturePadLocal.toDataURL('image/png');
   }
 
+  // MUDANÇA: Puxando o novo campo de vencimento e salvando na var
   const valorFechado = document.getElementById('os-valor') ? document.getElementById('os-valor').value : '';
   const formaPagto = document.getElementById('os-pagamento') ? document.getElementById('os-pagamento').value : '';
+  const vencimentoOS = document.getElementById('os-vencimento') ? document.getElementById('os-vencimento').value : '';
 
   compressImage(fotoFile, async (fotoB64) => {
     const data = {
@@ -1022,6 +1030,7 @@ window.salvarOS = async function () {
       operador: operador || 'Geral',
       valor: valorFechado ? Number(valorFechado) : 0,
       formaPagamento: formaPagto || '',
+      vencimento: vencimentoOS || '', // MUDANÇA AQUI (Envia para o Banco)
       fotoBase64: fotoB64 || window.currentOSFoto || null,
       assinaturaBase64: assB64 || null,
       userId: user.uid
@@ -1093,6 +1102,7 @@ window.editarOS = function (id) {
 
   if (document.getElementById('os-valor')) document.getElementById('os-valor').value = o.valor || '';
   if (document.getElementById('os-pagamento')) document.getElementById('os-pagamento').value = o.formaPagamento || '';
+  if (document.getElementById('os-vencimento')) document.getElementById('os-vencimento').value = o.vencimento || ''; // MUDANÇA: Puxando o vencimento do Banco
 
   window.currentOSFoto = o.fotoBase64 || null;
   window.currentOSAssinatura = o.assinaturaBase64 || null;
