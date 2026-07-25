@@ -67,7 +67,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, getDocs, collection, updateDoc } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDY_WTOjZG_xOnmzebcnL83MBGJZPhShIE",
@@ -109,11 +109,8 @@
     if (!osId) {
       document.getElementById('msg-loading').textContent = "Link inválido. Nenhuma OS encontrada.";
     } else {
-      // Busca a OS e a lista de equipamentos simultaneamente para exibir o nome certinho
-      Promise.all([
-        getDoc(doc(db, "os", osId)),
-        getDocs(collection(db, "equipamentos"))
-      ]).then(async ([snapshot, equipSnapshot]) => {
+      // Busca direto o documento da OS (muito mais rápido e seguro)
+      getDoc(doc(db, "os", osId)).then(snapshot => {
         if (snapshot.exists()) {
           const dados = snapshot.data();
           if(dados.assinaturaBase64) {
@@ -122,18 +119,10 @@
              document.getElementById('msg-sucesso').innerHTML += "<br><p>Esta OS já foi assinada.</p>";
              return;
           }
-
-          // Mapeia os equipamentos para encontrar o nome pelo ID salvo na OS
-          let nomeEquipamento = 'Não informado';
-          equipSnapshot.forEach(docEq => {
-            if (docEq.id === dados.equipId) {
-              nomeEquipamento = docEq.data().nome;
-            }
-          });
           
           document.getElementById('lbl-os').textContent = dados.numero || '-';
           document.getElementById('lbl-data').textContent = formatDate(dados.data);
-          document.getElementById('lbl-equip').textContent = nomeEquipamento;
+          document.getElementById('lbl-equip').textContent = dados.equipNome || 'Equipamento não especificado';
           document.getElementById('lbl-operador').textContent = dados.operador || 'Geral';
           document.getElementById('lbl-hini').textContent = dados.hini || '-';
           document.getElementById('lbl-hfim').textContent = dados.hfim || '-';
