@@ -524,23 +524,41 @@ function renderFinanceiro() {
 
   const sorted = [...financas].sort((a, b) => new Date(a.data) - new Date(b.data));
   sorted.forEach((f) => {
-    const val = Number(f.valor);
+    const val = Number(f.valor) || 0;
     const isReceita = f.tipo === 'Receita';
-    const isPago = f.statusPagamento === 'Pago';
+    
+    // Normaliza o status para garantir que leia certinho do banco
+    const statusAtual = f.statusPagamento || 'Pago';
+    const isPago = (statusAtual === 'Pago');
+    const isPendente = (statusAtual === 'Pendente' || statusAtual === 'Atrasado');
 
-    if (isReceita && isPago) entradas += val;
-    if (!isReceita && isPago) saidas += val;
-    if (isReceita && !isPago) { aReceber += val; pendentes++; }
-    if (!isReceita && !isPago) aPagar += val;
+    // REGRA FINANCEIRA RIGOROSA:
+    // Se for Receita e estiver 'Pago', vai para o Caixa/Entradas
+    if (isReceita && isPago) {
+      entradas += val;
+    }
+    // Se for Despesa e estiver 'Pago', vai para as Saídas pagas
+    if (!isReceita && isPago) {
+      saidas += val;
+    }
+    // Se for Receita e estiver 'Pendente', vai para Contas a Receber
+    if (isReceita && isPendente) {
+      aReceber += val;
+      pendentes++;
+    }
+    // Se for Despesa e estiver 'Pendente', vai para Contas a Pagar
+    if (!isReceita && isPendente) {
+      aPagar += val;
+    }
 
     if (tbody) {
-      const badgeCor = isPago ? 'badge-success' : (f.statusPagamento === 'Atrasado' ? 'badge-danger' : 'badge-warning');
+      const badgeCor = isPago ? 'badge-success' : (statusAtual === 'Atrasado' ? 'badge-danger' : 'badge-warning');
       tbody.innerHTML += `
         <tr>
           <td>${formatDate(f.data)}</td>
           <td>${f.desc}</td>
           <td>${f.categoria || 'Outros'}</td>
-          <td><span class="badge ${badgeCor}">${f.statusPagamento || 'Pago'}</span></td>
+          <td><span class="badge ${badgeCor}">${statusAtual}</span></td>
           <td style="color:${isReceita ? 'var(--accent-color)' : 'var(--danger-color)'}">${formatMoney(f.valor)}</td>
           <td>
             <div class="td-actions">
@@ -551,6 +569,38 @@ function renderFinanceiro() {
         </tr>`;
     }
   });
+
+  const elEntradas = document.getElementById('fin-entradas');
+  if (elEntradas) {
+    elEntradas.textContent = formatMoney(entradas);
+    document.getElementById('fin-saidas').textContent = formatMoney(saidas);
+    document.getElementById('fin-fluxo').textContent = formatMoney(entradas - saidas);
+    document.getElementById('fin-receber').textContent = formatMoney(aReceber);
+    document.getElementById('fin-pagar').textContent = formatMoney(aPagar);
+    document.getElementById('fin-pendentes').textContent = pendentes;
+  }
+
+  const ctx = document.getElementById('chartFinanceiroSecundario');
+  if (ctx && window.Chart) {
+    if (chartInstanceSecundario) chartInstanceSecundario.destroy();
+    chartInstanceSecundario = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Entradas (Recebido)', 'Saídas (Pago)'],
+        datasets: [{
+          data: [entradas, saidas],
+          backgroundColor: ['#10b981', '#ef4444'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { color: '#f8fafc' } } }
+      }
+    });
+  }
+}
 
   const elEntradas = document.getElementById('fin-entradas');
   if (elEntradas) {
