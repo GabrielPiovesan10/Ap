@@ -527,26 +527,20 @@ function renderFinanceiro() {
     const val = Number(f.valor) || 0;
     const isReceita = f.tipo === 'Receita';
     
-    // Normaliza o status para garantir que leia certinho do banco
     const statusAtual = f.statusPagamento || 'Pago';
     const isPago = (statusAtual === 'Pago');
     const isPendente = (statusAtual === 'Pendente' || statusAtual === 'Atrasado');
 
-    // REGRA FINANCEIRA RIGOROSA:
-    // Se for Receita e estiver 'Pago', vai para o Caixa/Entradas
     if (isReceita && isPago) {
       entradas += val;
     }
-    // Se for Despesa e estiver 'Pago', vai para as Saídas pagas
     if (!isReceita && isPago) {
       saidas += val;
     }
-    // Se for Receita e estiver 'Pendente', vai para Contas a Receber
     if (isReceita && isPendente) {
       aReceber += val;
       pendentes++;
     }
-    // Se for Despesa e estiver 'Pendente', vai para Contas a Pagar
     if (!isReceita && isPendente) {
       aPagar += val;
     }
@@ -569,38 +563,6 @@ function renderFinanceiro() {
         </tr>`;
     }
   });
-
-  const elEntradas = document.getElementById('fin-entradas');
-  if (elEntradas) {
-    elEntradas.textContent = formatMoney(entradas);
-    document.getElementById('fin-saidas').textContent = formatMoney(saidas);
-    document.getElementById('fin-fluxo').textContent = formatMoney(entradas - saidas);
-    document.getElementById('fin-receber').textContent = formatMoney(aReceber);
-    document.getElementById('fin-pagar').textContent = formatMoney(aPagar);
-    document.getElementById('fin-pendentes').textContent = pendentes;
-  }
-
-  const ctx = document.getElementById('chartFinanceiroSecundario');
-  if (ctx && window.Chart) {
-    if (chartInstanceSecundario) chartInstanceSecundario.destroy();
-    chartInstanceSecundario = new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels: ['Entradas (Recebido)', 'Saídas (Pago)'],
-        datasets: [{
-          data: [entradas, saidas],
-          backgroundColor: ['#10b981', '#ef4444'],
-          borderWidth: 0
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom', labels: { color: '#f8fafc' } } }
-      }
-    });
-  }
-}
 
   const elEntradas = document.getElementById('fin-entradas');
   if (elEntradas) {
@@ -866,7 +828,6 @@ window.salvarCliente = async function () {
       registrarHistorico("Cadastrou Cliente", `Nome: ${nome}`);
     }
     
-    // FECHA O MODAL AUTOMATICAMENTE
     closeModal('modal-cliente');
   } finally {
     window.isSaving = false;
@@ -951,7 +912,6 @@ window.salvarEquip = async function () {
         registrarHistorico("Cadastrou Equipamento", `Equipamento: ${nome}`);
       }
       
-      // FECHA O MODAL AUTOMATICAMENTE
       closeModal('modal-equip');
     } finally {
       window.isSaving = false;
@@ -1023,7 +983,6 @@ window.salvarAgenda = async function () {
       registrarHistorico("Novo Agendamento", `Data: ${formatDate(dataPrev)} - Status: ${status}`);
     }
     
-    // FECHA O MODAL AUTOMATICAMENTE
     closeModal('modal-agenda');
   } finally {
     window.isSaving = false;
@@ -1088,7 +1047,6 @@ window.solicitarAssinaturaRemota = function(osId) {
   
   const urlBase = window.location.href.split('index.html')[0].replace(/\/$/, "");
   
-  // MUDANÇA: Link gerado já embute as informações na URL!
   let link = `${urlBase}/assinar.html?id=${osId}&os=${o.numero || ''}`;
   if (o.vencimento) link += `&venc=${o.vencimento}`;
   if (o.valor) link += `&valor=${o.valor}`;
