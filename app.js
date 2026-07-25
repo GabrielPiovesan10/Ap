@@ -153,15 +153,22 @@ window.customConfirm = function(msg, callback, title = "Confirmação") {
   document.getElementById('confirm-message').textContent = msg;
   document.getElementById('modal-confirm').classList.add('active');
 };
-async function executarComBloqueio(botao, acao) {
-  if (!botao) return;
-  botao.disabled = true;
-  botao.style.opacity = '0.7'; 
-  try {
+
+async function executarComBloqueio(event, acao) {
+  if (event && event.currentTarget) {
+    const botao = event.currentTarget;
+    if (botao.disabled) return;
+    botao.disabled = true;
+    const opOriginal = botao.style.opacity;
+    botao.style.opacity = '0.7'; 
+    try {
+      await acao();
+    } finally {
+      botao.disabled = false;
+      botao.style.opacity = opOriginal || '1';
+    }
+  } else {
     await acao();
-  } finally {
-    botao.disabled = false;
-    botao.style.opacity = '1';
   }
 }
 
@@ -229,7 +236,6 @@ window.openModal = function (modalId) {
   } else if (modalId === 'modal-os') {
     document.getElementById('os-id').value = '';
     
-    // MUDANÇA: Adicionado o os-vencimento na lista de limpeza
     ['os-hini', 'os-hfim', 'os-foto', 'os-data', 'os-operador', 'os-valor', 'os-pagamento', 'os-vencimento'].forEach(id => {
       const el = document.getElementById(id);
       if(el) el.value = '';
@@ -478,8 +484,13 @@ function renderOS() {
   if (tbody) {
     tbody.innerHTML = '';
     os.forEach((o) => {
-      const cliName = (clientes.find(c => c.id === o.clienteId) || {}).nome || 'Desconhecido';
-      const eqName = (equipamentos.find(e => e.id === o.equipId) || {}).nome || 'Desconhecido';
+      // CORREÇÃO: Busca o cliente verificando tanto 'clienteId' quanto 'clientId' para evitar "Desconhecido"
+      const idClienteBusca = o.clienteId || o.clientId;
+      const clienteEncontrado = clientes.find(c => c.id === idClienteBusca);
+      const cliName = clienteEncontrado ? clienteEncontrado.nome : (o.clienteName || 'Desconhecido');
+      
+      const eqName = (equipamentos.find(e => e.id === o.equipId) || {}).nome || o.equipNome || 'Desconhecido';
+      
       tbody.innerHTML += `
         <tr>
           <td>${o.numero}</td>
@@ -571,7 +582,6 @@ function renderFinanceiro() {
   }
 }
 
-// RENDERIZAÇÃO DO HISTÓRICO FINANCEIRO MENSAL
 function renderHistoricoFinanceiro() {
   const tbody = document.getElementById('tbody-historico-financeiro');
   if (!tbody) return;
@@ -668,8 +678,10 @@ function renderRelatorios() {
   const osPorEquip = {};
 
   os.forEach(o => {
-    osPorCliente[o.clienteId] = (osPorCliente[o.clienteId] || 0) + 1;
-    osPorEquip[o.equipId] = (osPorEquip[o.equipId] || 0) + 1;
+    const cliKey = o.clienteId || o.clientId;
+    const eqKey = o.equipId;
+    if (cliKey) osPorCliente[cliKey] = (osPorCliente[cliKey] || 0) + 1;
+    if (eqKey) osPorEquip[eqKey] = (osPorEquip[eqKey] || 0) + 1;
   });
 
   const topClientesList = Object.entries(osPorCliente)
@@ -772,29 +784,31 @@ function renderDashboard() {
 }
 
 // ==========================================
-// CRUD - CLIENTES
+// CRUD - CLIENTES (Com Bloqueio de Duplicação)
 // ==========================================
-window.salvarCliente = async function () {
-  const id = document.getElementById('cli-id').value;
-  const nome = document.getElementById('cli-nome').value;
-  const cpf = document.getElementById('cli-cpf').value;
-  const whats = document.getElementById('cli-whats').value;
-  const email = document.getElementById('cli-email').value;
-  const endereco = document.getElementById('cli-endereco').value;
-  const obs = document.getElementById('cli-obs').value;
+window.salvarCliente = async function (event) {
+  await executarComBloqueio(event, async () => {
+    const id = document.getElementById('cli-id').value;
+    const nome = document.getElementById('cli-nome').value;
+    const cpf = document.getElementById('cli-cpf').value;
+    const whats = document.getElementById('cli-whats').value;
+    const email = document.getElementById('cli-email').value;
+    const endereco = document.getElementById('cli-endereco').value;
+    const obs = document.getElementById('cli-obs').value;
 
-  if (!nome || !whats) { customAlert("Nome e WhatsApp são obrigatórios!"); return; }
-  
-  const data = { nome, cpf, whats, email, endereco, obs, userId: auth.currentUser.uid };
+    if (!nome || !whats) { customAlert("Nome e WhatsApp são obrigatórios!"); return; }
+    
+    const data = { nome, cpf, whats, email, endereco, obs, userId: auth.currentUser.uid };
 
-  if (id) {
-    await updateDoc(doc(db, "clientes", id), data);
-    registrarHistorico("Editou Cliente", `Nome: ${nome}`);
-  } else {
-    await addDoc(collection(db, "clientes"), data);
-    registrarHistorico("Cadastrou Cliente", `Nome: ${nome}`);
-  }
-  closeModal('modal-cliente');
+    if (id) {
+      await updateDoc(doc(db, "clientes", id), data);
+      registrarHistorico("Editou Cliente", `Nome: ${nome}`);
+    } else {
+      await addDoc(collection(db, "clientes"), data);
+      registrarHistorico("Cadastrou Cliente", `Nome: ${nome}`);
+    }
+    closeModal('modal-cliente');
+  });
 };
 
 window.editarCliente = function (id) {
@@ -822,51 +836,56 @@ window.removerCliente = async function (id) {
 };
 
 // ==========================================
-// CRUD - EQUIPAMENTOS
+// CRUD - EQUIPAMENTOS (Com Bloqueio de Duplicação)
 // ==========================================
-window.salvarEquip = async function () {
-  const id = document.getElementById('eq-id').value;
-  const nome = document.getElementById('eq-nome').value;
+window.salvarEquip = async function (event) {
+  await executarComBloqueio(event, async () => {
+    const id = document.getElementById('eq-id').value;
+    const nome = document.getElementById('eq-nome').value;
 
-  const selectCat = document.getElementById('eq-categoria');
-  const categoria = selectCat ? selectCat.value : 'Equipamentos';
+    const selectCat = document.getElementById('eq-categoria');
+    const categoria = selectCat ? selectCat.value : 'Equipamentos';
 
-  const horimetro = document.getElementById('eq-hori').value;
-  const status = document.getElementById('eq-status').value;
-  const oleo = document.getElementById('eq-oleo').value;
-  const manutencao = document.getElementById('eq-manut').value;
-  const docum = document.getElementById('eq-doc').value;
-  const seguro = document.getElementById('eq-seguro').value;
-  const custos = document.getElementById('eq-custos').value;
+    const horimetro = document.getElementById('eq-hori').value;
+    const status = document.getElementById('eq-status').value;
+    const oleo = document.getElementById('eq-oleo').value;
+    const manutencao = document.getElementById('eq-manut').value;
+    const docum = document.getElementById('eq-doc').value;
+    const seguro = document.getElementById('eq-seguro').value;
+    const custos = document.getElementById('eq-custos').value;
 
-  if (!nome) { customAlert("Nome do equipamento é obrigatório!"); return; }
+    if (!nome) { customAlert("Nome do equipamento é obrigatório!"); return; }
 
-  const inputImagem = document.getElementById('eq-imagem');
-  const fotoFile = inputImagem ? inputImagem.files[0] : null;
+    const inputImagem = document.getElementById('eq-imagem');
+    const fotoFile = inputImagem ? inputImagem.files[0] : null;
 
-  compressImage(fotoFile, async (fotoB64) => {
-    const data = {
-      nome,
-      categoria,
-      horimetro: horimetro || '0',
-      status,
-      oleo,
-      manutencao,
-      documentacao: docum,
-      seguro,
-      custosAcumulados: Number(custos || 0),
-      fotoBase64: fotoB64 || window.currentEquipFoto || null,
-      userId: auth.currentUser.uid
-    };
+    return new Promise((resolve) => {
+      compressImage(fotoFile, async (fotoB64) => {
+        const data = {
+          nome,
+          categoria,
+          horimetro: horimetro || '0',
+          status,
+          oleo,
+          manutencao,
+          documentacao: docum,
+          seguro,
+          custosAcumulados: Number(custos || 0),
+          fotoBase64: fotoB64 || window.currentEquipFoto || null,
+          userId: auth.currentUser.uid
+        };
 
-    if (id) {
-      await updateDoc(doc(db, "equipamentos", id), data);
-      registrarHistorico("Editou Equipamento", `Equipamento: ${nome}`);
-    } else {
-      await addDoc(collection(db, "equipamentos"), data);
-      registrarHistorico("Cadastrou Equipamento", `Equipamento: ${nome}`);
-    }
-    closeModal('modal-equip');
+        if (id) {
+          await updateDoc(doc(db, "equipamentos", id), data);
+          registrarHistorico("Editou Equipamento", `Equipamento: ${nome}`);
+        } else {
+          await addDoc(collection(db, "equipamentos"), data);
+          registrarHistorico("Cadastrou Equipamento", `Equipamento: ${nome}`);
+        }
+        closeModal('modal-equip');
+        resolve();
+      });
+    });
   });
 };
 
@@ -904,28 +923,30 @@ window.removerEquip = async function (id) {
 };
 
 // ==========================================
-// CRUD - AGENDA
+// CRUD - AGENDA (Com Bloqueio de Duplicação)
 // ==========================================
-window.salvarAgenda = async function () {
-  const id = document.getElementById('ag-id').value;
-  const clienteId = document.getElementById('ag-cliente').value;
-  const equipId = document.getElementById('ag-equip').value;
-  const dataPrev = document.getElementById('ag-data').value;
-  const horaPrev = document.getElementById('ag-hora').value;
-  const status = document.getElementById('ag-status').value;
+window.salvarAgenda = async function (event) {
+  await executarComBloqueio(event, async () => {
+    const id = document.getElementById('ag-id').value;
+    const clienteId = document.getElementById('ag-cliente').value;
+    const equipId = document.getElementById('ag-equip').value;
+    const dataPrev = document.getElementById('ag-data').value;
+    const horaPrev = document.getElementById('ag-hora').value;
+    const status = document.getElementById('ag-status').value;
 
-  if (!clienteId || !equipId || !dataPrev) { customAlert("Preencha os campos obrigatórios!"); return; }
-  
-  const data = { clienteId, equipId, data: dataPrev, hora: horaPrev, status, userId: auth.currentUser.uid };
+    if (!clienteId || !equipId || !dataPrev) { customAlert("Preencha os campos obrigatórios!"); return; }
+    
+    const data = { clienteId, equipId, data: dataPrev, hora: horaPrev, status, userId: auth.currentUser.uid };
 
-  if (id) {
-    await updateDoc(doc(db, "agenda", id), data);
-    registrarHistorico("Editou Agenda", `Data: ${formatDate(dataPrev)} - Status: ${status}`);
-  } else {
-    await addDoc(collection(db, "agenda"), data);
-    registrarHistorico("Novo Agendamento", `Data: ${formatDate(dataPrev)} - Status: ${status}`);
-  }
-  closeModal('modal-agenda');
+    if (id) {
+      await updateDoc(doc(db, "agenda", id), data);
+      registrarHistorico("Editou Agenda", `Data: ${formatDate(dataPrev)} - Status: ${status}`);
+    } else {
+      await addDoc(collection(db, "agenda"), data);
+      registrarHistorico("Novo Agendamento", `Data: ${formatDate(dataPrev)} - Status: ${status}`);
+    }
+    closeModal('modal-agenda');
+  });
 };
 
 window.editarAgenda = function (id) {
@@ -951,7 +972,7 @@ window.removerAgenda = async function (id) {
 };
 
 // ==========================================
-// CRUD E ASSINATURAS - ORDENS DE SERVIÇO 
+// CRUD E ASSINATURAS - ORDENS DE SERVIÇO (Com Bloqueio)
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -982,11 +1003,11 @@ document.addEventListener('DOMContentLoaded', () => {
 window.solicitarAssinaturaRemota = function(osId) {
   const o = os.find(x => x.id === osId);
   if(!o) return;
-  const c = clientes.find(x => x.id === o.clienteId);
+  const clienteIdBusca = o.clienteId || o.clientId;
+  const c = clientes.find(x => x.id === clienteIdBusca);
   
   const urlBase = window.location.href.split('index.html')[0].replace(/\/$/, "");
   
-  // MUDANÇA: Link gerado já embute as informações na URL!
   let link = `${urlBase}/assinar.html?id=${osId}&os=${o.numero || ''}`;
   if (o.vencimento) link += `&venc=${o.vencimento}`;
   if (o.valor) link += `&valor=${o.valor}`;
@@ -1005,103 +1026,103 @@ window.abrirModalOS = function() {
     window.openModal('modal-os');
 };
 
-window.salvarOS = async function () {
-  const id = document.getElementById('os-id').value;
-  const numero = document.getElementById('os-numero').value;
-  const clientId = document.getElementById('os-cliente').value;
-  const equipId = document.getElementById('os-equip').value;
-  const hini = document.getElementById('os-hini').value;
-  const hfim = document.getElementById('os-hfim').value;
-  const status = document.getElementById('os-status').value;
-  
-  // Pegando a data corretamente do campo existente
-  const dataLanc = document.getElementById('os-data').value || new Date().toISOString().split('T')[0];
+window.salvarOS = async function (event) {
+  await executarComBloqueio(event, async () => {
+    const id = document.getElementById('os-id').value;
+    const numero = document.getElementById('os-numero').value;
+    const clientId = document.getElementById('os-cliente').value;
+    const equipId = document.getElementById('os-equip').value;
+    const hini = document.getElementById('os-hini').value;
+    const hfim = document.getElementById('os-hfim').value;
+    const status = document.getElementById('os-status').value;
+    
+    const dataLanc = document.getElementById('os-data').value || new Date().toISOString().split('T')[0];
 
-  let operador = document.getElementById('os-operador').value;
-  const user = auth.currentUser;
-  if (user && user.email === 'igornevesrc@gmail.com') {
-    operador = 'Igor';
-  }
-
-  const clienteObj = clientes.find(c => c.id === clientId);
-  const equipObj = equipamentos.find(e => e.id === equipId);
-
-  // Captura correta da assinatura do SignaturePad local se houver
-  let assinaturaB64 = window.currentOSAssinatura || null;
-  if (signaturePadLocal && !signaturePadLocal.isEmpty()) {
-    assinaturaB64 = signaturePadLocal.toDataURL();
-  }
-
-  const valorFechado = Number(document.getElementById('os-valor').value) || 0;
-  const formaPagamento = document.getElementById('os-pagamento').value || '';
-  const vencimento = document.getElementById('os-vencimento').value || '';
-
-  const data = {
-    numero,
-    clientId,
-    clienteName: clienteObj ? clienteObj.nome : 'Cliente',
-    equipId,
-    equipNome: equipObj ? equipObj.nome : 'Equipamento',
-    operador: operador || 'Geral',
-    hini,
-    hfim,
-    status,
-    data: dataLanc,
-    valor: valorFechado,
-    formaPagamento: formaPagamento,
-    vencimento: vencimento,
-    fotoBase64: window.currentOSFoto || null,
-    assinaturaBase64: assinaturaB64,
-    userId: user.uid
-  };
-
-  let osIdFinal = id;
-
-  try {
-    if (id) {
-      await updateDoc(doc(db, "os", id), data);
-      registrarHistorico("Editou OS", `OS Nº ${numero} - Status: ${status}`);
-    } else {
-      const docRef = await addDoc(collection(db, "os"), data);
-      osIdFinal = docRef.id;
-      registrarHistorico("Nova OS", `OS Nº ${numero} - Status: ${status}`);
+    let operador = document.getElementById('os-operador').value;
+    const user = auth.currentUser;
+    if (user && user.email === 'igornevesrc@gmail.com') {
+      operador = 'Igor';
     }
 
-    // Lançamento financeiro automático vinculado à OS
-    const finExistente = financas.find(f => f.osId === osIdFinal);
-    const dadosFinanc = {
-      desc: `Locação OS nº ${numero} - ${clienteObj ? clienteObj.nome : 'Cliente'} (${formaPagamento || 'Pix'})`,
-      tipo: 'Receita',
-      categoria: 'Serviço',
-      statusPagamento: 'Pago',
-      valor: valorFechado,
+    const clienteObj = clientes.find(c => c.id === clientId);
+    const equipObj = equipamentos.find(e => e.id === equipId);
+
+    let assinaturaB64 = window.currentOSAssinatura || null;
+    if (signaturePadLocal && !signaturePadLocal.isEmpty()) {
+      assinaturaB64 = signaturePadLocal.toDataURL();
+    }
+
+    const valorFechado = Number(document.getElementById('os-valor').value) || 0;
+    const formaPagamento = document.getElementById('os-pagamento').value || '';
+    const vencimento = document.getElementById('os-vencimento').value || '';
+
+    // CORREÇÃO: Salvando tanto 'clienteId' quanto 'clientId' unificados para garantir consistência
+    const data = {
+      numero,
+      clientId,
+      clienteId: clientId, 
+      clienteName: clienteObj ? clienteObj.nome : 'Cliente',
+      equipId,
+      equipNome: equipObj ? equipObj.nome : 'Equipamento',
+      operador: operador || 'Geral',
+      hini,
+      hfim,
+      status,
       data: dataLanc,
-      osId: osIdFinal,
+      valor: valorFechado,
+      formaPagamento: formaPagamento,
+      vencimento: vencimento,
+      fotoBase64: window.currentOSFoto || null,
+      assinaturaBase64: assinaturaB64,
       userId: user.uid
     };
 
-    if (finExistente) {
-      await updateDoc(doc(db, "financas", finExistente.id), dadosFinanc);
-      registrarHistorico("Atualização Financeira Automática", `Atualizado via OS Nº ${numero} - R$ ${valorFechado}`);
-    } else if (valorFechado > 0) {
-      await addDoc(collection(db, "financas"), dadosFinanc);
-      registrarHistorico("Lançamento Financeiro Automático", `Gerado via OS Nº ${numero} - R$ ${valorFechado}`);
-    }
+    let osIdFinal = id;
 
-    // Atualiza status do equipamento
-    if (equipId) {
-      const novoStatusEquip = (status === 'Finalizada') ? 'Operacional' : 'Alugado';
-      await updateDoc(doc(db, "equipamentos", equipId), { status: novoStatusEquip });
-    }
+    try {
+      if (id) {
+        await updateDoc(doc(db, "os", id), data);
+        registrarHistorico("Editou OS", `OS Nº ${numero} - Status: ${status}`);
+      } else {
+        const docRef = await addDoc(collection(db, "os"), data);
+        osIdFinal = docRef.id;
+        registrarHistorico("Nova OS", `OS Nº ${numero} - Status: ${status}`);
+      }
 
-    closeModal('modal-os');
-    if (signaturePadLocal) {
-      signaturePadLocal.clear();
+      const finExistente = financas.find(f => f.osId === osIdFinal);
+      const dadosFinanc = {
+        desc: `Locação OS nº ${numero} - ${clienteObj ? clienteObj.nome : 'Cliente'} (${formaPagamento || 'Pix'})`,
+        tipo: 'Receita',
+        categoria: 'Serviço',
+        statusPagamento: 'Pago',
+        valor: valorFechado,
+        data: dataLanc,
+        osId: osIdFinal,
+        userId: user.uid
+      };
+
+      if (finExistente) {
+        await updateDoc(doc(db, "financas", finExistente.id), dadosFinanc);
+        registrarHistorico("Atualização Financeira Automática", `Atualizado via OS Nº ${numero} - R$ ${valorFechado}`);
+      } else if (valorFechado > 0) {
+        await addDoc(collection(db, "financas"), dadosFinanc);
+        registrarHistorico("Lançamento Financeiro Automático", `Gerado via OS Nº ${numero} - R$ ${valorFechado}`);
+      }
+
+      if (equipId) {
+        const novoStatusEquip = (status === 'Finalizada') ? 'Operacional' : 'Alugado';
+        await updateDoc(doc(db, "equipamentos", equipId), { status: novoStatusEquip });
+      }
+
+      closeModal('modal-os');
+      if (signaturePadLocal) {
+        signaturePadLocal.clear();
+      }
+    } catch (err) {
+      console.error("Erro ao salvar OS:", err);
+      customAlert("Erro ao salvar a Ordem de Serviço. Verifique o console.");
     }
-  } catch (err) {
-    console.error("Erro ao salvar OS:", err);
-    customAlert("Erro ao salvar a Ordem de Serviço. Verifique o console.");
-  }
+  });
 };
 
 window.editarOS = function (id) {
@@ -1109,7 +1130,7 @@ window.editarOS = function (id) {
   if (!o) return;
   document.getElementById('os-id').value = o.id;
   document.getElementById('os-numero').value = o.numero || '';
-  document.getElementById('os-cliente').value = o.clienteId || '';
+  document.getElementById('os-cliente').value = o.clienteId || o.clientId || '';
   document.getElementById('os-equip').value = o.equipId || '';
   document.getElementById('os-data').value = o.data || '';
   document.getElementById('os-operador').value = o.operador || '';
@@ -1119,7 +1140,7 @@ window.editarOS = function (id) {
 
   if (document.getElementById('os-valor')) document.getElementById('os-valor').value = o.valor || '';
   if (document.getElementById('os-pagamento')) document.getElementById('os-pagamento').value = o.formaPagamento || '';
-  if (document.getElementById('os-vencimento')) document.getElementById('os-vencimento').value = o.vencimento || ''; // MUDANÇA: Puxando o vencimento do Banco
+  if (document.getElementById('os-vencimento')) document.getElementById('os-vencimento').value = o.vencimento || '';
 
   window.currentOSFoto = o.fotoBase64 || null;
   window.currentOSAssinatura = o.assinaturaBase64 || null;
@@ -1148,36 +1169,38 @@ window.removerOS = async function (id) {
 };
 
 // ==========================================
-// CRUD - FINANCEIRO
+// CRUD - FINANCEIRO (Com Bloqueio de Duplicação)
 // ==========================================
-window.salvarFin = async function () {
-  const id = document.getElementById('fin-id').value;
-  const desc = document.getElementById('fin-desc').value;
-  const tipo = document.getElementById('fin-tipo').value;
-  const valor = document.getElementById('fin-valor').value;
-  const cat = document.getElementById('fin-cat').value;
-  const statusPayment = document.getElementById('fin-status').value;
-  const dataLanc = document.getElementById('fin-data').value;
+window.salvarFin = async function (event) {
+  await executarComBloqueio(event, async () => {
+    const id = document.getElementById('fin-id').value;
+    const desc = document.getElementById('fin-desc').value;
+    const tipo = document.getElementById('fin-tipo').value;
+    const valor = document.getElementById('fin-valor').value;
+    const cat = document.getElementById('fin-cat').value;
+    const statusPayment = document.getElementById('fin-status').value;
+    const dataLanc = document.getElementById('fin-data').value;
 
-  if (!desc || !valor || !dataLanc) { customAlert("Preencha todos os campos!"); return; }
-  const data = {
-    desc,
-    tipo,
-    categoria: cat,
-    statusPagamento: statusPayment,
-    valor: Number(valor),
-    data: dataLanc,
-    userId: auth.currentUser.uid
-  };
+    if (!desc || !valor || !dataLanc) { customAlert("Preencha todos os campos!"); return; }
+    const data = {
+      desc,
+      tipo,
+      categoria: cat,
+      statusPagamento: statusPayment,
+      valor: Number(valor),
+      data: dataLanc,
+      userId: auth.currentUser.uid
+    };
 
-  if (id) {
-    await updateDoc(doc(db, "financas", id), data);
-    registrarHistorico("Editou Lançamento Financeiro", `R$ ${valor} - ${desc}`);
-  } else {
-    await addDoc(collection(db, "financas"), data);
-    registrarHistorico("Novo Lançamento Financeiro", `R$ ${valor} - ${desc}`);
-  }
-  closeModal('modal-fin');
+    if (id) {
+      await updateDoc(doc(db, "financas", id), data);
+      registrarHistorico("Editou Lançamento Financeiro", `R$ ${valor} - ${desc}`);
+    } else {
+      await addDoc(collection(db, "financas"), data);
+      registrarHistorico("Novo Lançamento Financeiro", `R$ ${valor} - ${desc}`);
+    }
+    closeModal('modal-fin');
+  });
 };
 
 window.editarFin = function (id) {
