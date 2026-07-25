@@ -1170,11 +1170,9 @@ window.salvarOS = async function (event) {
       await updateDoc(doc(db, "equipamentos", equipId), { status: novoStatusEquip });
     }
 
-    // FORÇA O FECHAMENTO DO MODAL IMEDIATAMENTE NA MARRA
-    const modalOS = document.getElementById('modal-os');
-    if (modalOS) {
-      modalOS.classList.remove('active');
-    }
+     // FORÇA O FECHAMENTO IMEDIATO
+    window.fecharModalOSForçado();
+
     
     if (signaturePadLocal) {
       signaturePadLocal.clear();
