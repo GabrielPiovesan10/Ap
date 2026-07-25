@@ -1027,26 +1027,41 @@ window.salvarOS = async function () {
       userId: user.uid
     };
 
+    let osIdFinal = id;
+
     if (id) {
       await updateDoc(doc(db, "os", id), data);
       registrarHistorico("Editou OS", `OS Nº ${numero} - Status: ${status}`);
     } else {
-      await addDoc(collection(db, "os"), data);
+      const docRef = await addDoc(collection(db, "os"), data);
+      osIdFinal = docRef.id;
       registrarHistorico("Nova OS", `OS Nº ${numero} - Status: ${status}`);
+    }
 
-      if (isAdminUser(user.email) && valorFechado && Number(valorFechado) > 0) {
-        const clienteObj = clientes.find(c => c.id === clienteId);
-        const nomeCliente = clienteObj ? clienteObj.nome : 'Cliente';
-        
-        await addDoc(collection(db, "financas"), {
-          desc: `Locação OS nº ${numero} - ${nomeCliente} (${formaPagto || 'Pix'})`,
-          tipo: 'Receita',
-          categoria: 'Serviço',
-          statusPagamento: 'Pago',
-          valor: Number(valorFechado),
-          data: data.data,
-          userId: user.uid
-        });
+    // Integração financeira unificada (funciona tanto para criação quanto para edição)
+    if (isAdminUser(user.email) && valorFechado && Number(valorFechado) > 0) {
+      const clienteObj = clientes.find(c => c.id === clienteId);
+      const nomeCliente = clienteObj ? clienteObj.nome : 'Cliente';
+      
+      const dadosFinanc = {
+        desc: `Locação OS nº ${numero} - ${nomeCliente} (${formaPagto || 'Pix'})`,
+        tipo: 'Receita',
+        categoria: 'Serviço',
+        statusPagamento: 'Pago',
+        valor: Number(valorFechado),
+        data: data.data,
+        osId: osIdFinal,
+        userId: user.uid
+      };
+
+      // Verifica se já existe um lançamento financeiro atrelado a esta OS
+      const finExistente = financas.find(f => f.osId === osIdFinal);
+
+      if (finExistente) {
+        await updateDoc(doc(db, "financas", finExistente.id), dadosFinanc);
+        registrarHistorico("Atualização Financeira Automática", `Atualizado via OS Nº ${numero} - R$ ${valorFechado}`);
+      } else {
+        await addDoc(collection(db, "financas"), dadosFinanc);
         registrarHistorico("Lançamento Financeiro Automático", `Gerado via OS Nº ${numero} - R$ ${valorFechado}`);
       }
     }
