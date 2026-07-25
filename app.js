@@ -153,6 +153,18 @@ window.customConfirm = function(msg, callback, title = "Confirmação") {
   document.getElementById('confirm-message').textContent = msg;
   document.getElementById('modal-confirm').classList.add('active');
 };
+async function executarComBloqueio(botao, acao) {
+  if (!botao) return;
+  botao.disabled = true;
+  botao.style.opacity = '0.7'; 
+  try {
+    await acao();
+  } finally {
+    botao.disabled = false;
+    botao.style.opacity = '1';
+  }
+}
+
 window.closeConfirm = function(result) {
   document.getElementById('modal-confirm').classList.remove('active');
   if (confirmCallback) {
