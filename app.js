@@ -1607,3 +1607,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+window.fecharModalOSForçado = function() {
+  const modal = document.getElementById('modal-os');
+  if (modal) {
+    modal.classList.remove('active');
+    modal.style.display = 'none';
+    setTimeout(() => { modal.style.display = ''; }, 100);
+  }
+};
