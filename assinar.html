@@ -36,6 +36,8 @@
       <div class="info-box">
         <strong>Nº da OS:</strong> <span id="lbl-os"></span><br>
         <strong>Data do Serviço:</strong> <span id="lbl-data"></span><br>
+        <strong>Equipamento:</strong> <span id="lbl-equip" style="font-weight: 600; color: #0f172a;"></span><br>
+        <strong>Operador:</strong> <span id="lbl-operador"></span><br>
         <strong>Horímetro Início:</strong> <span id="lbl-hini"></span> | <strong>Final:</strong> <span id="lbl-hfim"></span><br>
         <strong>Valor Total:</strong> <span id="lbl-valor" style="color: #10b981; font-weight: 700;"></span><br>
         <strong>Vencimento:</strong> <span id="lbl-vencimento" style="color: #d97706; font-weight: 700;"></span>
@@ -65,7 +67,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, getDocs, collection, updateDoc } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDY_WTOjZG_xOnmzebcnL83MBGJZPhShIE",
@@ -80,7 +82,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     
-    // Pega o ID na URL (ex: assinar.html?id=12345)
     const urlParams = new URLSearchParams(window.location.search);
     const osId = urlParams.get('id');
 
@@ -108,8 +109,11 @@
     if (!osId) {
       document.getElementById('msg-loading').textContent = "Link inválido. Nenhuma OS encontrada.";
     } else {
-      // Busca a OS no banco
-      getDoc(doc(db, "os", osId)).then(snapshot => {
+      // Busca a OS e a lista de equipamentos simultaneamente para exibir o nome certinho
+      Promise.all([
+        getDoc(doc(db, "os", osId)),
+        getDocs(collection(db, "equipamentos"))
+      ]).then(async ([snapshot, equipSnapshot]) => {
         if (snapshot.exists()) {
           const dados = snapshot.data();
           if(dados.assinaturaBase64) {
@@ -118,9 +122,19 @@
              document.getElementById('msg-sucesso').innerHTML += "<br><p>Esta OS já foi assinada.</p>";
              return;
           }
+
+          // Mapeia os equipamentos para encontrar o nome pelo ID salvo na OS
+          let nomeEquipamento = 'Não informado';
+          equipSnapshot.forEach(docEq => {
+            if (docEq.id === dados.equipId) {
+              nomeEquipamento = docEq.data().nome;
+            }
+          });
           
           document.getElementById('lbl-os').textContent = dados.numero || '-';
           document.getElementById('lbl-data').textContent = formatDate(dados.data);
+          document.getElementById('lbl-equip').textContent = nomeEquipamento;
+          document.getElementById('lbl-operador').textContent = dados.operador || 'Geral';
           document.getElementById('lbl-hini').textContent = dados.hini || '-';
           document.getElementById('lbl-hfim').textContent = dados.hfim || '-';
           document.getElementById('lbl-valor').textContent = formatMoney(dados.valor);
@@ -132,6 +146,9 @@
         } else {
           document.getElementById('msg-loading').textContent = "Ordem de serviço não encontrada.";
         }
+      }).catch(err => {
+        console.error(err);
+        document.getElementById('msg-loading').textContent = "Erro ao carregar os dados da OS.";
       });
     }
 
