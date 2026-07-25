@@ -267,8 +267,22 @@ window.openModal = function (modalId) {
 };
 
 window.closeModal = function (modalId) {
-  document.getElementById(modalId).classList.remove('active');
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.classList.remove('active');
+    modal.style.display = 'none'; // Garante o fechamento visual imediato
+    setTimeout(() => { modal.style.display = ''; }, 300); // Reseta para o padrão do CSS
+  }
+  
+  // Caso feche pelo botão de OS especificamente
+  const modalOs = document.getElementById('modal-os');
+  if (modalOs) {
+    modalOs.classList.remove('active');
+    modalOs.style.display = 'none';
+    setTimeout(() => { modalOs.style.display = ''; }, 300);
+  }
 };
+
 
 // ==========================================
 // RENDERIZAÇÃO
