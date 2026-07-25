@@ -1058,16 +1058,12 @@ window.salvarOS = async function () {
   try {
     const id = document.getElementById('os-id').value;
     const numero = document.getElementById('os-numero').value;
-    
-    // ATENÇÃO: Pegando o cliente corretamente e salvando a propriedade como clienteId
     const clienteId = document.getElementById('os-cliente').value;
-    
     const equipId = document.getElementById('os-equip').value;
     const hini = document.getElementById('os-hini').value;
     const hfim = document.getElementById('os-hfim').value;
     const status = document.getElementById('os-status').value;
     
-    // Pegando a data corretamente do campo existente
     const dataLanc = document.getElementById('os-data').value || new Date().toISOString().split('T')[0];
 
     let operador = document.getElementById('os-operador').value;
@@ -1079,7 +1075,6 @@ window.salvarOS = async function () {
     const clienteObj = clientes.find(c => c.id === clienteId);
     const equipObj = equipamentos.find(e => e.id === equipId);
 
-    // Captura correta da assinatura do SignaturePad local se houver
     let assinaturaB64 = window.currentOSAssinatura || null;
     if (signaturePadLocal && !signaturePadLocal.isEmpty()) {
       assinaturaB64 = signaturePadLocal.toDataURL();
@@ -1091,7 +1086,7 @@ window.salvarOS = async function () {
 
     const data = {
       numero,
-      clienteId: clienteId, // << ISSO AQUI FOI CORRIGIDO PARA PARAR DE DAR "DESCONHECIDO"
+      clienteId: clienteId,
       clienteName: clienteObj ? clienteObj.nome : 'Cliente',
       equipId,
       equipNome: equipObj ? equipObj.nome : 'Equipamento',
@@ -1119,13 +1114,17 @@ window.salvarOS = async function () {
       registrarHistorico("Nova OS", `OS Nº ${numero} - Status: ${status}`);
     }
 
-    // Lançamento financeiro automático vinculado à OS
+    // =========================================================================
+    // REGRA FINANCEIRA: Se OS "Em Andamento" = Pendente | Se "Finalizada" = Pago
+    // =========================================================================
+    const statusPagamentoIdeal = (status === 'Finalizada') ? 'Pago' : 'Pendente';
+
     const finExistente = financas.find(f => f.osId === osIdFinal);
     const dadosFinanc = {
       desc: `Locação OS nº ${numero} - ${clienteObj ? clienteObj.nome : 'Cliente'} (${formaPagamento || 'Pix'})`,
       tipo: 'Receita',
       categoria: 'Serviço',
-      statusPagamento: 'Pago',
+      statusPagamento: statusPagamentoIdeal, // Atualiza dinamicamente baseado no status da OS
       valor: valorFechado,
       data: dataLanc,
       osId: osIdFinal,
@@ -1134,10 +1133,10 @@ window.salvarOS = async function () {
 
     if (finExistente) {
       await updateDoc(doc(db, "financas", finExistente.id), dadosFinanc);
-      registrarHistorico("Atualização Financeira Automática", `Atualizado via OS Nº ${numero} - R$ ${valorFechado}`);
+      registrarHistorico("Atualização Financeira Automática", `Atualizado via OS Nº ${numero} - Status: ${statusPagamentoIdeal}`);
     } else if (valorFechado > 0) {
       await addDoc(collection(db, "financas"), dadosFinanc);
-      registrarHistorico("Lançamento Financeiro Automático", `Gerado via OS Nº ${numero} - R$ ${valorFechado}`);
+      registrarHistorico("Lançamento Financeiro Automático", `Gerado via OS Nº ${numero} - Status: ${statusPagamentoIdeal}`);
     }
 
     // Atualiza status do equipamento
