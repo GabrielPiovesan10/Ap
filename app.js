@@ -1024,17 +1024,28 @@ window.salvarOS = async function () {
   const vencimentoOS = document.getElementById('os-vencimento') ? document.getElementById('os-vencimento').value : '';
 
   compressImage(fotoFile, async (fotoB64) => {
+        const clienteObj = clientes.find(c => c.id === clienteId);
+    const equipObj = equipamentos.find(e => e.id === equipId); // Pega o objeto do equipamento
+
     const data = {
-      numero, clienteId, equipId, hini, hfim, status,
+      numero, 
+      clienteId, 
+      clienteNome: clienteObj ? clienteObj.nome : '', // Salva o nome do cliente direto
+      equipId, 
+      equipNome: equipObj ? equipObj.nome : '',       // Salva o nome do equipamento direto na OS!
+      operador: operador || 'Geral',                  // Salva o operador direto na OS!
+      hini, 
+      hfim, 
+      status,
       data: dataLanc || new Date().toISOString().split('T')[0],
-      operador: operador || 'Geral',
       valor: valorFechado ? Number(valorFechado) : 0,
       formaPagamento: formaPagto || '',
-      vencimento: vencimentoOS || '', // MUDANÇA AQUI (Envia para o Banco)
+      vencimento: vencimentoOS || '', 
       fotoBase64: fotoB64 || window.currentOSFoto || null,
       assinaturaBase64: assB64 || null,
       userId: user.uid
     };
+
 
     let osIdFinal = id;
 
