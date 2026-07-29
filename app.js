@@ -1085,18 +1085,6 @@ window.salvarOS = async function (event) {
   window.isSaving = true;
 
   try {
-    window.fecharModalOSForçado();
-
-    if (signaturePadLocal) {
-      signaturePadLocal.clear();
-    }
-  } catch (err) {
-    console.error("Erro ao salvar OS:", err);
-    customAlert("Erro ao salvar a Ordem de Serviço. Verifique o console.");
-  } finally {
-    window.isSaving = false;
-  }
-};
     const id = document.getElementById('os-id').value;
     const numero = document.getElementById('os-numero').value;
     const clienteId = document.getElementById('os-cliente').value;
@@ -1111,7 +1099,18 @@ window.salvarOS = async function (event) {
     const user = auth.currentUser;
     if (user && user.email === 'Igornevesrc@gmail.com') {
       operador = 'Igor';
-  
+  window.fecharModalOSForçado();
+
+    if (signaturePadLocal) {
+      signaturePadLocal.clear();
+    }
+  } catch (err) {
+    console.error("Erro ao salvar OS:", err);
+    customAlert("Erro ao salvar a Ordem de Serviço. Verifique o console.");
+  } finally {
+    window.isSaving = false;
+  }
+};
     }
 
     const clienteObj = clientes.find(c => c.id === clienteId);
