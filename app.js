@@ -3,7 +3,8 @@
 // ==========================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+// Adicionado orderBy e limit para impedir o Firebase de baixar o mundo inteiro de uma vez
+import { getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDY_WTOjZG_xOnmzebcnL83MBGJZPhShIE",
@@ -234,7 +235,6 @@ window.openModal = function (modalId) {
   } else if (modalId === 'modal-os') {
     document.getElementById('os-id').value = '';
     
-    // MUDANÇA: Adicionado o os-vencimento na lista de limpeza
     ['os-hini', 'os-hfim', 'os-foto', 'os-data', 'os-operador', 'os-valor', 'os-pagamento', 'os-vencimento'].forEach(id => {
       const el = document.getElementById(id);
       if(el) el.value = '';
@@ -270,22 +270,30 @@ window.closeModal = function (modalId) {
   const modal = document.getElementById(modalId);
   if (modal) {
     modal.classList.remove('active');
-    modal.style.display = 'none'; // Garante o fechamento visual imediato
-    setTimeout(() => { modal.style.display = ''; }, 300); // Reseta para o padrão do CSS
+    modal.style.display = 'none'; 
+    setTimeout(() => { modal.style.display = ''; }, 100);
   }
   
-  // Caso feche pelo botão de OS especificamente
   const modalOs = document.getElementById('modal-os');
   if (modalOs) {
     modalOs.classList.remove('active');
     modalOs.style.display = 'none';
-    setTimeout(() => { modalOs.style.display = ''; }, 300);
+    setTimeout(() => { modalOs.style.display = ''; }, 100);
+  }
+};
+
+window.fecharModalOSForçado = function() {
+  const modal = document.getElementById('modal-os');
+  if (modal) {
+    modal.classList.remove('active');
+    modal.style.display = 'none';
+    setTimeout(() => { modal.style.display = ''; }, 100);
   }
 };
 
 
 // ==========================================
-// RENDERIZAÇÃO
+// RENDERIZAÇÃO ULTRA-RÁPIDA (Sem travar o DOM)
 // ==========================================
 function renderAll() {
   renderClientes();
@@ -302,7 +310,6 @@ function renderAll() {
 function renderHistorico() {
   const tbody = document.getElementById('tbody-historico');
   if (!tbody) return;
-  tbody.innerHTML = '';
 
   const sorted = [...historico].sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
 
@@ -311,24 +318,26 @@ function renderHistorico() {
     return;
   }
 
+  // Otimização: Junta todo o HTML antes de injetar na tela (Evita lag)
+  let html = '';
   sorted.forEach((h) => {
     const dataFormatada = new Date(h.dataHora).toLocaleString('pt-BR');
-    
-    tbody.innerHTML += `
+    html += `
       <tr>
         <td style="font-size: 0.85rem;">${dataFormatada}</td>
         <td style="font-weight: 500;">${h.usuario}</td>
         <td><strong>${h.acao}</strong> <br><small style="color:var(--text-secondary)">${h.referencia}</small></td>
       </tr>`;
   });
+  tbody.innerHTML = html;
 }
 
 function renderClientes() {
   const tbody = document.getElementById('tbody-clientes');
   if (tbody) {
-    tbody.innerHTML = '';
+    let html = '';
     clientes.forEach((c) => {
-      tbody.innerHTML += `
+      html += `
         <tr>
           <td>${c.nome}</td>
           <td>${c.whats}</td>
@@ -341,13 +350,18 @@ function renderClientes() {
           </td>
         </tr>`;
     });
+    tbody.innerHTML = html;
   }
+  
+  // Otimizando os Selects
+  let optionsHtml = '<option value="">Selecione</option>';
+  clientes.forEach(c => optionsHtml += `<option value="${c.id}">${c.nome}</option>`);
+
   ['orc-cliente', 'ag-cliente', 'os-cliente'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
       const prev = el.value;
-      el.innerHTML = '<option value="">Selecione</option>';
-      clientes.forEach(c => el.innerHTML += `<option value="${c.id}">${c.nome}</option>`);
+      el.innerHTML = optionsHtml;
       el.value = prev;
     }
   });
@@ -355,12 +369,7 @@ function renderClientes() {
 
 function renderEquipamentos() {
   const grid = document.getElementById('grid-equipamentos');
-
-  const grupos = {
-    'Equipamentos': [],
-    'Ferramentas adicionais': [],
-    'Equipamento Parceiros': []
-  };
+  const grupos = { 'Equipamentos': [], 'Ferramentas adicionais': [], 'Equipamento Parceiros': [] };
 
   equipamentos.forEach((e) => {
     const cat = e.categoria || 'Equipamentos';
@@ -369,11 +378,10 @@ function renderEquipamentos() {
   });
 
   if (grid) {
-    grid.innerHTML = '';
-
+    let gridHtml = '';
     for (let categoria in grupos) {
       if (grupos[categoria].length > 0) {
-        grid.innerHTML += `
+        gridHtml += `
           <div style="grid-column: 1 / -1; margin-top: 16px; margin-bottom: 8px;">
             <h3 style="color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 8px;">
               <i class="ph ph-tag" style="margin-right: 6px; color: var(--primary-color);"></i>${categoria}
@@ -392,7 +400,7 @@ function renderEquipamentos() {
             ? `<img src="${e.fotoBase64}" alt="${e.nome}" style="width: 100%; height: 100%; object-fit: cover;">`
             : `<i class="ph ph-image" style="font-size: 3rem; color: #9ca3af;"></i>`;
 
-          grid.innerHTML += `
+          gridHtml += `
             <div class="glass-card equip-card" style="padding: 16px; display: flex; flex-direction: column; gap: 12px; border-radius: 12px;">
               <div style="width: 100%; height: 180px; background-color: #f3f4f6; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
                 ${imgHtml}
@@ -421,24 +429,26 @@ function renderEquipamentos() {
         });
       }
     }
+    grid.innerHTML = gridHtml; // Insere tudo de uma vez sem lag
   }
+
+  let optionsHtml = '<option value="">Selecione</option>';
+  equipamentos.forEach(e => optionsHtml += `<option value="${e.id}">${e.nome}</option>`);
 
   ['ag-equip', 'os-equip'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
       const prev = el.value;
-      el.innerHTML = '<option value="">Selecione</option>';
-      equipamentos.forEach(e => el.innerHTML += `<option value="${e.id}">${e.nome}</option>`);
+      el.innerHTML = optionsHtml;
       el.value = prev;
     }
   });
 
   const datalistCat = document.getElementById('cat-list');
   if (datalistCat) {
-    datalistCat.innerHTML = '';
-    Object.keys(grupos).forEach(cat => {
-      datalistCat.innerHTML += `<option value="${cat}">`;
-    });
+    let catHtml = '';
+    Object.keys(grupos).forEach(cat => catHtml += `<option value="${cat}">`);
+    datalistCat.innerHTML = catHtml;
   }
 
   renderCheckboxesOrcamento(grupos);
@@ -470,11 +480,11 @@ function renderCheckboxesOrcamento(grupos) {
 function renderAgenda() {
   const tbody = document.getElementById('tbody-agenda');
   if (tbody) {
-    tbody.innerHTML = '';
+    let html = '';
     agenda.forEach((a) => {
       const cliName = (clientes.find(c => c.id === a.clienteId) || {}).nome || 'Desconhecido';
       const eqName = (equipamentos.find(e => e.id === a.equipId) || {}).nome || 'Desconhecido';
-      tbody.innerHTML += `
+      html += `
         <tr>
           <td>${cliName}</td>
           <td>${eqName}</td>
@@ -489,25 +499,24 @@ function renderAgenda() {
           </td>
         </tr>`;
     });
+    tbody.innerHTML = html;
   }
 }
 
 function renderOS() {
   const tbody = document.getElementById('tbody-os');
   if (tbody) {
-    tbody.innerHTML = '';
-    
-    // ORDENAÇÃO BLINDADA: Transforma número em valor real para não quebrar.
+    let html = '';
     const osOrdenadas = [...os].sort((a, b) => {
       const numA = parseInt(a.numero, 10) || 0;
       const numB = parseInt(b.numero, 10) || 0;
-      return numB - numA; // O maior (mais novo) fica no topo
+      return numB - numA;
     });
 
     osOrdenadas.forEach((o) => {
       const cliName = (clientes.find(c => c.id === o.clienteId) || {}).nome || 'Desconhecido';
       const eqName = (equipamentos.find(e => e.id === o.equipId) || {}).nome || 'Desconhecido';
-      tbody.innerHTML += `
+      html += `
         <tr>
           <td>${o.numero}</td>
           <td>${formatDate(o.data) || '-'}</td>
@@ -525,16 +534,15 @@ function renderOS() {
           </td>
         </tr>`;
     });
+    tbody.innerHTML = html;
   }
 }
 
 let chartInstanceSecundario = null;
 function renderFinanceiro() {
   const tbody = document.getElementById('tbody-fin');
-
+  let html = '';
   let entradas = 0, saidas = 0, aReceber = 0, aPagar = 0, pendentes = 0;
-
-  if (tbody) tbody.innerHTML = '';
 
   const sorted = [...financas].sort((a, b) => new Date(a.data) - new Date(b.data));
   sorted.forEach((f) => {
@@ -545,38 +553,29 @@ function renderFinanceiro() {
     const isPago = (statusAtual === 'Pago');
     const isPendente = (statusAtual === 'Pendente' || statusAtual === 'Atrasado');
 
-    if (isReceita && isPago) {
-      entradas += val;
-    }
-    if (!isReceita && isPago) {
-      saidas += val;
-    }
-    if (isReceita && isPendente) {
-      aReceber += val;
-      pendentes++;
-    }
-    if (!isReceita && isPendente) {
-      aPagar += val;
-    }
+    if (isReceita && isPago) entradas += val;
+    if (!isReceita && isPago) saidas += val;
+    if (isReceita && isPendente) { aReceber += val; pendentes++; }
+    if (!isReceita && isPendente) aPagar += val;
 
-    if (tbody) {
-      const badgeCor = isPago ? 'badge-success' : (statusAtual === 'Atrasado' ? 'badge-danger' : 'badge-warning');
-      tbody.innerHTML += `
-        <tr>
-          <td>${formatDate(f.data)}</td>
-          <td>${f.desc}</td>
-          <td>${f.categoria || 'Outros'}</td>
-          <td><span class="badge ${badgeCor}">${statusAtual}</span></td>
-          <td style="color:${isReceita ? 'var(--accent-color)' : 'var(--danger-color)'}">${formatMoney(f.valor)}</td>
-          <td>
-            <div class="td-actions">
-              <button class="btn btn-primary" style="padding:4px 8px;font-size:0.8rem;" onclick="editarFin('${f.id}')">Editar</button>
-              <button class="btn btn-danger" style="padding:4px 8px;font-size:0.8rem;background:var(--danger-color);color:white;border:none;" onclick="removerFin('${f.id}')">Remover</button>
-            </div>
-          </td>
-        </tr>`;
-    }
+    const badgeCor = isPago ? 'badge-success' : (statusAtual === 'Atrasado' ? 'badge-danger' : 'badge-warning');
+    html += `
+      <tr>
+        <td>${formatDate(f.data)}</td>
+        <td>${f.desc}</td>
+        <td>${f.categoria || 'Outros'}</td>
+        <td><span class="badge ${badgeCor}">${statusAtual}</span></td>
+        <td style="color:${isReceita ? 'var(--accent-color)' : 'var(--danger-color)'}">${formatMoney(f.valor)}</td>
+        <td>
+          <div class="td-actions">
+            <button class="btn btn-primary" style="padding:4px 8px;font-size:0.8rem;" onclick="editarFin('${f.id}')">Editar</button>
+            <button class="btn btn-danger" style="padding:4px 8px;font-size:0.8rem;background:var(--danger-color);color:white;border:none;" onclick="removerFin('${f.id}')">Remover</button>
+          </div>
+        </td>
+      </tr>`;
   });
+
+  if (tbody) tbody.innerHTML = html;
 
   const elEntradas = document.getElementById('fin-entradas');
   if (elEntradas) {
@@ -610,14 +609,11 @@ function renderFinanceiro() {
   }
 }
 
-// RENDERIZAÇÃO DO HISTÓRICO FINANCEIRO MENSAL
 function renderHistoricoFinanceiro() {
   const tbody = document.getElementById('tbody-historico-financeiro');
   if (!tbody) return;
-  tbody.innerHTML = '';
 
   const mesesMap = {};
-
   financas.forEach(f => {
     if (!f.data) return;
     const [ano, mes] = f.data.split('-');
@@ -629,11 +625,8 @@ function renderHistoricoFinanceiro() {
 
     const val = Number(f.valor) || 0;
     if (f.statusPagamento === 'Pago') {
-      if (f.tipo === 'Receita') {
-        mesesMap[chave].entradas += val;
-      } else if (f.tipo === 'Despesa') {
-        mesesMap[chave].saidas += val;
-      }
+      if (f.tipo === 'Receita') mesesMap[chave].entradas += val;
+      else if (f.tipo === 'Despesa') mesesMap[chave].saidas += val;
     }
   });
 
@@ -647,9 +640,10 @@ function renderHistoricoFinanceiro() {
     return;
   }
 
+  let html = '';
   listaMeses.forEach(m => {
     const saldo = m.entradas - m.saidas;
-    tbody.innerHTML += `
+    html += `
       <tr>
         <td style="font-weight: 600;">${m.mesAno}</td>
         <td style="color: var(--accent-color);">${formatMoney(m.entradas)}</td>
@@ -661,6 +655,7 @@ function renderHistoricoFinanceiro() {
       </tr>
     `;
   });
+  tbody.innerHTML = html;
 }
 
 window.verDetalhesMes = function(mesAno) {
@@ -668,15 +663,8 @@ window.verDetalhesMes = function(mesAno) {
 };
 
 function renderRelatorios() {
-  let fatMes = 0;
-  let recTotal = 0;
-  let despTotal = 0;
-  let custoDiesel = 0;
-  let custoManut = 0;
-
-  const hj = new Date();
-  const currentMonth = hj.getMonth();
-  const currentYear = hj.getFullYear();
+  let fatMes = 0; let recTotal = 0; let despTotal = 0; let custoDiesel = 0; let custoManut = 0;
+  const hj = new Date(); const currentMonth = hj.getMonth(); const currentYear = hj.getFullYear();
 
   financas.forEach(f => {
     const val = Number(f.valor);
@@ -684,9 +672,7 @@ function renderRelatorios() {
       if (f.statusPagamento === 'Pago') recTotal += val;
       if (f.data) {
         const [y, m] = f.data.split('-');
-        if (parseInt(y) === currentYear && parseInt(m) - 1 === currentMonth) {
-          fatMes += val;
-        }
+        if (parseInt(y) === currentYear && parseInt(m) - 1 === currentMonth) fatMes += val;
       }
     } else {
       if (f.statusPagamento === 'Pago') despTotal += val;
@@ -703,17 +689,13 @@ function renderRelatorios() {
     document.getElementById('rel-manutencao').textContent = formatMoney(custoManut);
   }
 
-  const osPorCliente = {};
-  const osPorEquip = {};
-
+  const osPorCliente = {}; const osPorEquip = {};
   os.forEach(o => {
     osPorCliente[o.clienteId] = (osPorCliente[o.clienteId] || 0) + 1;
     osPorEquip[o.equipId] = (osPorEquip[o.equipId] || 0) + 1;
   });
 
-  const topClientesList = Object.entries(osPorCliente)
-    .sort((a, b) => b[1] - a[1]).slice(0, 5)
-    .map(entry => {
+  const topClientesList = Object.entries(osPorCliente).sort((a, b) => b[1] - a[1]).slice(0, 5).map(entry => {
       const c = clientes.find(x => x.id === entry[0]);
       return c ? `<li><strong>${c.nome}</strong>: ${entry[1]} obras/locações</li>` : '';
     }).join('');
@@ -721,9 +703,7 @@ function renderRelatorios() {
   const elTopCli = document.getElementById('rel-top-clientes');
   if (elTopCli) elTopCli.innerHTML = topClientesList || '<li>Nenhum dado suficiente</li>';
 
-  const topEquipsList = Object.entries(osPorEquip)
-    .sort((a, b) => b[1] - a[1]).slice(0, 5)
-    .map(entry => {
+  const topEquipsList = Object.entries(osPorEquip).sort((a, b) => b[1] - a[1]).slice(0, 5).map(entry => {
       const e = equipamentos.find(x => x.id === entry[0]);
       return e ? `<li><strong>${e.nome}</strong>: Locado em ${entry[1]} OS</li>` : '';
     }).join('');
@@ -739,7 +719,6 @@ function renderDashboard() {
   const currentYear = hj.getFullYear();
   let fatMes = 0;
   const monthLabels = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-
   const faturamentoData = new Array(12).fill(0);
   const lucroData = new Array(12).fill(0);
 
@@ -763,10 +742,8 @@ function renderDashboard() {
 
   const dashFat = document.getElementById('dash-fat');
   if (dashFat) dashFat.textContent = formatMoney(fatMes);
-
   const dashOs = document.getElementById('dash-os');
   if (dashOs) dashOs.textContent = os.filter(o => o.status === 'Em Andamento').length;
-
   const dashMaq = document.getElementById('dash-maq');
   if (dashMaq) dashMaq.textContent = equipamentos.filter(e => e.status === 'Operacional').length;
 
@@ -833,10 +810,6 @@ window.salvarCliente = async function () {
     }
     
     const data = { nome, cpf, whats, email, endereco, obs, userId: auth.currentUser.uid };
-    
-    // ==========================================
-    // FECHA O MODAL NA HORA (INTERFACE OTIMISTA)
-    // ==========================================
     closeModal('modal-cliente');
 
     if (id) {
@@ -846,7 +819,6 @@ window.salvarCliente = async function () {
       await addDoc(collection(db, "clientes"), data);
       registrarHistorico("Cadastrou Cliente", `Nome: ${nome}`);
     }
-    
   } finally {
     window.isSaving = false;
   }
@@ -885,10 +857,8 @@ window.salvarEquip = async function () {
 
   const id = document.getElementById('eq-id').value;
   const nome = document.getElementById('eq-nome').value;
-
   const selectCat = document.getElementById('eq-categoria');
   const categoria = selectCat ? selectCat.value : 'Equipamentos';
-
   const horimetro = document.getElementById('eq-hori').value;
   const status = document.getElementById('eq-status').value;
   const oleo = document.getElementById('eq-oleo').value;
@@ -909,22 +879,11 @@ window.salvarEquip = async function () {
   compressImage(fotoFile, async (fotoB64) => {
     try {
       const data = {
-        nome,
-        categoria,
-        horimetro: horimetro || '0',
-        status,
-        oleo,
-        manutencao,
-        documentacao: docum,
-        seguro,
-        custosAcumulados: Number(custos || 0),
-        fotoBase64: fotoB64 || window.currentEquipFoto || null,
+        nome, categoria, horimetro: horimetro || '0', status, oleo, manutencao, documentacao: docum,
+        seguro, custosAcumulados: Number(custos || 0), fotoBase64: fotoB64 || window.currentEquipFoto || null,
         userId: auth.currentUser.uid
       };
       
-      // ==========================================
-      // FECHA O MODAL NA HORA (INTERFACE OTIMISTA)
-      // ==========================================
       closeModal('modal-equip');
 
       if (id) {
@@ -934,7 +893,6 @@ window.salvarEquip = async function () {
         await addDoc(collection(db, "equipamentos"), data);
         registrarHistorico("Cadastrou Equipamento", `Equipamento: ${nome}`);
       }
-      
     } finally {
       window.isSaving = false;
     }
@@ -946,10 +904,8 @@ window.editarEquip = function (id) {
   if (!e) return;
   document.getElementById('eq-id').value = e.id;
   document.getElementById('eq-nome').value = e.nome || '';
-
   const selectCat = document.getElementById('eq-categoria');
   if (selectCat) selectCat.value = e.categoria || 'Equipamentos';
-
   document.getElementById('eq-hori').value = e.horimetro || '';
   document.getElementById('eq-status').value = e.status || 'Operacional';
   document.getElementById('eq-oleo').value = e.oleo || '';
@@ -959,7 +915,6 @@ window.editarEquip = function (id) {
   document.getElementById('eq-custos').value = e.custosAcumulados || '';
 
   window.currentEquipFoto = e.fotoBase64 || null;
-
   document.getElementById('title-modal-equip').textContent = "Editar Equipamento";
   document.getElementById('modal-equip').classList.add('active');
 };
@@ -996,10 +951,6 @@ window.salvarAgenda = async function () {
     }
     
     const data = { clienteId, equipId, data: dataPrev, hora: horaPrev, status, userId: auth.currentUser.uid };
-    
-    // ==========================================
-    // FECHA O MODAL NA HORA (INTERFACE OTIMISTA)
-    // ==========================================
     closeModal('modal-agenda');
 
     if (id) {
@@ -1009,7 +960,6 @@ window.salvarAgenda = async function () {
       await addDoc(collection(db, "agenda"), data);
       registrarHistorico("Novo Agendamento", `Data: ${formatDate(dataPrev)} - Status: ${status}`);
     }
-    
   } finally {
     window.isSaving = false;
   }
@@ -1040,7 +990,6 @@ window.removerAgenda = async function (id) {
 // ==========================================
 // CRUD E ASSINATURAS - ORDENS DE SERVIÇO 
 // ==========================================
-
 document.addEventListener('DOMContentLoaded', () => {
   const canvasLocal = document.getElementById('canvas-assinatura-local');
   if (canvasLocal) {
@@ -1070,9 +1019,7 @@ window.solicitarAssinaturaRemota = function(osId) {
   const o = os.find(x => x.id === osId);
   if(!o) return;
   const c = clientes.find(x => x.id === o.clienteId);
-  
   const urlBase = window.location.href.split('index.html')[0].replace(/\/$/, "");
-  
   let link = `${urlBase}/assinar.html?id=${osId}&os=${o.numero || ''}`;
   if (o.vencimento) link += `&venc=${o.vencimento}`;
   if (o.valor) link += `&valor=${o.valor}`;
@@ -1104,57 +1051,32 @@ window.salvarOS = async function (event) {
     const hini = document.getElementById('os-hini').value;
     const hfim = document.getElementById('os-hfim').value;
     const status = document.getElementById('os-status').value;
-    
     const dataLanc = document.getElementById('os-data').value || new Date().toISOString().split('T')[0];
-
     let operador = document.getElementById('os-operador').value;
     const user = auth.currentUser;
-    if (user && user.email === 'Igornevesrc@gmail.com') {
-      operador = 'Igor';
-    }
-
+    if (user && user.email === 'Igornevesrc@gmail.com') operador = 'Igor';
+    
     const clienteObj = clientes.find(c => c.id === clienteId);
     const equipObj = equipamentos.find(e => e.id === equipId);
-
     let assinaturaB64 = window.currentOSAssinatura || null;
-    if (signaturePadLocal && !signaturePadLocal.isEmpty()) {
-      assinaturaB64 = signaturePadLocal.toDataURL();
-    }
+    if (signaturePadLocal && !signaturePadLocal.isEmpty()) assinaturaB64 = signaturePadLocal.toDataURL();
 
     const valorFechado = Number(document.getElementById('os-valor').value) || 0;
     const formaPagamento = document.getElementById('os-pagamento').value || '';
     const vencimento = document.getElementById('os-vencimento').value || '';
 
     const data = {
-      numero,
-      clienteId: clienteId,
-      clienteName: clienteObj ? clienteObj.nome : 'Cliente',
-      equipId,
-      equipNome: equipObj ? equipObj.nome : 'Equipamento',
-      operador: operador || 'Geral',
-      hini,
-      hfim,
-      status,
-      data: dataLanc,
-      valor: valorFechado,
-      formaPagamento: formaPagamento,
-      vencimento: vencimento,
-      fotoBase64: window.currentOSFoto || null,
-      assinaturaBase64: assinaturaB64,
+      numero, clienteId: clienteId, clienteName: clienteObj ? clienteObj.nome : 'Cliente',
+      equipId, equipNome: equipObj ? equipObj.nome : 'Equipamento', operador: operador || 'Geral',
+      hini, hfim, status, data: dataLanc, valor: valorFechado, formaPagamento: formaPagamento,
+      vencimento: vencimento, fotoBase64: window.currentOSFoto || null, assinaturaBase64: assinaturaB64,
       userId: user.uid
     };
 
-    // ==========================================
-    // FECHA O MODAL NA HORA (INTERFACE OTIMISTA)
-    // ==========================================
     window.fecharModalOSForçado();
-    
-    if (signaturePadLocal) {
-      signaturePadLocal.clear();
-    }
+    if (signaturePadLocal) signaturePadLocal.clear();
 
     let osIdFinal = id;
-
     if (id) {
       await updateDoc(doc(db, "os", id), data);
       registrarHistorico("Editou OS", `OS Nº ${numero} - Status: ${status}`);
@@ -1164,25 +1086,15 @@ window.salvarOS = async function (event) {
       registrarHistorico("Nova OS", `OS Nº ${numero} - Status: ${status}`);
     }
 
-    // ========== BLINDAGEM DA MUDANÇA NA LÓGICA DE PAGAMENTO ==========
     const statusTexto = status || '';
-    
-    // Se o status escolhido for exatamente 'Finalizada e Paga', o financeiro fica Pago. 
-    // Em qualquer outro caso (Em Andamento ou Aguardando Pagamento), fica Pendente.
     const statusPagamentoIdeal = statusTexto === 'Finalizada e Paga' ? 'Pago' : 'Pendente';
-
     const finExistente = financas.find(f => f.osId === osIdFinal);
     const valorFinal = (finExistente && valorFechado === 0) ? finExistente.valor : valorFechado;
 
     const dadosFinanc = {
       desc: `Locação OS nº ${numero} - ${clienteObj ? clienteObj.nome : 'Cliente'} (${formaPagamento || 'Pix'})`,
-      tipo: 'Receita',
-      categoria: 'Serviço',
-      statusPagamento: statusPagamentoIdeal,
-      valor: valorFinal,
-      data: dataLanc,
-      osId: osIdFinal,
-      userId: user.uid
+      tipo: 'Receita', categoria: 'Serviço', statusPagamento: statusPagamentoIdeal, valor: valorFinal,
+      data: dataLanc, osId: osIdFinal, userId: user.uid
     };
 
     if (finExistente) {
@@ -1193,7 +1105,6 @@ window.salvarOS = async function (event) {
       registrarHistorico("Lançamento Financeiro Automático", `Gerado via OS Nº ${numero} - Status: ${statusPagamentoIdeal}`);
     }
 
-    // ========== BLINDAGEM DO STATUS DO EQUIPAMENTO ==========
     if (equipId) {
       const novoStatusEquip = statusTexto.includes('Finalizada') ? 'Operacional' : 'Alugado';
       await updateDoc(doc(db, "equipamentos", equipId), { status: novoStatusEquip });
@@ -1219,11 +1130,8 @@ window.editarOS = function (id) {
   document.getElementById('os-hini').value = o.hini || '';
   document.getElementById('os-hfim').value = o.hfim || '';
   
-  // ========== MUDANÇA: Conversão de OSs antigas ==========
   let statusBanco = o.status || 'Em Andamento';
-  if (statusBanco === 'Finalizada') {
-      statusBanco = 'Finalizada - Aguardando Pagamento'; // Migra visualmente o que estava no banco antigo
-  }
+  if (statusBanco === 'Finalizada') statusBanco = 'Finalizada - Aguardando Pagamento'; 
   document.getElementById('os-status').value = statusBanco;
 
   if (document.getElementById('os-valor')) document.getElementById('os-valor').value = o.valor || '';
@@ -1279,18 +1187,9 @@ window.salvarFin = async function () {
       return; 
     }
     const data = {
-      desc,
-      tipo,
-      categoria: cat,
-      statusPagamento: statusPayment,
-      valor: Number(valor),
-      data: dataLanc,
-      userId: auth.currentUser.uid
+      desc, tipo, categoria: cat, statusPagamento: statusPayment, valor: Number(valor), data: dataLanc, userId: auth.currentUser.uid
     };
     
-    // ==========================================
-    // FECHA O MODAL NA HORA (INTERFACE OTIMISTA)
-    // ==========================================
     closeModal('modal-fin');
 
     if (id) {
@@ -1300,7 +1199,6 @@ window.salvarFin = async function () {
       await addDoc(collection(db, "financas"), data);
       registrarHistorico("Novo Lançamento Financeiro", `R$ ${valor} - ${desc}`);
     }
-    
   } finally {
     window.isSaving = false;
   }
@@ -1337,33 +1235,24 @@ window.obterDadosOrcamento = function () {
   const clienteId = document.getElementById('orc-cliente').value;
   if (!clienteId) { customAlert("Selecione um cliente no Orçamento."); return null; }
   const cliente = clientes.find(c => c.id === clienteId);
-
   const checkboxes = document.querySelectorAll('#orc-equipamentos input[type="checkbox"]:checked');
   const equipsSelecionados = Array.from(checkboxes).map(cb => cb.value);
   if (equipsSelecionados.length === 0) { customAlert("Selecione ao menos um equipamento ou ferramenta."); return null; }
 
   return {
-    cliente,
-    equipsSelecionados,
-    valor: document.getElementById('orc-valor').value,
-    cobranca: document.getElementById('orc-cobranca').value,
-    qtd: document.getElementById('orc-qtd').value,
+    cliente, equipsSelecionados, valor: document.getElementById('orc-valor').value,
+    cobranca: document.getElementById('orc-cobranca').value, qtd: document.getElementById('orc-qtd').value,
     comb: document.getElementById('orc-combustivel').checked ? "Sim" : "Não",
-    op: document.getElementById('orc-operador').checked ? "Sim" : "Não",
-    obs: document.getElementById('orc-obs').value
+    op: document.getElementById('orc-operador').checked ? "Sim" : "Não", obs: document.getElementById('orc-obs').value
   };
 };
 
 window.enviarWhatsApp = function () {
   const dados = obterDadosOrcamento();
   if (!dados) return;
-  let texto = `*ORÇAMENTO - BIANCHIN ESCAVAÇÕES*\n\n`;
-  texto += `*Cliente:* ${dados.cliente.nome}\n`;
-  texto += `*Itens Solicitados:*\n- ${dados.equipsSelecionados.join('\n- ')}\n\n`;
-  texto += `*Valor Estimado:* ${formatMoney(dados.valor || 0)} (${dados.cobranca})\n`;
+  let texto = `*ORÇAMENTO - BIANCHIN ESCAVAÇÕES*\n\n*Cliente:* ${dados.cliente.nome}\n*Itens Solicitados:*\n- ${dados.equipsSelecionados.join('\n- ')}\n\n*Valor Estimado:* ${formatMoney(dados.valor || 0)} (${dados.cobranca})\n`;
   if (dados.qtd) texto += `*Quantidade Horas/Dias:* ${dados.qtd}\n`;
-  texto += `*Combustível Incluso:* ${dados.comb}\n`;
-  texto += `*Operador Incluso:* ${dados.op}\n`;
+  texto += `*Combustível Incluso:* ${dados.comb}\n*Operador Incluso:* ${dados.op}\n`;
   if (dados.obs) texto += `\n*Observações:* ${dados.obs}\n`;
   texto += `\nFicamos à disposição!`;
   const whatsLimpo = (dados.cliente.whats || '').replace(/\D/g, '');
@@ -1409,10 +1298,7 @@ window.gerarPDF = function () {
     <div style="margin-bottom:30px;">
       <h3 style="color:#0f172a;border-bottom:2px solid #e2e8f0;padding-bottom:10px;font-size:18px;">Itens do Orçamento</h3>
       <ul style="list-style-type:none;padding:0;margin:0;">
-        ${dados.equipsSelecionados.map(eq => `
-          <li style="padding:12px 10px;border-bottom:1px dashed #cbd5e1;display:flex;align-items:center;">
-            <span style="color:#10b981;margin-right:10px;font-size:16px;">✔</span> ${eq}
-          </li>`).join('')}
+        ${dados.equipsSelecionados.map(eq => `<li style="padding:12px 10px;border-bottom:1px dashed #cbd5e1;display:flex;align-items:center;"><span style="color:#10b981;margin-right:10px;font-size:16px;">✔</span> ${eq}</li>`).join('')}
       </ul>
     </div>
     <div style="display:flex;gap:20px;margin-bottom:30px;">
@@ -1428,11 +1314,7 @@ window.gerarPDF = function () {
         <p style="margin:8px 0;font-size:14px;"><strong>Operador:</strong> ${dados.op === 'Sim' ? '<span style="color:#10b981;">Incluso</span>' : '<span style="color:#ef4444;">Não Incluso</span>'}</p>
       </div>
     </div>
-    ${dados.obs ? `
-    <div style="margin-bottom:30px;">
-      <h3 style="color:#0f172a;border-bottom:1px solid #e2e8f0;padding-bottom:10px;font-size:18px;">Observações</h3>
-      <p style="background:#f1f5f9;padding:15px;border-radius:8px;font-style:italic;font-size:14px;border-left:4px solid #94a3b8;margin:0;">${dados.obs}</p>
-    </div>` : ''}
+    ${dados.obs ? `<div style="margin-bottom:30px;"><h3 style="color:#0f172a;border-bottom:1px solid #e2e8f0;padding-bottom:10px;font-size:18px;">Observações</h3><p style="background:#f1f5f9;padding:15px;border-radius:8px;font-style:italic;font-size:14px;border-left:4px solid #94a3b8;margin:0;">${dados.obs}</p></div>` : ''}
     <div style="margin-top:50px;text-align:center;color:#64748b;font-size:12px;border-top:1px solid #e2e8f0;padding-top:20px;">
       <p style="margin:5px 0;">Este orçamento é válido por 7 dias. A locação está sujeita à disponibilidade do equipamento.</p>
       <p style="margin:5px 0;font-size:14px;"><strong style="color:#0f172a;">Bianchin Escavações</strong> - Agradecemos a preferência!</p>
@@ -1453,14 +1335,12 @@ window.gerarPDF = function () {
 // SINCRONIZAÇÃO TEMPO REAL COM FIRESTORE
 // ==========================================
 
-// CRIAMOS UM "FREIO" PARA O SISTEMA RESPIRAR (Evita travamentos)
 let renderTimer = null;
 function solicitarRenderizacao() {
   if (renderTimer) clearTimeout(renderTimer);
-  // Aguarda o banco terminar o tiroteio de atualizações e renderiza TUDO apenas 1 vez
   renderTimer = setTimeout(() => {
     renderAll();
-  }, 200); 
+  }, 400); // Respiro de 400ms para evitar engasgos ao desenhar
 }
 
 function syncData() {
@@ -1471,7 +1351,7 @@ function syncData() {
 
   unsubClientes = onSnapshot(collection(db, "clientes"), (snapshot) => {
     clientes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-    solicitarRenderizacao(); // Usando o freio no lugar do renderAll()
+    solicitarRenderizacao();
   });
 
   unsubEquipamentos = onSnapshot(collection(db, "equipamentos"), (snapshot) => {
@@ -1494,12 +1374,13 @@ function syncData() {
     solicitarRenderizacao();
   });
   
-  unsubHistorico = onSnapshot(collection(db, "historico"), (snapshot) => {
+  // TRAVA DE CARREGAMENTO NO HISTÓRICO - Traz só os 50 registros mais recentes!
+  const qHistorico = query(collection(db, "historico"), orderBy("dataHora", "desc"), limit(50));
+  unsubHistorico = onSnapshot(qHistorico, (snapshot) => {
     historico = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     solicitarRenderizacao();
   });
 }
-
 
 // ==========================================
 // INICIALIZAÇÃO, NAVEGAÇÃO E AUTENTICAÇÃO
@@ -1610,13 +1491,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } catch (err) {
         const msgs = {
-          'auth/invalid-credential': 'Dados incorretos ou conta não existe. Se for seu primeiro acesso, clique em "Criar conta" abaixo.',
+          'auth/invalid-credential': 'Dados incorretos ou conta não existe.',
           'auth/email-already-in-use': 'Este e-mail já está cadastrado.',
           'auth/weak-password': 'A senha deve ter pelo menos 6 caracteres.',
           'auth/invalid-email': 'E-mail inválido.',
           'auth/user-not-found': 'Usuário não encontrado.',
           'auth/wrong-password': 'Senha incorreta.',
-          'auth/too-many-requests': 'Muitas tentativas. Aguarde alguns minutos.',
+          'auth/too-many-requests': 'Muitas tentativas. Aguarde.',
         };
         authError.style.color = "var(--danger-color)";
         authError.textContent = msgs[err.code] || err.message;
@@ -1649,11 +1530,3 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
-window.fecharModalOSForçado = function() {
-  const modal = document.getElementById('modal-os');
-  if (modal) {
-    modal.classList.remove('active');
-    modal.style.display = 'none';
-    setTimeout(() => { modal.style.display = ''; }, 100);
-  }
-};
