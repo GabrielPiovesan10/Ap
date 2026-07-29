@@ -1143,7 +1143,8 @@ window.salvarOS = async function (event) {
       registrarHistorico("Nova OS", `OS Nº ${numero} - Status: ${status}`);
     }
 
-    const statusPagamentoIdeal = (status === 'Finalizada') ? 'Pago' : 'Pendente';
+    // ========== MUDANÇA NA LÓGICA DE PAGAMENTO AQUI ==========
+    const statusPagamentoIdeal = (status === 'Finalizada e Paga') ? 'Pago' : 'Pendente';
 
     const finExistente = financas.find(f => f.osId === osIdFinal);
     const dadosFinanc = {
@@ -1165,8 +1166,10 @@ window.salvarOS = async function (event) {
       registrarHistorico("Lançamento Financeiro Automático", `Gerado via OS Nº ${numero} - Status: ${statusPagamentoIdeal}`);
     }
 
+    // ========== MUDANÇA NA LÓGICA DE EQUIPAMENTO AQUI ==========
+    // Qualquer coisa que tiver a palavra 'Finalizada' (Paga ou Aguardando) deixa o trator Operacional.
     if (equipId) {
-      const novoStatusEquip = (status === 'Finalizada') ? 'Operacional' : 'Alugado';
+      const novoStatusEquip = status.includes('Finalizada') ? 'Operacional' : 'Alugado';
       await updateDoc(doc(db, "equipamentos", equipId), { status: novoStatusEquip });
     }
 
@@ -1215,7 +1218,8 @@ window.removerOS = async function (id) {
   customConfirm('Remover OS?', async (res) => {
     if (res) {
       const o = os.find(x => x.id === id);
-      if (o && o.equipId && o.status !== 'Finalizada') {
+      // ========== MUDANÇA NA LÓGICA DE EXCLUSÃO AQUI ==========
+      if (o && o.equipId && !o.status.includes('Finalizada')) {
         try {
           await updateDoc(doc(db, "equipamentos", o.equipId), { status: 'Operacional' });
         } catch (e) {
