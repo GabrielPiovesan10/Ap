@@ -1111,7 +1111,7 @@ window.salvarOS = async function (event) {
     window.isSaving = false;
   }
 };
-    }
+  
 
     const clienteObj = clientes.find(c => c.id === clienteId);
     const equipObj = equipamentos.find(e => e.id === equipId);
