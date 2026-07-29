@@ -1085,7 +1085,7 @@ window.salvarOS = async function (event) {
   window.isSaving = true;
 
   try {
-   window.fecharModalOSForçado();
+    window.fecharModalOSForçado();
 
     if (signaturePadLocal) {
       signaturePadLocal.clear();
@@ -1111,8 +1111,8 @@ window.salvarOS = async function (event) {
     const user = auth.currentUser;
     if (user && user.email === 'Igornevesrc@gmail.com') {
       operador = 'Igor';
-
-   }
+  
+    }
 
     const clienteObj = clientes.find(c => c.id === clienteId);
     const equipObj = equipamentos.find(e => e.id === equipId);
