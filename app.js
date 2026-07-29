@@ -1452,6 +1452,17 @@ window.gerarPDF = function () {
 // ==========================================
 // SINCRONIZAÇÃO TEMPO REAL COM FIRESTORE
 // ==========================================
+
+// CRIAMOS UM "FREIO" PARA O SISTEMA RESPIRAR (Evita travamentos)
+let renderTimer = null;
+function solicitarRenderizacao() {
+  if (renderTimer) clearTimeout(renderTimer);
+  // Aguarda o banco terminar o tiroteio de atualizações e renderiza TUDO apenas 1 vez
+  renderTimer = setTimeout(() => {
+    renderAll();
+  }, 200); 
+}
+
 function syncData() {
   const user = auth.currentUser;
   if (!user) return;
@@ -1460,34 +1471,35 @@ function syncData() {
 
   unsubClientes = onSnapshot(collection(db, "clientes"), (snapshot) => {
     clientes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderAll();
+    solicitarRenderizacao(); // Usando o freio no lugar do renderAll()
   });
 
   unsubEquipamentos = onSnapshot(collection(db, "equipamentos"), (snapshot) => {
     equipamentos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderAll();
+    solicitarRenderizacao();
   });
 
   unsubAgenda = onSnapshot(collection(db, "agenda"), (snapshot) => {
     agenda = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderAll();
+    solicitarRenderizacao();
   });
 
   unsubOS = onSnapshot(collection(db, "os"), (snapshot) => {
     os = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderAll();
+    solicitarRenderizacao();
   });
 
   unsubFinancas = onSnapshot(collection(db, "financas"), (snapshot) => {
     financas = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderAll();
+    solicitarRenderizacao();
   });
   
   unsubHistorico = onSnapshot(collection(db, "historico"), (snapshot) => {
     historico = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderAll();
+    solicitarRenderizacao();
   });
 }
+
 
 // ==========================================
 // INICIALIZAÇÃO, NAVEGAÇÃO E AUTENTICAÇÃO
