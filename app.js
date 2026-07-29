@@ -833,6 +833,11 @@ window.salvarCliente = async function () {
     }
     
     const data = { nome, cpf, whats, email, endereco, obs, userId: auth.currentUser.uid };
+    
+    // ==========================================
+    // FECHA O MODAL NA HORA (INTERFACE OTIMISTA)
+    // ==========================================
+    closeModal('modal-cliente');
 
     if (id) {
       await updateDoc(doc(db, "clientes", id), data);
@@ -842,7 +847,6 @@ window.salvarCliente = async function () {
       registrarHistorico("Cadastrou Cliente", `Nome: ${nome}`);
     }
     
-    closeModal('modal-cliente');
   } finally {
     window.isSaving = false;
   }
@@ -917,6 +921,11 @@ window.salvarEquip = async function () {
         fotoBase64: fotoB64 || window.currentEquipFoto || null,
         userId: auth.currentUser.uid
       };
+      
+      // ==========================================
+      // FECHA O MODAL NA HORA (INTERFACE OTIMISTA)
+      // ==========================================
+      closeModal('modal-equip');
 
       if (id) {
         await updateDoc(doc(db, "equipamentos", id), data);
@@ -926,7 +935,6 @@ window.salvarEquip = async function () {
         registrarHistorico("Cadastrou Equipamento", `Equipamento: ${nome}`);
       }
       
-      closeModal('modal-equip');
     } finally {
       window.isSaving = false;
     }
@@ -988,6 +996,11 @@ window.salvarAgenda = async function () {
     }
     
     const data = { clienteId, equipId, data: dataPrev, hora: horaPrev, status, userId: auth.currentUser.uid };
+    
+    // ==========================================
+    // FECHA O MODAL NA HORA (INTERFACE OTIMISTA)
+    // ==========================================
+    closeModal('modal-agenda');
 
     if (id) {
       await updateDoc(doc(db, "agenda", id), data);
@@ -997,7 +1010,6 @@ window.salvarAgenda = async function () {
       registrarHistorico("Novo Agendamento", `Data: ${formatDate(dataPrev)} - Status: ${status}`);
     }
     
-    closeModal('modal-agenda');
   } finally {
     window.isSaving = false;
   }
@@ -1132,6 +1144,15 @@ window.salvarOS = async function (event) {
       userId: user.uid
     };
 
+    // ==========================================
+    // FECHA O MODAL NA HORA (INTERFACE OTIMISTA)
+    // ==========================================
+    window.fecharModalOSForçado();
+    
+    if (signaturePadLocal) {
+      signaturePadLocal.clear();
+    }
+
     let osIdFinal = id;
 
     if (id) {
@@ -1143,7 +1164,7 @@ window.salvarOS = async function (event) {
       registrarHistorico("Nova OS", `OS Nº ${numero} - Status: ${status}`);
     }
 
-        // ========== BLINDAGEM DA MUDANÇA NA LÓGICA DE PAGAMENTO ==========
+    // ========== BLINDAGEM DA MUDANÇA NA LÓGICA DE PAGAMENTO ==========
     const statusTexto = status || '';
     
     // Se o status escolhido for exatamente 'Finalizada e Paga', o financeiro fica Pago. 
@@ -1151,12 +1172,14 @@ window.salvarOS = async function (event) {
     const statusPagamentoIdeal = statusTexto === 'Finalizada e Paga' ? 'Pago' : 'Pendente';
 
     const finExistente = financas.find(f => f.osId === osIdFinal);
+    const valorFinal = (finExistente && valorFechado === 0) ? finExistente.valor : valorFechado;
+
     const dadosFinanc = {
       desc: `Locação OS nº ${numero} - ${clienteObj ? clienteObj.nome : 'Cliente'} (${formaPagamento || 'Pix'})`,
       tipo: 'Receita',
       categoria: 'Serviço',
       statusPagamento: statusPagamentoIdeal,
-      valor: valorFechado,
+      valor: valorFinal,
       data: dataLanc,
       osId: osIdFinal,
       userId: user.uid
@@ -1165,7 +1188,7 @@ window.salvarOS = async function (event) {
     if (finExistente) {
       await updateDoc(doc(db, "financas", finExistente.id), dadosFinanc);
       registrarHistorico("Atualização Financeira Automática", `Atualizado via OS Nº ${numero} - Status: ${statusPagamentoIdeal}`);
-    } else if (valorFechado > 0) {
+    } else if (valorFinal > 0) {
       await addDoc(collection(db, "financas"), dadosFinanc);
       registrarHistorico("Lançamento Financeiro Automático", `Gerado via OS Nº ${numero} - Status: ${statusPagamentoIdeal}`);
     }
@@ -1176,11 +1199,6 @@ window.salvarOS = async function (event) {
       await updateDoc(doc(db, "equipamentos", equipId), { status: novoStatusEquip });
     }
 
-    window.fecharModalOSForçado();
-
-    if (signaturePadLocal) {
-      signaturePadLocal.clear();
-    }
   } catch (err) {
     console.error("Erro ao salvar OS:", err);
     customAlert("Erro ao salvar a Ordem de Serviço. Verifique o console.");
@@ -1269,6 +1287,11 @@ window.salvarFin = async function () {
       data: dataLanc,
       userId: auth.currentUser.uid
     };
+    
+    // ==========================================
+    // FECHA O MODAL NA HORA (INTERFACE OTIMISTA)
+    // ==========================================
+    closeModal('modal-fin');
 
     if (id) {
       await updateDoc(doc(db, "financas", id), data);
@@ -1278,7 +1301,6 @@ window.salvarFin = async function () {
       registrarHistorico("Novo Lançamento Financeiro", `R$ ${valor} - ${desc}`);
     }
     
-    closeModal('modal-fin');
   } finally {
     window.isSaving = false;
   }
