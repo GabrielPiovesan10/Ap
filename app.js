@@ -1099,6 +1099,18 @@ window.salvarOS = async function (event) {
     const user = auth.currentUser;
     if (user && user.email === 'Igornevesrc@gmail.com') {
       operador = 'Igor';
+  window.fecharModalOSForçado();
+
+    if (signaturePadLocal) {
+      signaturePadLocal.clear();
+    }
+  } catch (err) {
+    console.error("Erro ao salvar OS:", err);
+    customAlert("Erro ao salvar a Ordem de Serviço. Verifique o console.");
+  } finally {
+    window.isSaving = false;
+  }
+};
     }
 
     const clienteObj = clientes.find(c => c.id === clienteId);
@@ -1176,18 +1188,7 @@ window.salvarOS = async function (event) {
       await updateDoc(doc(db, "equipamentos", equipId), { status: novoStatusEquip });
     }
 
-    window.fecharModalOSForçado();
-
-    if (signaturePadLocal) {
-      signaturePadLocal.clear();
-    }
-  } catch (err) {
-    console.error("Erro ao salvar OS:", err);
-    customAlert("Erro ao salvar a Ordem de Serviço. Verifique o console.");
-  } finally {
-    window.isSaving = false;
-  }
-};
+    
 
 window.editarOS = function (id) {
   const o = os.find(x => x.id === id);
