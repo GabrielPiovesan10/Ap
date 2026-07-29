@@ -1143,10 +1143,12 @@ window.salvarOS = async function (event) {
       registrarHistorico("Nova OS", `OS Nº ${numero} - Status: ${status}`);
     }
 
-    // ========== BLINDAGEM DA MUDANÇA NA LÓGICA DE PAGAMENTO ==========
+        // ========== BLINDAGEM DA MUDANÇA NA LÓGICA DE PAGAMENTO ==========
     const statusTexto = status || '';
-    // Usando includes para não bugar com nenhum espaço em branco do HTML
-    const statusPagamentoIdeal = statusTexto.includes('Paga') ? 'Pago' : 'Pendente';
+    
+    // Se o status escolhido for exatamente 'Finalizada e Paga', o financeiro fica Pago. 
+    // Em qualquer outro caso (Em Andamento ou Aguardando Pagamento), fica Pendente.
+    const statusPagamentoIdeal = statusTexto === 'Finalizada e Paga' ? 'Pago' : 'Pendente';
 
     const finExistente = financas.find(f => f.osId === osIdFinal);
     const dadosFinanc = {
